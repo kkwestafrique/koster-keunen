@@ -1,19 +1,20 @@
 import React from 'react';
 
-const STANDARD_STYLES = {
-  Sustainable: { bg: '#fffaec', text: '#79730a' },
-  Organic: { bg: '#edf9f2', text: '#1ba441' },
-  Conventional: { bg: '#fff4f4', text: '#ba550c' },
+// Figma design system: standard label is rendered as bold colored text (no pill background)
+const STANDARD_COLORS = {
+  Sustainable: '#79730a',
+  Organic: '#1ba441',
+  Conventional: '#ba550c',
 };
 
 export default function StandardBadge({ standard, testId }) {
-  const style = STANDARD_STYLES[standard];
-  if (!style) return null;
+  const color = STANDARD_COLORS[standard];
+  if (!color) return null;
   return (
     <span
       data-testid={testId || `standard-badge-${standard}`}
-      className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
-      style={{ backgroundColor: style.bg, color: style.text }}
+      className="text-sm font-bold"
+      style={{ color }}
     >
       {standard}
     </span>

@@ -9,6 +9,7 @@ export default function TopBar({ title }) {
   return (
     <header
       className="h-16 flex items-center justify-between px-8 bg-white border-b border-[#cfd8e6] sticky top-0 z-10"
+      style={{ boxShadow: '0 4px 5px rgba(207, 216, 230, 0.3)' }}
       data-testid="top-bar"
     >
       <h1 className="text-xl font-black text-[#032b71]" data-testid="top-bar-title">

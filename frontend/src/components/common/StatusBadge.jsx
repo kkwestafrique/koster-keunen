@@ -1,20 +1,21 @@
 import React from 'react';
 
-const STATUS_STYLES = {
-  Active: { bg: '#edf9f2', text: '#219653' },
-  Actual: { bg: '#edf9f2', text: '#219653' },
-  Inactive: { bg: '#f5f5f5', text: '#7089b4' },
-  Potential: { bg: '#fffaec', text: '#79730a' },
-  Revoked: { bg: '#fff4f4', text: '#ba550c' },
+// Figma design system: status is rendered as bold colored text (no pill background)
+const STATUS_COLORS = {
+  Active: '#219653',
+  Actual: '#219653',
+  Inactive: '#7089b4',
+  Potential: '#79730a',
+  Revoked: '#ba550c',
 };
 
 export default function StatusBadge({ status, testId }) {
-  const style = STATUS_STYLES[status] || { bg: '#f5f5f5', text: '#7089b4' };
+  const color = STATUS_COLORS[status] || '#7089b4';
   return (
     <span
       data-testid={testId || `status-badge-${status}`}
-      className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
-      style={{ backgroundColor: style.bg, color: style.text }}
+      className="text-sm font-bold"
+      style={{ color }}
     >
       {status}
     </span>

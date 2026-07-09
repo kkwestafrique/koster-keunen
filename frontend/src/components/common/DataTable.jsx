@@ -37,7 +37,7 @@ export default function DataTable({
         <TableHeader>
           <TableRow className="border-b border-[#cfd8e6] hover:bg-transparent">
             {columns.map((col) => (
-              <TableHead key={col.key} className="text-[#032b71] font-medium bg-transparent">
+              <TableHead key={col.key} className="text-[#7089b4] font-bold bg-transparent">
                 {col.label}
               </TableHead>
             ))}
@@ -90,7 +90,7 @@ export default function DataTable({
                 />
               </PaginationItem>
               <PaginationItem>
-                <PaginationLink isActive className="border-[#0f48aa] text-[#0f48aa]">
+                <PaginationLink isActive className="border-[#0f48aa] text-[#0f48aa] rounded-[3px]">
                   {page}
                 </PaginationLink>
               </PaginationItem>

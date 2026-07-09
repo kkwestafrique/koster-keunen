@@ -74,7 +74,7 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['Roboto', 'Lato', 'sans-serif']
+        sans: ['Lato', 'Roboto', 'sans-serif']
       },
       keyframes: {
         'accordion-down': {
