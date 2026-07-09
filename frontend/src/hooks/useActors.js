@@ -87,6 +87,27 @@ export function useCreateActor() {
   });
 }
 
+export function useActorTypeCounts() {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['actor-type-counts', supplyChainId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('actors')
+        .select('actor_type')
+        .eq('supply_chain_id', supplyChainId);
+      if (error) throw error;
+      const counts = { Buyer: 0, 'Local Partner': 0, Aggregator: 0, 'Producer Organisation': 0 };
+      data.forEach((row) => {
+        counts[row.actor_type] = (counts[row.actor_type] || 0) + 1;
+      });
+      return { total: data.length, byType: counts };
+    },
+    enabled: !!supplyChainId,
+    staleTime: 30_000,
+  });
+}
+
 export function useUpdateActor() {
   const queryClient = useQueryClient();
   return useMutation({

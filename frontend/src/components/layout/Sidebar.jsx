@@ -46,11 +46,11 @@ const NAV_ITEMS = [
 function NavIcon({ Icon, active }) {
   return (
     <span
-      className={`flex items-center justify-center h-7 w-7 rounded-md ${
+      className={`flex items-center justify-center h-[37px] w-10 shrink-0 ${
         active ? 'bg-[#0f48aa]' : ''
       }`}
     >
-      <Icon className={`h-4 w-4 ${active ? 'text-white' : 'text-[#032b71]'}`} />
+      <Icon className={`h-5 w-5 ${active ? 'text-white' : 'text-[#0f48aa]'}`} />
     </span>
   );
 }
@@ -64,22 +64,22 @@ function NavGroup({ item, currentPath }) {
       <button
         data-testid={`sidebar-nav-${item.key}`}
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-[#032b71] hover:bg-white/60 transition-colors"
+        className="w-full flex items-center gap-3 pr-3 text-[13px] font-normal text-[#032b71] hover:bg-white/40 transition-colors"
       >
         <NavIcon Icon={item.icon} active={isChildActive} />
         <span className="flex-1 text-left">{item.label}</span>
-        {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        {open ? <ChevronDown className="h-4 w-4 text-[#0f48aa]" /> : <ChevronRight className="h-4 w-4 text-[#0f48aa]" />}
       </button>
       {open && (
-        <div className="ml-10 mt-1 flex flex-col gap-1">
+        <div className="ml-10 mt-1 flex flex-col gap-1 pb-2">
           {item.children.map((child) => (
             <NavLink
               key={child.to}
               to={child.to}
               data-testid={`sidebar-nav-${item.key}-${child.label.toLowerCase()}`}
               className={({ isActive }) =>
-                `px-3 py-1.5 rounded-md text-sm transition-colors ${
-                  isActive ? 'text-[#0f48aa] font-semibold' : 'text-[#032b71] hover:bg-white/60'
+                `px-3 py-1.5 rounded-[4px] text-[13px] transition-colors ${
+                  isActive ? 'text-[#0f48aa] font-bold' : 'text-[#032b71] font-normal hover:bg-white/40'
                 }`
               }
             >
@@ -99,17 +99,10 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="w-64 h-screen fixed left-0 top-0 flex flex-col bg-[#ebf6ff] border-r border-[#cfd8e6]"
+      className="w-[210px] h-screen fixed left-0 top-0 flex flex-col bg-[#ebf6ff]"
       data-testid="sidebar"
     >
-      <div className="px-5 py-6 flex items-center gap-2">
-        <div className="h-9 w-9 rounded-md bg-[#0f48aa] flex items-center justify-center text-white font-black">
-          B
-        </div>
-        <span className="font-black text-lg text-[#032b71]">BeezTrace</span>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto px-3 flex flex-col gap-1">
+      <nav className="flex-1 overflow-y-auto pt-4 flex flex-col gap-2">
         {NAV_ITEMS.map((item) =>
           item.children ? (
             <NavGroup key={item.key} item={item} currentPath={window.location.pathname} />
@@ -120,8 +113,8 @@ export default function Sidebar() {
               end
               data-testid={`sidebar-nav-${item.key}`}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive ? 'text-[#0f48aa] font-semibold' : 'text-[#032b71] hover:bg-white/60'
+                `flex items-center gap-3 pr-3 text-[13px] transition-colors ${
+                  isActive ? 'text-[#0f48aa] font-bold' : 'text-[#032b71] font-normal hover:bg-white/40'
                 }`
               }
             >
@@ -141,7 +134,7 @@ export default function Sidebar() {
           <DropdownMenuTrigger asChild>
             <button
               data-testid="my-actor-switcher"
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-md bg-white border border-[#cfd8e6] hover:bg-[#f5f5f5] transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-[4px] bg-white border border-[#cfd8e6] hover:bg-[#f5f5f5] transition-colors"
             >
               <div className="h-8 w-8 rounded-full bg-[#0f48aa] flex items-center justify-center text-white text-xs font-bold overflow-hidden">
                 {currentActor?.logo_url ? (

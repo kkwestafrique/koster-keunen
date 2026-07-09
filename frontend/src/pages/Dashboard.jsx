@@ -1,56 +1,245 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useActors } from '@/hooks/useActors';
-import { useBeekeepers } from '@/hooks/useBeekeepers';
-import { useVillages } from '@/hooks/useVillages';
-import { useConnections } from '@/hooks/useConnections';
-import { Users, UserRound, MapPin, Link2 } from 'lucide-react';
+import { useAllActorsLite, useActorTypeCounts } from '@/hooks/useActors';
+import { useBeekeeperAggregates } from '@/hooks/useBeekeepers';
+import { useConstants } from '@/hooks/useConstants';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-function StatCard({ icon: Icon, label, value, testId }) {
+function StatCard({ label, value, wide, testId }) {
   return (
     <div
       data-testid={testId}
-      className="bg-white border border-[#cfd8e6] rounded-[5px] p-5 flex items-center gap-4"
+      className={`bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-2 justify-center ${
+        wide ? 'flex-[1.6]' : 'flex-1'
+      }`}
     >
-      <div className="h-11 w-11 rounded-md bg-[#ebf6ff] flex items-center justify-center">
-        <Icon className="h-5 w-5 text-[#0f48aa]" />
-      </div>
-      <div>
-        <p className="text-xs text-[#7089b4]">{label}</p>
-        <p className="text-2xl font-black text-[#032b71]">{value ?? '—'}</p>
-      </div>
+      <span className="text-xs text-[#032b71]">{label}</span>
+      <span className="text-3xl font-bold text-[#0f48aa]">{value ?? '—'}</span>
     </div>
   );
 }
 
+function ChartCard({ title, controls, children, testId }) {
+  return (
+    <div
+      data-testid={testId}
+      className="bg-white border border-[#cfd8e6] rounded-[5px] p-4 flex-1 min-w-[300px]"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold text-[#032b71]">{title}</h3>
+        {controls}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const ACTOR_TYPE_COLORS = {
+  'Producer Organisation': '#0f48aa',
+  Aggregator: '#2d9cdb',
+  'Local Partner': '#6fcf97',
+  Buyer: '#f2c94c',
+};
+
+const HIVE_COLORS = { Traditional: '#0f48aa', Modern: '#9fb6dd', Other: '#c5cae9' };
+const GENDER_COLORS = { Male: '#0f48aa', Female: '#9fb6dd' };
+
 export default function Dashboard() {
   const { profile } = useAuth();
-  const { data: actors } = useActors({ page: 1 });
-  const { data: beekeepers } = useBeekeepers({ page: 1 });
-  const { data: villages } = useVillages({ page: 1 });
-  const { data: connections } = useConnections({ page: 1 });
+  const { data: actors = [] } = useAllActorsLite();
+  const { data: actorCounts } = useActorTypeCounts();
+  const { data: bkAgg } = useBeekeeperAggregates();
+  const { data: countries = [] } = useConstants('country');
+  const [tab, setTab] = useState('supply');
+  const [country, setCountry] = useState('');
+  const [levelActor, setLevelActor] = useState('');
+
+  const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
+
+  const actorTypeData = actorCounts
+    ? Object.entries(actorCounts.byType)
+        .filter(([, v]) => v > 0)
+        .map(([name, value]) => ({ name, value }))
+    : [];
+
+  const hiveData = bkAgg
+    ? [
+        { name: 'Traditional', value: bkAgg.traditional },
+        { name: 'Modern', value: bkAgg.modern },
+        { name: 'Other', value: bkAgg.other },
+      ].filter((d) => d.value > 0)
+    : [];
+
+  const genderData = bkAgg
+    ? [
+        { name: 'Male', value: bkAgg.male },
+        { name: 'Female', value: bkAgg.female },
+      ].filter((d) => d.value > 0)
+    : [];
 
   return (
-    <AppLayout title="Dashboard">
-      <p className="text-sm text-[#7089b4] mb-6" data-testid="dashboard-welcome">
-        Welcome back, {profile?.username || 'there'}.
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Total Actors" value={actors?.total} testId="stat-actors" />
-        <StatCard
-          icon={UserRound}
-          label="Total Beekeepers"
-          value={beekeepers?.total}
-          testId="stat-beekeepers"
-        />
-        <StatCard icon={MapPin} label="Villages" value={villages?.total} testId="stat-villages" />
-        <StatCard
-          icon={Link2}
-          label="Connections"
-          value={connections?.total}
-          testId="stat-connections"
-        />
+    <AppLayout hideDefaultHeader>
+      <div className="bg-[#f9fafc] px-0 -m-8 mb-0 pb-8">
+        {/* Header block */}
+        <div className="bg-[#f9fafc] px-8 py-6 flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-lg font-black text-[#0f48aa]" data-testid="dashboard-title">
+              Dashboard
+            </h1>
+            <p className="text-[15px] text-[#032b71]" data-testid="dashboard-welcome">
+              Hi {profile?.username || 'there'}, You are now managing{' '}
+              {currentActor?.contact_name || 'your organisation'}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-6">
+            <StatCard
+              label="Total actors in supply chain"
+              value={actorCounts?.total}
+              wide
+              testId="stat-total-actors"
+            />
+            <StatCard
+              label="Local partners"
+              value={actorCounts?.byType?.['Local Partner']}
+              testId="stat-local-partners"
+            />
+            <StatCard
+              label="Aggregators"
+              value={actorCounts?.byType?.Aggregator}
+              testId="stat-aggregators"
+            />
+            <StatCard
+              label="Producer organisations"
+              value={actorCounts?.byType?.['Producer Organisation']}
+              testId="stat-producer-orgs"
+            />
+            <StatCard label="Beekeepers" value={bkAgg?.total} testId="stat-beekeepers" />
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="px-8">
+          <div className="flex" data-testid="dashboard-tabs">
+            <button
+              data-testid="dashboard-tab-supply"
+              onClick={() => setTab('supply')}
+              className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
+                tab === 'supply'
+                  ? 'bg-white text-[#0f48aa] border-[#0f48aa]'
+                  : 'bg-[#e8ecf3] text-[#7089b4] border-transparent'
+              }`}
+            >
+              Supply chain overview
+            </button>
+            <button
+              data-testid="dashboard-tab-transactions"
+              onClick={() => setTab('transactions')}
+              className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
+                tab === 'transactions'
+                  ? 'bg-white text-[#0f48aa] border-[#0f48aa]'
+                  : 'bg-[#e8ecf3] text-[#7089b4] border-transparent'
+              }`}
+            >
+              Transaction overview
+            </button>
+          </div>
+
+          {/* Filter bar */}
+          <div className="bg-white border border-[#cfd8e6] rounded-b-[5px] px-8 py-4 flex flex-col gap-2">
+            <span className="text-[13px] text-[#7089b4]">
+              Filter and view your supply chain overview
+            </span>
+            <div className="flex gap-4">
+              <Select value={country} onValueChange={setCountry}>
+                <SelectTrigger data-testid="dashboard-filter-country" className="w-[200px] bg-white border-[#cfd8e6]">
+                  <SelectValue placeholder="Country: All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {countries.map((c) => (
+                    <SelectItem key={c.id} value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={levelActor} onValueChange={setLevelActor}>
+                <SelectTrigger data-testid="dashboard-filter-actor-type" className="w-[200px] bg-white border-[#cfd8e6]">
+                  <SelectValue placeholder="Level 1 actors: All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {Object.keys(ACTOR_TYPE_COLORS).map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts */}
+        <div className="px-8 pt-6">
+          {tab === 'supply' ? (
+            <div className="flex flex-wrap gap-6" data-testid="dashboard-charts-supply">
+              <ChartCard title="Actor type distribution" testId="chart-actor-types">
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie data={actorTypeData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} isAnimationActive={false}>
+                      {actorTypeData.map((entry) => (
+                        <Cell key={entry.name} fill={ACTOR_TYPE_COLORS[entry.name] || '#cfd8e6'} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="Total hives installed" testId="chart-hives">
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie data={hiveData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} isAnimationActive={false}>
+                      {hiveData.map((entry) => (
+                        <Cell key={entry.name} fill={HIVE_COLORS[entry.name] || '#cfd8e6'} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="Beekeepers overview (Male : Female)" testId="chart-gender">
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie data={genderData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} isAnimationActive={false}>
+                      {genderData.map((entry) => (
+                        <Cell key={entry.name} fill={GENDER_COLORS[entry.name] || '#cfd8e6'} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+          ) : (
+            <div
+              className="bg-white border border-[#cfd8e6] rounded-[5px] p-10 text-center text-sm text-[#7089b4]"
+              data-testid="dashboard-transactions-placeholder"
+            >
+              No transaction data available yet.
+            </div>
+          )}
+        </div>
       </div>
     </AppLayout>
   );
