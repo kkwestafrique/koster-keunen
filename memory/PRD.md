@@ -70,6 +70,29 @@ constants — all in Supabase Postgres, RLS enabled, scoped by supply_chain_id.
   - TopBar: subtle drop shadow `0 4px 5px rgba(207,216,230,0.3)`.
 - No functionality/routing/data/logic changed — testing agent confirmed 100% regression pass.
 
+## Figma Verbatim Rebuild — AppLayout + Dashboard (2026-02, Run 3)
+- Extracted precise layout specs from Figma file (node 11776:238, "KKWA dashboard" frame
+  4533:19193) via Figma REST API (node tree + rendered PNG exports for visual verification),
+  using user-provided personal access token.
+- Sidebar rebuilt to 210px width, nav items with 40px icon badge (blue bg + white icon when
+  active, transparent + blue icon when inactive), Lato 13px labels. My Actor switcher still
+  pinned at bottom (unchanged).
+- TopBar rebuilt: left shows CURRENT ACTOR name (bold blue) instead of generic page title
+  (matches Figma's org-context topbar pattern); right shows notification bell (decorative) +
+  account dropdown (avatar/username/role, Logout moved inside dropdown).
+- Dashboard fully rebuilt: header + 5 real-data stat cards (Total actors, Local partners,
+  Aggregators, Producer organisations, Beekeepers via new `useActorTypeCounts`/
+  `useBeekeeperAggregates` hooks), 2 tabs (Supply chain overview real / Transaction overview
+  placeholder — no transactions module exists), filter bar (Country/Level 1 actors — informational
+  only, not yet wired), 3 recharts donut charts (Actor type distribution, Total hives installed,
+  Beekeepers Male:Female) using real Supabase data.
+- Other list pages (Actors/Beekeepers/Villages/Connections) unchanged functionally; their page
+  title now renders as an in-content heading (AppLayout `title` prop) instead of inside TopBar,
+  since TopBar is now global/actor-context-only. Not yet rebuilt to full Figma spec (deferred).
+- Deliberate scope limits vs Figma (documented, not fabricated): dropped wax-quantity/kg charts,
+  top-5-suppliers ranking, country-wise transaction %, crop-type hive distribution — none of
+  this data exists in the current schema; only chart widgets backed by real data were built.
+
 ## Prioritized Backlog
 - P0: None blocking — core CRUD + auth + RLS + storage verified working end-to-end.
 - P1: Actor/Beekeeper Edit persistence for all fields (currently a subset of fields editable
