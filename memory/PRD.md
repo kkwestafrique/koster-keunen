@@ -58,6 +58,18 @@ constants — all in Supabase Postgres, RLS enabled, scoped by supply_chain_id.
   `status = Active` (Actual) since the actors table only has Active/Inactive (no separate
   Potential/Actual enum like beekeepers).
 
+## Design System Update (2026-02, Run 2 — visual-only)
+- Extracted real design tokens from user's Figma file via Figma REST API (file key
+  YxVU02wklaCZ8MF19ESpzQ) — confirmed core palette (#0f48aa, #032b71, #ebf6ff, #f9fafc,
+  #7089b4, #cfd8e6, #219653) already matched exactly; applied the concrete deltas found:
+  - Font: Lato is primary (was Roboto-primary), Roboto kept as fallback.
+  - Table headers: muted `#7089b4` bold (was navy `#032b71` medium).
+  - Status/Standard badges: plain bold colored text, no pill background (was tinted-bg chip).
+  - Buttons/Inputs/Select/Textarea: border-radius 4px (was 6px `rounded-md`).
+  - Pagination active page: 3px radius.
+  - TopBar: subtle drop shadow `0 4px 5px rgba(207,216,230,0.3)`.
+- No functionality/routing/data/logic changed — testing agent confirmed 100% regression pass.
+
 ## Prioritized Backlog
 - P0: None blocking — core CRUD + auth + RLS + storage verified working end-to-end.
 - P1: Actor/Beekeeper Edit persistence for all fields (currently a subset of fields editable
