@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,7 @@ export default function BeekeeperFormDialog({ open, onOpenChange }) {
       <DialogContent className="max-w-2xl bg-white" data-testid="beekeeper-form-dialog">
         <DialogHeader>
           <DialogTitle className="text-[#032b71] font-black">Add Beekeeper</DialogTitle>
+          <DialogDescription>Enter the beekeeper's details below to add them to the supply chain.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">

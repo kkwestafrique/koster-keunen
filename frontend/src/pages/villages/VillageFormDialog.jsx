@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ export default function VillageFormDialog({ open, onOpenChange }) {
       <DialogContent className="max-w-lg bg-white" data-testid="village-form-dialog">
         <DialogHeader>
           <DialogTitle className="text-[#032b71] font-black">Add Village</DialogTitle>
+          <DialogDescription>Enter the village details below.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
           <div className="flex flex-col gap-1.5">
