@@ -46,11 +46,11 @@ const NAV_ITEMS = [
 function NavIcon({ Icon, active }) {
   return (
     <span
-      className={`flex items-center justify-center h-[37px] w-10 shrink-0 ${
+      className={`flex items-center justify-center h-[34px] w-[34px] shrink-0 rounded-lg ${
         active ? 'bg-[#0f48aa]' : ''
       }`}
     >
-      <Icon className={`h-5 w-5 ${active ? 'text-white' : 'text-[#0f48aa]'}`} />
+      <Icon className={`h-[18px] w-[18px] ${active ? 'text-white' : 'text-[#0f48aa]'}`} />
     </span>
   );
 }
@@ -64,14 +64,14 @@ function NavGroup({ item, currentPath }) {
       <button
         data-testid={`sidebar-nav-${item.key}`}
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 pr-3 text-[13px] font-normal text-[#032b71] hover:bg-white/40 transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-2 text-[13px] font-normal text-[#032b71] hover:bg-white/60 transition-colors"
       >
         <NavIcon Icon={item.icon} active={isChildActive} />
-        <span className="flex-1 text-left">{item.label}</span>
-        {open ? <ChevronDown className="h-4 w-4 text-[#0f48aa]" /> : <ChevronRight className="h-4 w-4 text-[#0f48aa]" />}
+        <span className={`flex-1 text-left ${isChildActive ? 'text-[#0f48aa] font-bold' : ''}`}>{item.label}</span>
+        {open ? <ChevronDown className="h-4 w-4 text-[#7089b4]" /> : <ChevronRight className="h-4 w-4 text-[#7089b4]" />}
       </button>
       {open && (
-        <div className="ml-10 mt-1 flex flex-col gap-1 pb-2">
+        <div className="ml-[60px] mt-0.5 flex flex-col gap-0.5 pb-2">
           {item.children.map((child) => (
             <NavLink
               key={child.to}
@@ -79,7 +79,7 @@ function NavGroup({ item, currentPath }) {
               data-testid={`sidebar-nav-${item.key}-${child.label.toLowerCase()}`}
               className={({ isActive }) =>
                 `px-3 py-1.5 rounded-[4px] text-[13px] transition-colors ${
-                  isActive ? 'text-[#0f48aa] font-bold' : 'text-[#032b71] font-normal hover:bg-white/40'
+                  isActive ? 'text-[#0f48aa] font-bold' : 'text-[#032b71] font-normal hover:bg-white/60'
                 }`
               }
             >
@@ -99,10 +99,18 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="w-[210px] h-screen fixed left-0 top-0 flex flex-col bg-[#ebf6ff]"
+      className="w-[210px] h-screen fixed left-0 top-0 flex flex-col bg-[#f0f6ff] border-r border-[#e2eaf5]"
       data-testid="sidebar"
     >
-      <nav className="flex-1 overflow-y-auto pt-4 flex flex-col gap-2">
+      {/* Logo area */}
+      <div className="h-16 flex items-center px-4 gap-2 shrink-0">
+        <div className="h-7 w-7 rounded-full bg-[#c8a200] flex items-center justify-center">
+          <span className="text-white text-xs font-black">K</span>
+        </div>
+        <span className="text-[11px] font-black text-[#032b71] tracking-wider uppercase">Koster <span className="text-[11px]">Keunen</span></span>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto pt-2 flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) =>
           item.children ? (
             <NavGroup key={item.key} item={item} currentPath={window.location.pathname} />
@@ -113,8 +121,8 @@ export default function Sidebar() {
               end
               data-testid={`sidebar-nav-${item.key}`}
               className={({ isActive }) =>
-                `flex items-center gap-3 pr-3 text-[13px] transition-colors ${
-                  isActive ? 'text-[#0f48aa] font-bold' : 'text-[#032b71] font-normal hover:bg-white/40'
+                `flex items-center gap-3 px-4 py-2 text-[13px] transition-colors ${
+                  isActive ? 'text-[#0f48aa] font-bold' : 'text-[#032b71] font-normal hover:bg-white/60'
                 }`
               }
             >
@@ -129,7 +137,7 @@ export default function Sidebar() {
         )}
       </nav>
 
-      <div className="p-3 border-t border-[#cfd8e6]">
+      <div className="p-3 border-t border-[#e2eaf5]">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button

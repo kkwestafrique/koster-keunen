@@ -4,7 +4,7 @@ import TopBar from '@/components/layout/TopBar';
 
 export default function AppLayout({ title, hideDefaultHeader, children }) {
   return (
-    <div className="min-h-screen bg-[#f9fafc]">
+    <div className="min-h-screen bg-[#f5f7fa]">
       <Sidebar />
       <div className="ml-[210px]">
         <TopBar />

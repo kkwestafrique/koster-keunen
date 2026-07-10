@@ -56,8 +56,8 @@ module.exports = {
         brand: {
           primary: '#0f48aa',
           navy: '#032b71',
-          sidebar: '#ebf6ff',
-          page: '#f9fafc',
+          sidebar: '#f0f6ff',
+          page: '#f5f7fa',
           white: '#ffffff',
           muted: '#7089b4',
           borderc: '#cfd8e6',

@@ -19,13 +19,14 @@ export default function TopBar() {
 
   return (
     <header
-      className="h-16 flex items-center justify-between px-8 bg-white sticky top-0 z-10"
-      style={{ boxShadow: '0 4px 5px rgba(207, 216, 230, 0.3)' }}
+      className="h-16 flex items-center justify-between px-8 bg-white sticky top-0 z-10 border-b border-[#e2eaf5]"
       data-testid="top-bar"
     >
-      <h1 className="text-lg font-black text-[#0f48aa]" data-testid="top-bar-actor-name">
-        {currentActor?.contact_name || 'BeezTrace'}
-      </h1>
+      <div className="flex items-center gap-4">
+        <h1 className="text-lg font-black text-[#0f48aa]" data-testid="top-bar-actor-name">
+          {currentActor?.contact_name || 'Koster Keunen'}
+        </h1>
+      </div>
       <div className="flex items-center gap-5">
         <button
           data-testid="top-bar-notifications"
@@ -34,6 +35,12 @@ export default function TopBar() {
           <Bell className="h-5 w-5 text-[#032b71]" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#eb5757]" />
         </button>
+
+        <div className="flex items-center gap-1 border border-[#cfd8e6] rounded px-2.5 py-1.5 text-sm text-[#032b71] cursor-default">
+          <span className="text-xs">🇬🇧</span>
+          <span className="text-xs">Eng</span>
+          <ChevronDown className="h-3 w-3 text-[#7089b4]" />
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

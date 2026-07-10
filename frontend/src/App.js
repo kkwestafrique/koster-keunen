@@ -16,7 +16,7 @@ function ProtectedRoute({ children }) {
   const { session, loading } = useAuth();
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f9fafc] text-[#7089b4]">
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f7fa] text-[#7089b4]">
         Loading...
       </div>
     );

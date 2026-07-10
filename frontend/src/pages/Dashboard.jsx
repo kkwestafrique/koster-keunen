@@ -17,12 +17,12 @@ function StatCard({ label, value, wide, testId }) {
   return (
     <div
       data-testid={testId}
-      className={`bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-2 justify-center ${
+      className={`bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-1 justify-center ${
         wide ? 'flex-[1.6]' : 'flex-1'
       }`}
     >
-      <span className="text-xs text-[#032b71]">{label}</span>
-      <span className="text-3xl font-bold text-[#0f48aa]">{value ?? '—'}</span>
+      <span className="text-[28px] font-bold text-[#032b71]">{value ?? '—'}</span>
+      <span className="text-xs text-[#7089b4]">{label}</span>
     </div>
   );
 }
@@ -87,9 +87,9 @@ export default function Dashboard() {
 
   return (
     <AppLayout hideDefaultHeader>
-      <div className="bg-[#f9fafc] px-0 -m-8 mb-0 pb-8">
+      <div className="bg-[#f5f7fa] px-0 -m-8 mb-0 pb-8">
         {/* Header block */}
-        <div className="bg-[#f9fafc] px-8 py-6 flex flex-col gap-6">
+        <div className="bg-[#f5f7fa] px-8 py-6 flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-lg font-black text-[#0f48aa]" data-testid="dashboard-title">
               Dashboard
