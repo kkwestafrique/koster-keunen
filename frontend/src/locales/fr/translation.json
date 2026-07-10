@@ -107,7 +107,8 @@
     "type": "Type",
     "standard": "Norme",
     "signatureDate": "Date de signature",
-    "totalQuantityExpected": "Quantité totale attendue"
+    "totalQuantityExpected": "Quantité totale attendue",
+    "totalAmount": "Montant total"
   },
   "transactions": {
     "receivedTitle": "Transactions reçues",

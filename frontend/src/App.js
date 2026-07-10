@@ -75,29 +75,29 @@ function AppRoutes() {
       {/* Transactions */}
       <Route
         path="/transactions/received"
-        element={<ProtectedRoute><TransactionsList title="Received transactions" actionLabel="Receive stock" testId="transactions-received-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><TransactionsList direction="Received" title="Received transactions" actionLabel="Receive stock" testId="transactions-received-table" /></ProtectedRoute>}
       />
       <Route
         path="/transactions/processing"
-        element={<ProtectedRoute><TransactionsList title="Processing transactions" actionLabel="Process stock" testId="transactions-processing-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><TransactionsList direction="Processing" title="Processing transactions" actionLabel="Process stock" testId="transactions-processing-table" /></ProtectedRoute>}
       />
       <Route
         path="/transactions/send"
-        element={<ProtectedRoute><TransactionsList title="Send transactions" actionLabel="Send stock" testId="transactions-send-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><TransactionsList direction="Send" title="Send transactions" actionLabel="Send stock" testId="transactions-send-table" /></ProtectedRoute>}
       />
 
       {/* Stocks */}
       <Route
         path="/stocks/raw-material"
-        element={<ProtectedRoute><StocksList title="Raw material stocks" actionLabel="Receive stock" testId="stocks-raw-material-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><StocksList stockType="Raw Material" title="Raw material stocks" actionLabel="Receive stock" testId="stocks-raw-material-table" /></ProtectedRoute>}
       />
       <Route
         path="/stocks/final-product"
-        element={<ProtectedRoute><StocksList title="Final product stocks" actionLabel="Add stock" testId="stocks-final-product-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><StocksList stockType="Final Product" title="Final product stocks" actionLabel="Add stock" testId="stocks-final-product-table" /></ProtectedRoute>}
       />
       <Route
         path="/stocks/loss"
-        element={<ProtectedRoute><StocksList title="Loss" actionLabel="Record loss" testId="stocks-loss-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><StocksList stockType="Loss" title="Loss" actionLabel="Record loss" testId="stocks-loss-table" /></ProtectedRoute>}
       />
 
       <Route path="/bulk-uploads" element={<ProtectedRoute><BulkUploads /></ProtectedRoute>} />

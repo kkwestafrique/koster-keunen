@@ -3,24 +3,49 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
+import StandardBadge from '@/components/common/StandardBadge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { useTransactions } from '@/hooks/useTransactions';
+import { useConstants } from '@/hooks/useConstants';
 
 // Shared list for Transactions > Received / Processing / Send.
-// The live MIS uses the same table shape for all three, only the title and action differ.
-export default function TransactionsList({ title, actionLabel, testId }) {
+// The live MIS uses the same table shape for all three, only the title, action and direction filter differ.
+export default function TransactionsList({ direction, title, actionLabel, testId }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [product, setProduct] = useState('');
-  const [txType, setTxType] = useState('');
+  const [standard, setStandard] = useState('');
+  const [page, setPage] = useState(1);
+
+  const { data: products = [] } = useConstants('product_type');
+  const { data: standards = [] } = useConstants('standard');
+
+  const { data, isLoading } = useTransactions({ direction, page, search, product, standard });
 
   const columns = [
-    { key: 'date', label: t('transactions.date') },
-    { key: 'transaction_id', label: t('transactions.transactionId') },
-    { key: 'actor_beekeeper', label: t('transactions.actorBeekeeper') },
+    { key: 'transaction_date', label: t('transactions.date') },
+    {
+      key: 'actor_beekeeper',
+      label: t('transactions.actorBeekeeper'),
+      render: (row) => row.beekeepers?.full_name || row.actors?.contact_name || '—',
+    },
     { key: 'product', label: t('transactions.product') },
-    { key: 'quantity_delivered', label: t('transactions.quantityDelivered') },
-    { key: 'total_amount', label: t('transactions.totalAmount') },
+    {
+      key: 'standard',
+      label: t('contracts.standard'),
+      render: (row) => <StandardBadge standard={row.standard} />,
+    },
+    {
+      key: 'quantity',
+      label: t('transactions.quantityDelivered'),
+      render: (row) => (row.quantity != null ? `${row.quantity} ${row.unit || ''}` : '—'),
+    },
+    {
+      key: 'total_amount',
+      label: t('transactions.totalAmount'),
+      render: (row) => (row.total_amount != null ? row.total_amount.toLocaleString() : '—'),
+    },
   ];
 
   return (
@@ -35,22 +60,34 @@ export default function TransactionsList({ title, actionLabel, testId }) {
       <FilterBar
         testId={testId}
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(v) => { setSearch(v); setPage(1); }}
         searchPlaceholder={t('actorsList.searchPlaceholder')}
         filters={[
-          { key: 'product', label: t('transactions.allProducts'), value: product, onChange: setProduct, options: [] },
-          { key: 'type', label: t('transactions.allTransactions'), value: txType, onChange: setTxType, options: [] },
+          {
+            key: 'product',
+            label: t('transactions.allProducts'),
+            value: product,
+            onChange: (v) => { setProduct(v); setPage(1); },
+            options: products.map((p) => ({ value: p.value, label: p.label })),
+          },
+          {
+            key: 'standard',
+            label: t('contracts.standard'),
+            value: standard,
+            onChange: (v) => { setStandard(v); setPage(1); },
+            options: standards.map((s) => ({ value: s.value, label: s.label })),
+          },
         ]}
       />
 
       <DataTable
         testId={testId}
         columns={columns}
-        rows={[]}
-        total={0}
-        page={1}
-        onPageChange={() => {}}
-        loading={false}
+        rows={data?.rows || []}
+        total={data?.total || 0}
+        page={page}
+        onPageChange={setPage}
+        loading={isLoading}
         emptyMessage={t('common.noRecordsFound')}
       />
     </AppLayout>
