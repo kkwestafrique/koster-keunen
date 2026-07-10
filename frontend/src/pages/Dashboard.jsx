@@ -51,6 +51,18 @@ const ACTOR_TYPE_COLORS = {
 const HIVE_COLORS = { Traditional: '#0f48aa', Modern: '#9fb6dd', Other: '#c5cae9' };
 const GENDER_COLORS = { Male: '#0f48aa', Female: '#9fb6dd' };
 
+const CATEGORY_TRANSLATION_KEY = {
+  'Producer Organisation': 'dashboard.categoryProducerOrganisation',
+  Aggregator: 'dashboard.categoryAggregator',
+  'Local Partner': 'dashboard.categoryLocalPartner',
+  Buyer: 'dashboard.categoryBuyer',
+  Traditional: 'dashboard.categoryTraditional',
+  Modern: 'dashboard.categoryModern',
+  Other: 'dashboard.categoryOther',
+  Male: 'dashboard.categoryMale',
+  Female: 'dashboard.categoryFemale',
+};
+
 export default function Dashboard() {
   const { t } = useTranslation();
   const { profile } = useAuth();
@@ -68,21 +80,21 @@ export default function Dashboard() {
   const actorTypeData = actorCounts
     ? Object.entries(actorCounts.byType)
         .filter(([, v]) => v > 0)
-        .map(([name, value]) => ({ name, value }))
+        .map(([name, value]) => ({ name, translatedName: t(CATEGORY_TRANSLATION_KEY[name] || name), value }))
     : [];
 
   const hiveData = bkAgg
     ? [
-        { name: 'Traditional', value: bkAgg.traditional },
-        { name: 'Modern', value: bkAgg.modern },
-        { name: 'Other', value: bkAgg.other },
+        { name: 'Traditional', translatedName: t('dashboard.categoryTraditional'), value: bkAgg.traditional },
+        { name: 'Modern', translatedName: t('dashboard.categoryModern'), value: bkAgg.modern },
+        { name: 'Other', translatedName: t('dashboard.categoryOther'), value: bkAgg.other },
       ].filter((d) => d.value > 0)
     : [];
 
   const genderData = bkAgg
     ? [
-        { name: 'Male', value: bkAgg.male },
-        { name: 'Female', value: bkAgg.female },
+        { name: 'Male', translatedName: t('dashboard.categoryMale'), value: bkAgg.male },
+        { name: 'Female', translatedName: t('dashboard.categoryFemale'), value: bkAgg.female },
       ].filter((d) => d.value > 0)
     : [];
 
@@ -205,10 +217,10 @@ export default function Dashboard() {
         <div className="px-8 pt-6">
           {tab === 'supply' ? (
             <div className="flex flex-wrap gap-6" data-testid="dashboard-charts-supply">
-              <ChartCard title="Actor type distribution" testId="chart-actor-types">
+              <ChartCard title={t("dashboard.actorTypeDistribution")} testId="chart-actor-types">
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
-                    <Pie data={actorTypeData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} isAnimationActive={false}>
+                    <Pie data={actorTypeData} dataKey="value" nameKey="translatedName" innerRadius={55} outerRadius={90} isAnimationActive={false}>
                       {actorTypeData.map((entry) => (
                         <Cell key={entry.name} fill={ACTOR_TYPE_COLORS[entry.name] || '#cfd8e6'} />
                       ))}
@@ -219,10 +231,10 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Total hives installed" testId="chart-hives">
+              <ChartCard title={t("dashboard.totalHivesInstalled")} testId="chart-hives">
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
-                    <Pie data={hiveData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} isAnimationActive={false}>
+                    <Pie data={hiveData} dataKey="value" nameKey="translatedName" innerRadius={55} outerRadius={90} isAnimationActive={false}>
                       {hiveData.map((entry) => (
                         <Cell key={entry.name} fill={HIVE_COLORS[entry.name] || '#cfd8e6'} />
                       ))}
@@ -233,10 +245,10 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Beekeepers overview (Male : Female)" testId="chart-gender">
+              <ChartCard title={t("dashboard.beekeepersOverview")} testId="chart-gender">
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
-                    <Pie data={genderData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} isAnimationActive={false}>
+                    <Pie data={genderData} dataKey="value" nameKey="translatedName" innerRadius={55} outerRadius={90} isAnimationActive={false}>
                       {genderData.map((entry) => (
                         <Cell key={entry.name} fill={GENDER_COLORS[entry.name] || '#cfd8e6'} />
                       ))}

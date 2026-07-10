@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +27,7 @@ const EMPTY = {
 };
 
 export default function ActorFormDialog({ open, onOpenChange }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(EMPTY);
   const [logoFile, setLogoFile] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -43,12 +45,12 @@ export default function ActorFormDialog({ open, onOpenChange }) {
       let logo_url = null;
       if (logoFile) logo_url = await uploadMediaFile(logoFile, 'actors');
       await createActor.mutateAsync({ ...form, logo_url });
-      toast({ title: 'Actor created', description: `${form.contact_name} was added successfully.` });
+      toast({ title: t('forms.actorCreated'), description: t('forms.actorCreatedDescription', { name: form.contact_name }) });
       setForm(EMPTY);
       setLogoFile(null);
       onOpenChange(false);
     } catch (err) {
-      toast({ title: 'Failed to create actor', description: err.message, variant: 'destructive' });
+      toast({ title: t('forms.actorCreateFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -58,83 +60,83 @@ export default function ActorFormDialog({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-white" data-testid="actor-form-dialog">
         <DialogHeader>
-          <DialogTitle className="text-[#032b71] font-black">Add Actor</DialogTitle>
-          <DialogDescription>Enter the actor's details below to add them to the supply chain.</DialogDescription>
+          <DialogTitle className="text-[#032b71] font-black">{t('forms.addActor')}</DialogTitle>
+          <DialogDescription>{t('forms.addActorDescription')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Traceability Code</Label>
+            <Label className="text-[#7089b4]">{t('forms.traceabilityCode')}</Label>
             <Input data-testid="actor-form-code" required value={form.traceability_code} onChange={(e) => set('traceability_code')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Actor Type</Label>
+            <Label className="text-[#7089b4]">{t('forms.actorType')}</Label>
             <Select value={form.actor_type} onValueChange={set('actor_type')}>
-              <SelectTrigger data-testid="actor-form-type"><SelectValue placeholder="Select type" /></SelectTrigger>
+              <SelectTrigger data-testid="actor-form-type"><SelectValue placeholder={t('forms.selectType')} /></SelectTrigger>
               <SelectContent>
-                {actorTypes.map((t) => <SelectItem key={t.id} value={t.value}>{t.label}</SelectItem>)}
+                {actorTypes.map((ty) => <SelectItem key={ty.id} value={ty.value}>{ty.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Contact Name</Label>
+            <Label className="text-[#7089b4]">{t('forms.contactName')}</Label>
             <Input data-testid="actor-form-contact-name" required value={form.contact_name} onChange={(e) => set('contact_name')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Contact Email</Label>
+            <Label className="text-[#7089b4]">{t('forms.contactEmail')}</Label>
             <Input type="email" data-testid="actor-form-contact-email" value={form.contact_email} onChange={(e) => set('contact_email')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Contact Phone</Label>
+            <Label className="text-[#7089b4]">{t('forms.contactPhone')}</Label>
             <Input data-testid="actor-form-contact-phone" value={form.contact_phone} onChange={(e) => set('contact_phone')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Country</Label>
+            <Label className="text-[#7089b4]">{t('forms.country')}</Label>
             <Select value={form.country} onValueChange={set('country')}>
-              <SelectTrigger data-testid="actor-form-country"><SelectValue placeholder="Select country" /></SelectTrigger>
+              <SelectTrigger data-testid="actor-form-country"><SelectValue placeholder={t('forms.selectCountry')} /></SelectTrigger>
               <SelectContent>
                 {countries.map((c) => <SelectItem key={c.id} value={c.value}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">State / Region</Label>
+            <Label className="text-[#7089b4]">{t('forms.stateRegion')}</Label>
             <Input data-testid="actor-form-state" value={form.state_region} onChange={(e) => set('state_region')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">LGA / Municipality</Label>
+            <Label className="text-[#7089b4]">{t('forms.lgaMunicipality')}</Label>
             <Input data-testid="actor-form-lga" value={form.lga_municipality} onChange={(e) => set('lga_municipality')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Village</Label>
+            <Label className="text-[#7089b4]">{t('forms.village')}</Label>
             <Input data-testid="actor-form-village" value={form.village} onChange={(e) => set('village')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Status</Label>
+            <Label className="text-[#7089b4]">{t('forms.status')}</Label>
             <Select value={form.status} onValueChange={set('status')}>
               <SelectTrigger data-testid="actor-form-status"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Inactive">Inactive</SelectItem>
+                <SelectItem value="Active">{t('common.active')}</SelectItem>
+                <SelectItem value="Inactive">{t('common.inactive')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Profile Completeness (%)</Label>
+            <Label className="text-[#7089b4]">{t('forms.profileCompleteness')}</Label>
             <Input type="number" min="0" max="100" data-testid="actor-form-completeness" value={form.profile_completeness} onChange={(e) => set('profile_completeness')(Number(e.target.value))} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Logo</Label>
+            <Label className="text-[#7089b4]">{t('forms.logo')}</Label>
             <Input type="file" accept="image/*" data-testid="actor-form-logo" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
           </div>
           <div className="flex items-center gap-2 col-span-2 mt-1">
             <Checkbox id="charter" data-testid="actor-form-charter" checked={form.charter_signed} onCheckedChange={set('charter_signed')} />
-            <Label htmlFor="charter" className="text-[#032b71]">Charter Signed</Label>
+            <Label htmlFor="charter" className="text-[#032b71]">{t('forms.charterSigned')}</Label>
           </div>
 
           <DialogFooter className="col-span-2 mt-2">
-            <Button type="button" variant="outline" className="border-[#0f48aa] text-[#0f48aa]" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" className="border-[#0f48aa] text-[#0f48aa]" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
             <Button type="submit" data-testid="actor-form-submit" disabled={saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
-              {saving ? 'Saving...' : 'Save Actor'}
+              {saving ? t('forms.saving') : t('forms.saveActor')}
             </Button>
           </DialogFooter>
         </form>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
@@ -14,6 +15,7 @@ const YEAR_OPTIONS = Array.from({ length: 8 }, (_, i) => {
 });
 
 export default function ConnectionsList() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -23,25 +25,25 @@ export default function ConnectionsList() {
   const { data, isLoading } = useConnections({ page, search, status, year });
 
   const columns = [
-    { key: 'actor_from', label: 'Actor From', render: (row) => row.actor_from?.contact_name || '—' },
-    { key: 'actor_to', label: 'Actor To', render: (row) => row.actor_to?.contact_name || '—' },
-    { key: 'connection_type', label: 'Type' },
-    { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-    { key: 'year', label: 'Year' },
+    { key: 'actor_from', label: t('connectionsList.actorFrom'), render: (row) => row.actor_from?.contact_name || '—' },
+    { key: 'actor_to', label: t('connectionsList.actorTo'), render: (row) => row.actor_to?.contact_name || '—' },
+    { key: 'connection_type', label: t('connectionsList.type') },
+    { key: 'status', label: t('connectionsList.status'), render: (row) => <StatusBadge status={row.status} /> },
+    { key: 'year', label: t('connectionsList.year') },
     {
       key: 'is_supplier',
-      label: 'Supplier',
+      label: t('connectionsList.supplier'),
       render: (row) => (row.is_supplier ? <Check className="h-4 w-4 text-[#219653]" /> : <X className="h-4 w-4 text-[#7089b4]" />),
     },
     {
       key: 'is_buyer',
-      label: 'Buyer',
+      label: t('connectionsList.buyer'),
       render: (row) => (row.is_buyer ? <Check className="h-4 w-4 text-[#219653]" /> : <X className="h-4 w-4 text-[#7089b4]" />),
     },
   ];
 
   return (
-    <AppLayout title="Connections">
+    <AppLayout title={t('connectionsList.title')}>
       <div className="flex items-center justify-between mb-4">
         <div />
         <Button
@@ -49,7 +51,7 @@ export default function ConnectionsList() {
           onClick={() => setFormOpen(true)}
           className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
         >
-          <Plus className="h-4 w-4 mr-1" /> Add Connection
+          <Plus className="h-4 w-4 mr-1" /> {t('connectionsList.addConnection')}
         </Button>
       </div>
 
@@ -57,18 +59,18 @@ export default function ConnectionsList() {
         testId="connections-filter-bar"
         search={search}
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
-        searchPlaceholder="Search by actor name or code..."
+        searchPlaceholder={t('connectionsList.searchPlaceholder')}
         filters={[
           {
             key: 'status',
-            label: 'Status',
+            label: t('connectionsList.status'),
             value: status,
             onChange: (v) => { setStatus(v); setPage(1); },
-            options: [{ value: 'Active', label: 'Active' }, { value: 'Revoked', label: 'Revoked' }],
+            options: [{ value: 'Active', label: t('common.active') }, { value: 'Revoked', label: t('common.revoked') }],
           },
           {
             key: 'year',
-            label: 'Year',
+            label: t('connectionsList.year'),
             value: year,
             onChange: (v) => { setYear(v); setPage(1); },
             options: YEAR_OPTIONS,

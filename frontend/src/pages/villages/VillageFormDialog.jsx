@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 const EMPTY = { name: '', country: '', state_region: '', lga_municipality: '' };
 
 export default function VillageFormDialog({ open, onOpenChange }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const { data: countries = [] } = useConstants('country');
@@ -24,11 +26,11 @@ export default function VillageFormDialog({ open, onOpenChange }) {
     setSaving(true);
     try {
       await createVillage.mutateAsync(form);
-      toast({ title: 'Village created', description: `${form.name} was added successfully.` });
+      toast({ title: t('forms.villageCreated'), description: t('forms.actorCreatedDescription', { name: form.name }) });
       setForm(EMPTY);
       onOpenChange(false);
     } catch (err) {
-      toast({ title: 'Failed to create village', description: err.message, variant: 'destructive' });
+      toast({ title: t('forms.villageCreateFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -38,36 +40,36 @@ export default function VillageFormDialog({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg bg-white" data-testid="village-form-dialog">
         <DialogHeader>
-          <DialogTitle className="text-[#032b71] font-black">Add Village</DialogTitle>
-          <DialogDescription>Enter the village details below.</DialogDescription>
+          <DialogTitle className="text-[#032b71] font-black">{t('forms.addVillage')}</DialogTitle>
+          <DialogDescription>{t('forms.addVillageDescription')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Village Name</Label>
+            <Label className="text-[#7089b4]">{t('forms.villageName')}</Label>
             <Input data-testid="village-form-name" required value={form.name} onChange={(e) => set('name')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">Country</Label>
+            <Label className="text-[#7089b4]">{t('forms.country')}</Label>
             <Select value={form.country} onValueChange={set('country')}>
-              <SelectTrigger data-testid="village-form-country"><SelectValue placeholder="Select country" /></SelectTrigger>
+              <SelectTrigger data-testid="village-form-country"><SelectValue placeholder={t('forms.selectCountry')} /></SelectTrigger>
               <SelectContent>
                 {countries.map((c) => <SelectItem key={c.id} value={c.value}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">State / Region</Label>
+            <Label className="text-[#7089b4]">{t('forms.stateRegion')}</Label>
             <Input data-testid="village-form-state" value={form.state_region} onChange={(e) => set('state_region')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">LGA / Municipality</Label>
+            <Label className="text-[#7089b4]">{t('forms.lgaMunicipality')}</Label>
             <Input data-testid="village-form-lga" value={form.lga_municipality} onChange={(e) => set('lga_municipality')(e.target.value)} />
           </div>
 
           <DialogFooter className="mt-2">
-            <Button type="button" variant="outline" className="border-[#0f48aa] text-[#0f48aa]" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" className="border-[#0f48aa] text-[#0f48aa]" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
             <Button type="submit" data-testid="village-form-submit" disabled={saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
-              {saving ? 'Saving...' : 'Save Village'}
+              {saving ? t('forms.saving') : t('forms.saveVillage')}
             </Button>
           </DialogFooter>
         </form>

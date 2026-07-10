@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Table,
   TableHeader,
@@ -26,9 +27,11 @@ export default function DataTable({
   onPageChange,
   onRowClick,
   loading,
-  emptyMessage = 'No records found.',
+  emptyMessage,
   testId = 'data-table',
 }) {
+  const { t } = useTranslation();
+  const resolvedEmptyMessage = emptyMessage ?? t('common.noRecordsFound');
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize));
 
   return (
@@ -47,13 +50,13 @@ export default function DataTable({
           {loading ? (
             <TableRow>
               <TableCell colSpan={columns.length} className="text-center py-8 text-[#7089b4]">
-                Loading...
+                {t('common.loading')}
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={columns.length} className="text-center py-8 text-[#7089b4]" data-testid="data-table-empty">
-                {emptyMessage}
+                {resolvedEmptyMessage}
               </TableCell>
             </TableRow>
           ) : (
@@ -78,7 +81,7 @@ export default function DataTable({
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-[#cfd8e6]">
           <span className="text-sm text-[#7089b4]" data-testid={`${testId}-summary`}>
-            Page {page} of {totalPages} &middot; {total} records
+            {t('common.page')} {page} {t('common.of')} {totalPages} &middot; {total} {t('common.records')}
           </span>
           <Pagination className="justify-end w-auto mx-0">
             <PaginationContent>
