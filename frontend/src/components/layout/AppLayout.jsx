@@ -6,7 +6,7 @@ export default function AppLayout({ title, hideDefaultHeader, children }) {
   return (
     <div className="min-h-screen bg-[#f5f7fa]">
       <Sidebar />
-      <div className="ml-[210px]">
+      <div className="ml-[240px]">
         <TopBar />
         <main data-testid="main-content">
           {!hideDefaultHeader && title && (

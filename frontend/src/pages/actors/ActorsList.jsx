@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
@@ -12,6 +13,7 @@ import ActorFormDialog from '@/pages/actors/ActorFormDialog';
 
 // fixedStatus: 'Inactive' -> Potential actors, 'Active' -> Actual (confirmed) actors, null -> all
 export default function ActorsList({ fixedStatus, title, testId }) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [actorType, setActorType] = useState('');
@@ -31,28 +33,23 @@ export default function ActorsList({ fixedStatus, title, testId }) {
   });
 
   const columns = [
-    { key: 'traceability_code', label: 'Code' },
-    { key: 'contact_name', label: 'Name' },
-    { key: 'actor_type', label: 'Actor Type' },
-    { key: 'country', label: 'Country' },
-    { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-    {
-      key: 'profile_completeness',
-      label: 'Completeness',
-      render: (row) => `${row.profile_completeness ?? 0}%`,
-    },
+    { key: 'traceability_code', label: t('actorsList.traceabilityCode') },
+    { key: 'contact_name', label: t('actorsList.actorName') },
+    { key: 'actor_type', label: t('actorsList.actorType') },
+    { key: 'country', label: t('actorsList.country') },
+    { key: 'status', label: t('actorsList.status'), render: (row) => <StatusBadge status={row.status} /> },
   ];
 
   return (
-    <AppLayout title={title}>
+    <AppLayout hideDefaultHeader>
       <div className="flex items-center justify-between mb-4">
-        <div />
+        <h1 className="text-lg font-black text-[#0f48aa]">{title || t('actorsList.title')}</h1>
         <Button
           data-testid="add-actor-button"
           onClick={() => setFormOpen(true)}
           className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
         >
-          <Plus className="h-4 w-4 mr-1" /> Add Actor
+          <Plus className="h-4 w-4 mr-1" /> {t('actorsList.addActor')}
         </Button>
       </div>
 
@@ -60,18 +57,18 @@ export default function ActorsList({ fixedStatus, title, testId }) {
         testId={testId}
         search={search}
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
-        searchPlaceholder="Search by code or name..."
+        searchPlaceholder={t('actorsList.searchPlaceholder')}
         filters={[
           {
             key: 'type',
-            label: 'Type',
+            label: t('actorsList.allActorType'),
             value: actorType,
             onChange: (v) => { setActorType(v); setPage(1); },
-            options: actorTypes.map((t) => ({ value: t.value, label: t.label })),
+            options: actorTypes.map((t2) => ({ value: t2.value, label: t2.label })),
           },
           {
             key: 'country',
-            label: 'Country',
+            label: t('actorsList.allStatus'),
             value: country,
             onChange: (v) => { setCountry(v); setPage(1); },
             options: countries.map((c) => ({ value: c.value, label: c.label })),
@@ -87,6 +84,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
         page={page}
         onPageChange={setPage}
         loading={isLoading}
+        emptyMessage={t('common.noRecordsFound')}
         onRowClick={(row) => navigate(`/actors/${row.id}`)}
       />
 

@@ -11,6 +11,12 @@ import BeekeepersList from '@/pages/beekeepers/BeekeepersList';
 import BeekeeperDetail from '@/pages/beekeepers/BeekeeperDetail';
 import VillagesList from '@/pages/villages/VillagesList';
 import ConnectionsList from '@/pages/connections/ConnectionsList';
+import CompanyProfile from '@/pages/company/CompanyProfile';
+import ContractsList from '@/pages/contracts/ContractsList';
+import TransactionsList from '@/pages/transactions/TransactionsList';
+import StocksList from '@/pages/stocks/StocksList';
+import BulkUploads from '@/pages/bulkUploads/BulkUploads';
+import Report from '@/pages/report/Report';
 
 function ProtectedRoute({ children }) {
   const { session, loading } = useAuth();
@@ -30,6 +36,11 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+
+      {/* Actor profile (self / company profile) */}
+      <Route path="/company-profile" element={<ProtectedRoute><CompanyProfile /></ProtectedRoute>} />
+
+      {/* Commercial partners > Actors */}
       <Route
         path="/actors/potential"
         element={<ProtectedRoute><ActorsList fixedStatus="Inactive" title="Actors — Potential" testId="actors-potential-table" /></ProtectedRoute>}
@@ -39,6 +50,8 @@ function AppRoutes() {
         element={<ProtectedRoute><ActorsList fixedStatus="Active" title="Actors — Actual" testId="actors-actual-table" /></ProtectedRoute>}
       />
       <Route path="/actors/:id" element={<ProtectedRoute><ActorDetail /></ProtectedRoute>} />
+
+      {/* Commercial partners > Beekeepers */}
       <Route
         path="/beekeepers"
         element={<ProtectedRoute><BeekeepersList title="Beekeepers" testId="beekeepers-table" /></ProtectedRoute>}
@@ -52,8 +65,44 @@ function AppRoutes() {
         element={<ProtectedRoute><BeekeepersList fixedStatus="Actual" title="Beekeepers — Actual" testId="beekeepers-actual-table" /></ProtectedRoute>}
       />
       <Route path="/beekeepers/:id" element={<ProtectedRoute><BeekeeperDetail /></ProtectedRoute>} />
+
       <Route path="/villages" element={<ProtectedRoute><VillagesList /></ProtectedRoute>} />
       <Route path="/connections" element={<ProtectedRoute><ConnectionsList /></ProtectedRoute>} />
+
+      {/* Contracts */}
+      <Route path="/contracts" element={<ProtectedRoute><ContractsList /></ProtectedRoute>} />
+
+      {/* Transactions */}
+      <Route
+        path="/transactions/received"
+        element={<ProtectedRoute><TransactionsList title="Received transactions" actionLabel="Receive stock" testId="transactions-received-table" /></ProtectedRoute>}
+      />
+      <Route
+        path="/transactions/processing"
+        element={<ProtectedRoute><TransactionsList title="Processing transactions" actionLabel="Process stock" testId="transactions-processing-table" /></ProtectedRoute>}
+      />
+      <Route
+        path="/transactions/send"
+        element={<ProtectedRoute><TransactionsList title="Send transactions" actionLabel="Send stock" testId="transactions-send-table" /></ProtectedRoute>}
+      />
+
+      {/* Stocks */}
+      <Route
+        path="/stocks/raw-material"
+        element={<ProtectedRoute><StocksList title="Raw material stocks" actionLabel="Receive stock" testId="stocks-raw-material-table" /></ProtectedRoute>}
+      />
+      <Route
+        path="/stocks/final-product"
+        element={<ProtectedRoute><StocksList title="Final product stocks" actionLabel="Add stock" testId="stocks-final-product-table" /></ProtectedRoute>}
+      />
+      <Route
+        path="/stocks/loss"
+        element={<ProtectedRoute><StocksList title="Loss" actionLabel="Record loss" testId="stocks-loss-table" /></ProtectedRoute>}
+      />
+
+      <Route path="/bulk-uploads" element={<ProtectedRoute><BulkUploads /></ProtectedRoute>} />
+      <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

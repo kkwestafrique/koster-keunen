@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite, useActorTypeCounts } from '@/hooks/useActors';
@@ -13,13 +14,11 @@ import {
 } from '@/components/ui/select';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-function StatCard({ label, value, wide, testId }) {
+function StatCard({ label, value, testId }) {
   return (
     <div
       data-testid={testId}
-      className={`bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-1 justify-center ${
-        wide ? 'flex-[1.6]' : 'flex-1'
-      }`}
+      className="bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-1 justify-center flex-1"
     >
       <span className="text-[28px] font-bold text-[#032b71]">{value ?? '—'}</span>
       <span className="text-xs text-[#7089b4]">{label}</span>
@@ -53,6 +52,7 @@ const HIVE_COLORS = { Traditional: '#0f48aa', Modern: '#9fb6dd', Other: '#c5cae9
 const GENDER_COLORS = { Male: '#0f48aa', Female: '#9fb6dd' };
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const { data: actors = [] } = useAllActorsLite();
   const { data: actorCounts } = useActorTypeCounts();
@@ -60,7 +60,8 @@ export default function Dashboard() {
   const { data: countries = [] } = useConstants('country');
   const [tab, setTab] = useState('supply');
   const [country, setCountry] = useState('');
-  const [levelActor, setLevelActor] = useState('');
+  const [actorFilter, setActorFilter] = useState('');
+  const [year, setYear] = useState('2026');
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
 
@@ -92,37 +93,33 @@ export default function Dashboard() {
         <div className="bg-[#f5f7fa] px-8 py-6 flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-lg font-black text-[#0f48aa]" data-testid="dashboard-title">
-              Dashboard
+              {t('dashboard.title')}
             </h1>
             <p className="text-[15px] text-[#032b71]" data-testid="dashboard-welcome">
-              Hi {profile?.username || 'there'}, You are now managing{' '}
-              {currentActor?.contact_name || 'your organisation'}
+              {t('dashboard.greeting', {
+                name: profile?.username || 'there',
+                company: currentActor?.contact_name || 'your organisation',
+              })}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-6">
             <StatCard
-              label="Total actors in supply chain"
-              value={actorCounts?.total}
-              wide
-              testId="stat-total-actors"
-            />
-            <StatCard
-              label="Local partners"
+              label={t('dashboard.localPartners')}
               value={actorCounts?.byType?.['Local Partner']}
               testId="stat-local-partners"
             />
             <StatCard
-              label="Aggregators"
+              label={t('dashboard.aggregators')}
               value={actorCounts?.byType?.Aggregator}
               testId="stat-aggregators"
             />
             <StatCard
-              label="Producer organisations"
+              label={t('dashboard.producerOrganisations')}
               value={actorCounts?.byType?.['Producer Organisation']}
               testId="stat-producer-orgs"
             />
-            <StatCard label="Beekeepers" value={bkAgg?.total} testId="stat-beekeepers" />
+            <StatCard label={t('dashboard.beekeepers')} value={bkAgg?.total} testId="stat-beekeepers" />
           </div>
         </div>
 
@@ -138,7 +135,7 @@ export default function Dashboard() {
                   : 'bg-[#e8ecf3] text-[#7089b4] border-transparent'
               }`}
             >
-              Supply chain overview
+              {t('dashboard.supplyChainOverview')}
             </button>
             <button
               data-testid="dashboard-tab-transactions"
@@ -149,38 +146,57 @@ export default function Dashboard() {
                   : 'bg-[#e8ecf3] text-[#7089b4] border-transparent'
               }`}
             >
-              Transaction overview
+              {t('dashboard.transactionOverview')}
             </button>
           </div>
 
           {/* Filter bar */}
           <div className="bg-white border border-[#cfd8e6] rounded-b-[5px] px-8 py-4 flex flex-col gap-2">
             <span className="text-[13px] text-[#7089b4]">
-              Filter and view your supply chain overview
+              {t('dashboard.filterHint')}
             </span>
             <div className="flex gap-4">
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger data-testid="dashboard-filter-country" className="w-[200px] bg-white border-[#cfd8e6]">
-                  <SelectValue placeholder="Country: All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  {countries.map((c) => (
-                    <SelectItem key={c.id} value={c.value}>{c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={levelActor} onValueChange={setLevelActor}>
-                <SelectTrigger data-testid="dashboard-filter-actor-type" className="w-[200px] bg-white border-[#cfd8e6]">
-                  <SelectValue placeholder="Level 1 actors: All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  {Object.keys(ACTOR_TYPE_COLORS).map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-bold text-[#032b71]">{t('dashboard.country')}</span>
+                <Select value={country} onValueChange={setCountry}>
+                  <SelectTrigger data-testid="dashboard-filter-country" className="w-[180px] bg-white border-[#cfd8e6]">
+                    <SelectValue placeholder={t('dashboard.allCountry')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('dashboard.allCountry')}</SelectItem>
+                    {countries.map((c) => (
+                      <SelectItem key={c.id} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-bold text-[#032b71]">{t('dashboard.actors')}</span>
+                <Select value={actorFilter} onValueChange={setActorFilter}>
+                  <SelectTrigger data-testid="dashboard-filter-actor-type" className="w-[180px] bg-white border-[#cfd8e6]">
+                    <SelectValue placeholder={t('dashboard.allActors')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('dashboard.allActors')}</SelectItem>
+                    {Object.keys(ACTOR_TYPE_COLORS).map((tName) => (
+                      <SelectItem key={tName} value={tName}>{tName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-bold text-[#032b71]">{t('dashboard.year')}</span>
+                <Select value={year} onValueChange={setYear}>
+                  <SelectTrigger data-testid="dashboard-filter-year" className="w-[140px] bg-white border-[#cfd8e6]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['2026', '2025', '2024'].map((y) => (
+                      <SelectItem key={y} value={y}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
@@ -236,7 +252,7 @@ export default function Dashboard() {
               className="bg-white border border-[#cfd8e6] rounded-[5px] p-10 text-center text-sm text-[#7089b4]"
               data-testid="dashboard-transactions-placeholder"
             >
-              No transaction data available yet.
+              {t('common.noRecordsFound')}
             </div>
           )}
         </div>

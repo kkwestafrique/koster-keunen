@@ -1,11 +1,59 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const LANGUAGES = [
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'fr', label: 'French', flag: '🇫🇷' },
+];
+
+function LanguageSwitcher() {
+  const { i18n } = useTranslation();
+  const current = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          data-testid="login-language-switcher"
+          className="flex items-center gap-1 border border-[#cfd8e6] rounded px-3 py-1.5 text-sm text-[#032b71] hover:bg-[#f5f5f5] transition-colors"
+        >
+          <span className="text-xs">{current.flag}</span>
+          <span>{current.code === 'en' ? 'Eng' : 'Fr'}</span>
+          <ChevronDown className="h-3 w-3 ml-1" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <div className="px-3 py-1.5 text-xs font-semibold text-[#032b71]">Languages</div>
+        {LANGUAGES.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            data-testid={`login-language-option-${lang.code}`}
+            onClick={() => i18n.changeLanguage(lang.code)}
+            className="flex items-center gap-2"
+          >
+            <span>{lang.flag}</span>
+            <span>{lang.label}</span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function Login() {
+  const { t } = useTranslation();
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -21,7 +69,7 @@ export default function Login() {
       await signIn(email, password);
       navigate('/');
     } catch (err) {
-      setError('Invalid email or password.');
+      setError(t('login.invalidCredentials'));
     } finally {
       setLoading(false);
     }
@@ -61,25 +109,21 @@ export default function Login() {
       {/* Right panel - Login form */}
       <div className="w-full md:w-1/2 bg-white flex flex-col">
         <div className="flex justify-end px-6 py-4">
-          <div className="flex items-center gap-1 border border-[#cfd8e6] rounded px-3 py-1.5 text-sm text-[#032b71]">
-            <span className="text-xs">🇬🇧</span>
-            <span>Eng</span>
-            <svg className="h-3 w-3 ml-1" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </div>
+          <LanguageSwitcher />
         </div>
 
         <div className="flex-1 flex items-center justify-center px-12 md:px-20">
           <div className="w-full max-w-[400px]">
             <h2 className="text-[32px] font-bold text-[#0f48aa] leading-tight mb-2">
-              Login to<br />your account
+              {t('login.title')}<br />{t('login.titleLine2')}
             </h2>
             <p className="text-sm text-[#032b71] mb-8">
-              Welcome back! Login to your Koster Keunen<br />account using your credentials
+              {t('login.welcome')}<br />{t('login.welcomeLine2')}
             </p>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-5" data-testid="login-form">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email" className="text-[#0f48aa] text-sm font-medium">Email</Label>
+                <Label htmlFor="email" className="text-[#0f48aa] text-sm font-medium">{t('login.email')}</Label>
                 <Input
                   id="email"
                   data-testid="login-email-input"
@@ -92,7 +136,7 @@ export default function Login() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="password" className="text-[#0f48aa] text-sm font-medium">Password</Label>
+                <Label htmlFor="password" className="text-[#0f48aa] text-sm font-medium">{t('login.password')}</Label>
                 <Input
                   id="password"
                   data-testid="login-password-input"
@@ -108,10 +152,10 @@ export default function Login() {
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
                   <input type="checkbox" className="rounded border-[#cfd8e6]" />
-                  Keep me logged in
+                  {t('login.keepLoggedIn')}
                 </label>
                 <button type="button" className="text-sm font-bold text-[#032b71] hover:text-[#0f48aa]">
-                  Forgot password?
+                  {t('login.forgotPassword')}
                 </button>
               </div>
 
@@ -127,7 +171,7 @@ export default function Login() {
                 disabled={loading}
                 className="h-12 bg-[#032b71] hover:bg-[#021d4f] text-white text-base font-semibold mt-2 rounded-[5px]"
               >
-                {loading ? 'Signing in...' : 'Login to your account'}
+                {loading ? t('login.signingIn') : t('login.loginButton')}
               </Button>
             </form>
           </div>
