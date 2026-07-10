@@ -9,7 +9,7 @@ body {
     font-family: 'Lato', 'Roboto', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f5f7fa;
+    background-color: #f9fafc;
     color: #032b71;
 }
 
@@ -96,7 +96,7 @@ code {
 
 /* Zebra stripe tables used across all list screens */
 .zebra-table tbody tr:nth-child(odd) {
-    background-color: #f5f7fa;
+    background-color: #f9fafc;
 }
 .zebra-table tbody tr:nth-child(even) {
     background-color: #ffffff;

@@ -114,7 +114,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="w-[240px] h-screen fixed left-0 top-0 flex flex-col bg-[#f0f6ff]"
+      className="w-[240px] h-screen fixed left-0 top-0 flex flex-col bg-[#ebf6ff]"
       data-testid="sidebar"
     >
       {/* Logo area */}

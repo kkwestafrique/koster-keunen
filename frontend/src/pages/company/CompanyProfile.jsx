@@ -103,7 +103,7 @@ export default function CompanyProfile() {
           </Tabs>
         </div>
 
-        <div className="bg-[#eaf2ff] border border-[#cfd8e6] rounded-[5px] p-5" data-testid="profile-completion-panel">
+        <div className="bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-5" data-testid="profile-completion-panel">
           <p className="text-sm font-bold text-[#032b71] mb-2">{t('actorProfile.profileCompleted')}</p>
           <p className="text-3xl font-black text-[#0f48aa] mb-3">{completeness}%</p>
           <Progress value={completeness} className="bg-[#c5cae9] [&>div]:bg-[#0f48aa] h-2" />

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
+import StandardBadge from '@/components/common/StandardBadge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
@@ -20,11 +21,7 @@ export default function ContractsList() {
     {
       key: 'standard',
       label: t('contracts.standard'),
-      render: (row) => (
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#fffaec] text-[#79730a]">
-          {row.standard}
-        </span>
-      ),
+      render: (row) => <StandardBadge standard={row.standard} />,
     },
     { key: 'signature_date', label: t('contracts.signatureDate') },
     { key: 'total_quantity_expected', label: t('contracts.totalQuantityExpected') },

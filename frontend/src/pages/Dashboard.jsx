@@ -100,9 +100,9 @@ export default function Dashboard() {
 
   return (
     <AppLayout hideDefaultHeader>
-      <div className="bg-[#f5f7fa] px-0 -m-8 mb-0 pb-8">
+      <div className="bg-[#f9fafc] px-0 -m-8 mb-0 pb-8">
         {/* Header block */}
-        <div className="bg-[#f5f7fa] px-8 py-6 flex flex-col gap-6">
+        <div className="bg-[#f9fafc] px-8 py-6 flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-lg font-black text-[#0f48aa]" data-testid="dashboard-title">
               {t('dashboard.title')}

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
+import StandardBadge from '@/components/common/StandardBadge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
@@ -21,11 +22,7 @@ export default function StocksList({ title, actionLabel, testId }) {
     {
       key: 'standard',
       label: t('stocks.standard'),
-      render: (row) => (
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#fffaec] text-[#79730a]">
-          {row.standard}
-        </span>
-      ),
+      render: (row) => <StandardBadge standard={row.standard} />,
     },
     { key: 'quantity_available', label: t('stocks.quantityAvailable') },
     {
