@@ -81,9 +81,6 @@ export default function Login() {
       <div className="hidden md:flex md:w-1/2 flex-col bg-[#0f48aa] relative overflow-hidden">
         <div className="px-12 pt-12 pb-6">
           <h2 className="text-white font-bold text-base tracking-wide">Koster Keunen</h2>
-          <h1 className="text-white text-[28px] font-bold leading-tight mt-6">
-            Block chain powered<br />supply chain platform
-          </h1>
         </div>
         {/* Decorative 3D cube illustration */}
         <div className="flex-1 relative">
