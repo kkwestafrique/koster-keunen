@@ -9,6 +9,7 @@ export const BULK_UPLOAD_TEMPLATES = {
   beekeepers: {
     label: 'Beekeepers',
     table: 'beekeepers',
+    uploadType: 'Connections', // matches bulk_uploads.upload_type CHECK constraint
     columns: [
       { key: 'traceability_code', label: 'Traceability code', required: true },
       { key: 'full_name', label: 'Full name', required: true },
@@ -24,6 +25,7 @@ export const BULK_UPLOAD_TEMPLATES = {
   transactions: {
     label: 'Transactions',
     table: 'transactions',
+    uploadType: 'Transactions',
     columns: [
       { key: 'transaction_date', label: 'Date', required: true },
       { key: 'actor_code', label: 'Actor traceability code', required: false },
@@ -140,6 +142,7 @@ export function useBulkUpload(templateKey) {
       ...r.data,
       supply_chain_id: supplyChainId,
     }));
+    const validationFailedCount = rows.length - validRows.length;
 
     let inserted = 0;
     let failed = 0;
@@ -158,10 +161,32 @@ export function useBulkUpload(templateKey) {
       }
     }
 
+    const totalFailed = failed + validationFailedCount;
+
+    // Log this upload to bulk_uploads so the Bulk Uploads history page
+    // (Connections/Transactions tabs) actually reflects real activity,
+    // instead of always showing empty.
+    try {
+      await supabase.from('bulk_uploads').insert({
+        supply_chain_id: supplyChainId,
+        upload_type: template.uploadType,
+        file_name: fileName,
+        status: inserted === 0 ? 'Failed' : 'Completed',
+        progress: 100,
+        ...(template.uploadType === 'Connections'
+          ? { new_beekeepers: inserted, updated_beekeepers: 0 }
+          : {}),
+      });
+    } catch (logErr) {
+      // Don't let a logging failure block the person from seeing their
+      // actual import result — just note it happened.
+      console.error('Failed to log bulk upload history:', logErr);
+    }
+
     setUploading(false);
-    setResult({ inserted, failed, errors });
-    return { inserted, failed, errors };
-  }, [rows, supplyChainId, template]);
+    setResult({ inserted, failed: totalFailed, errors });
+    return { inserted, failed: totalFailed, errors };
+  }, [rows, supplyChainId, template, fileName]);
 
   const reset = useCallback(() => {
     setRows([]);
