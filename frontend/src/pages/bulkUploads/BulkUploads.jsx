@@ -1,172 +1,136 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import AppLayout from '@/components/layout/AppLayout';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { UploadCloud, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
-import { useBulkUpload, BULK_UPLOAD_TEMPLATES } from '@/hooks/useBulkUpload';
+import FilterBar from '@/components/common/FilterBar';
+import DataTable from '@/components/common/DataTable';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
+
+const STATUS_OPTIONS = ['Cancelled', 'Inprogress', 'Completed', 'Failed'];
+const STATUS_COLORS = {
+  Completed: '#219653',
+  Inprogress: '#79730a',
+  Cancelled: '#7089b4',
+  Failed: '#ba550c',
+};
+
+// Bulk uploads page, matching the live site: two tabs (Connections /
+// Transactions) showing upload HISTORY only. There is deliberately no
+// upload button here — file uploads happen inside the Multiple-transaction
+// flows under Transactions > Received / Send.
+function UploadStatus({ status }) {
+  return (
+    <span className="text-sm font-bold" style={{ color: STATUS_COLORS[status] || '#7089b4' }}>
+      {status}
+    </span>
+  );
+}
+
+function UploadHistoryTable({ uploadType, showProgress, testId }) {
+  const { t } = useTranslation();
+  const { supplyChainId } = useAuth();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['bulk_uploads', { uploadType, page, search, status, supplyChainId }],
+    queryFn: async () => {
+      let query = supabase
+        .from('bulk_uploads')
+        .select('*', { count: 'exact' })
+        .eq('supply_chain_id', supplyChainId)
+        .eq('upload_type', uploadType)
+        .order('created_at', { ascending: false });
+      if (search) query = query.ilike('file_name', `%${search}%`);
+      if (status) query = query.eq('status', status);
+      const from = (page - 1) * 25;
+      query = query.range(from, from + 24);
+      const { data: rows, error, count } = await query;
+      if (error) throw error;
+      return { rows, total: count };
+    },
+    enabled: !!supplyChainId,
+    staleTime: 30_000,
+  });
+
+  const columns = [
+    { key: 'id', label: t('bulkUploads.id'), render: (row) => String(row.id).slice(0, 8) },
+    { key: 'file_name', label: t('bulkUploads.fileName') },
+    { key: 'created_at', label: t('bulkUploads.uploadedOn'), render: (row) => row.created_at?.slice(0, 10) },
+    ...(showProgress
+      ? [{ key: 'progress', label: t('bulkUploads.progress'), render: (row) => (row.progress != null ? `${row.progress}%` : '—') }]
+      : [
+          { key: 'updated_beekeepers', label: t('bulkUploads.updatedBeekeepers') },
+          { key: 'new_beekeepers', label: t('bulkUploads.newBeekeepers') },
+        ]),
+    { key: 'status', label: t('bulkUploads.status'), render: (row) => <UploadStatus status={row.status} /> },
+  ];
+
+  return (
+    <>
+      <FilterBar
+        testId={testId}
+        search={search}
+        onSearchChange={(v) => { setSearch(v); setPage(1); }}
+        searchPlaceholder={t('bulkUploads.searchPlaceholder')}
+        filters={[
+          {
+            key: 'status',
+            label: t('bulkUploads.allStatus'),
+            value: status,
+            onChange: (v) => { setStatus(v); setPage(1); },
+            options: STATUS_OPTIONS.map((s) => ({ value: s, label: s })),
+          },
+        ]}
+      />
+      <DataTable
+        testId={testId}
+        columns={columns}
+        rows={data?.rows || []}
+        total={data?.total || 0}
+        page={page}
+        onPageChange={setPage}
+        loading={isLoading}
+      />
+    </>
+  );
+}
 
 export default function BulkUploads() {
   const { t } = useTranslation();
-  const [templateKey, setTemplateKey] = useState('beekeepers');
-  const fileInputRef = useRef(null);
-
-  const {
-    template,
-    rows,
-    fileName,
-    validCount,
-    errorCount,
-    uploading,
-    result,
-    loadFile,
-    submit,
-    reset,
-  } = useBulkUpload(templateKey);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) loadFile(file);
-  };
-
-  const handleTemplateChange = (v) => {
-    setTemplateKey(v);
-    reset();
-  };
 
   return (
     <AppLayout hideDefaultHeader>
       <h1 className="text-lg font-black text-[#0f48aa] mb-4">{t('nav.bulkUploads')}</h1>
 
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-sm text-[#7089b4]">Upload type:</span>
-        <Select value={templateKey} onValueChange={handleTemplateChange}>
-          <SelectTrigger className="w-[220px] bg-white border-[#cfd8e6] text-[#032b71]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(BULK_UPLOAD_TEMPLATES).map(([key, tmpl]) => (
-              <SelectItem key={key} value={key}>{tmpl.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <Tabs defaultValue="connections">
+        <TabsList className="bg-transparent border-b border-[#cfd8e6] p-0 rounded-none h-auto gap-6 justify-start mb-4">
+          <TabsTrigger
+            value="connections"
+            data-testid="bulk-tab-connections"
+            className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+          >
+            {t('nav.connections')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="transactions"
+            data-testid="bulk-tab-transactions"
+            className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+          >
+            {t('nav.transactions')}
+          </TabsTrigger>
+        </TabsList>
 
-      {rows.length === 0 ? (
-        <div
-          className="bg-white border border-dashed border-[#cfd8e6] rounded-[5px] p-16 flex flex-col items-center justify-center gap-3 text-center cursor-pointer"
-          data-testid="bulk-uploads-dropzone"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <UploadCloud className="h-10 w-10 text-[#7089b4]" />
-          <p className="text-sm text-[#032b71] font-medium">Drag and drop a file here, or click to browse</p>
-          <p className="text-xs text-[#7089b4]">Supports .xlsx and .csv</p>
-          <p className="text-xs text-[#7089b4]">
-            Required columns: {template.columns.filter((c) => c.required).map((c) => c.label).join(', ')}
-          </p>
-          <Button className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] mt-2">Choose file</Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv,.xlsx,.xls"
-            className="hidden"
-            onChange={handleFileChange}
-            data-testid="bulk-uploads-file-input"
-          />
-        </div>
-      ) : (
-        <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm font-medium text-[#032b71]">{fileName}</p>
-              <p className="text-xs text-[#7089b4]">
-                {rows.length} rows found — <span className="text-[#219653] font-semibold">{validCount} valid</span>
-                {errorCount > 0 && (
-                  <span className="text-[#ba550c] font-semibold"> · {errorCount} with errors</span>
-                )}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="border-[#0f48aa] text-[#0f48aa]" onClick={reset}>
-                Cancel
-              </Button>
-              <Button
-                className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
-                disabled={validCount === 0 || uploading}
-                onClick={submit}
-                data-testid="bulk-uploads-submit"
-              >
-                {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
-                Import {validCount} row{validCount === 1 ? '' : 's'}
-              </Button>
-            </div>
-          </div>
-
-          {result && (
-            <div
-              className={`mb-4 rounded-[5px] p-3 text-sm ${
-                result.failed > 0 ? 'bg-[#fff4f4] text-[#ba550c]' : 'bg-[#edf9f2] text-[#1ba441]'
-              }`}
-            >
-              {result.inserted} row(s) imported successfully.
-              {result.failed > 0 && ` ${result.failed} row(s) failed: ${result.errors.join('; ')}`}
-            </div>
-          )}
-
-          <div className="max-h-[420px] overflow-auto border border-[#cfd8e6] rounded-[5px]">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-white">
-                <tr className="border-b border-[#cfd8e6]">
-                  <th className="text-left px-3 py-2 text-[#7089b4] font-bold">Row</th>
-                  {template.columns.map((col) => (
-                    <th key={col.key} className="text-left px-3 py-2 text-[#7089b4] font-bold">
-                      {col.label}
-                    </th>
-                  ))}
-                  <th className="text-left px-3 py-2 text-[#7089b4] font-bold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, i) => (
-                  <tr
-                    key={i}
-                    className={`border-b border-[#cfd8e6] last:border-0 ${
-                      i % 2 === 0 ? 'bg-[#f9fafc]' : 'bg-white'
-                    }`}
-                  >
-                    <td className="px-3 py-2 text-[#032b71]">{row.rowNumber}</td>
-                    {template.columns.map((col) => (
-                      <td key={col.key} className="px-3 py-2 text-[#032b71]">
-                        {String(row.data[col.key] ?? '')}
-                      </td>
-                    ))}
-                    <td className="px-3 py-2">
-                      {row.errors.length === 0 ? (
-                        <span className="inline-flex items-center gap-1 text-[#1ba441] text-xs font-semibold">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Valid
-                        </span>
-                      ) : (
-                        <span
-                          className="inline-flex items-center gap-1 text-[#ba550c] text-xs font-semibold"
-                          title={row.errors.join('; ')}
-                        >
-                          <XCircle className="h-3.5 w-3.5" /> {row.errors.length} error(s)
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+        <TabsContent value="connections">
+          <UploadHistoryTable uploadType="Connections" showProgress={false} testId="bulk-connections-table" />
+        </TabsContent>
+        <TabsContent value="transactions">
+          <UploadHistoryTable uploadType="Transactions" showProgress testId="bulk-transactions-table" />
+        </TabsContent>
+      </Tabs>
     </AppLayout>
   );
 }

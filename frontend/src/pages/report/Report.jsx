@@ -1,151 +1,266 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Download } from 'lucide-react';
-import { useReportData, exportToCsv } from '@/hooks/useReportData';
-import { useConstants } from '@/hooks/useConstants';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PRODUCTS, STANDARDS } from '@/data/regions';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
+import { exportToCsv } from '@/hooks/useReportData';
+import { useToast } from '@/hooks/use-toast';
+
+const YEARS = ['2027', '2026', '2025', '2024', '2023', '2022'];
+
+// Report page, matching the live site exactly:
+// Tab 1 "Commercial partners": Beekeeper list (Year-only modal);
+//   Beekeepers-Potential / Beekeepers-Achieved / Actors-Potential /
+//   Actors-Achieved (Start year + End year + Standards multi-select modal).
+// Tab 2 "Transactions": Contract / Received-Beekeepers / Received-Actors /
+//   Processing / Sent (Date range + Products multi-select + Standards
+//   multi-select modal). Every report generates a CSV download.
+const PARTNER_REPORTS = [
+  { key: 'beekeeperList', modal: 'yearOnly', table: 'beekeepers' },
+  { key: 'beekeepersPotential', modal: 'yearRange', table: 'beekeepers', status: 'Potential' },
+  { key: 'beekeepersAchieved', modal: 'yearRange', table: 'beekeepers', status: 'Actual' },
+  { key: 'actorsPotential', modal: 'yearRange', table: 'actors', status: 'Inactive' },
+  { key: 'actorsAchieved', modal: 'yearRange', table: 'actors', status: 'Active' },
+];
+
+const TRANSACTION_REPORTS = [
+  { key: 'contract', modal: 'dateProducts', table: 'contracts' },
+  { key: 'receivedBeekeepers', modal: 'dateProducts', table: 'transactions', direction: 'Received' },
+  { key: 'receivedActors', modal: 'dateProducts', table: 'transactions', direction: 'Received' },
+  { key: 'processing', modal: 'dateProducts', table: 'transactions', direction: 'Processing' },
+  { key: 'sent', modal: 'dateProducts', table: 'transactions', direction: 'Send' },
+];
+
+function MultiCheck({ options, allLabel, value, onChange, testIdPrefix }) {
+  const allSelected = value.length === 0;
+  return (
+    <div className="flex flex-col gap-2 max-h-48 overflow-y-auto border border-[#cfd8e6] rounded-[5px] p-3">
+      <label className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
+        <Checkbox
+          checked={allSelected}
+          data-testid={`${testIdPrefix}-all`}
+          onCheckedChange={() => onChange([])}
+        />
+        {allLabel}
+      </label>
+      {options.map((opt) => (
+        <label key={opt} className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
+          <Checkbox
+            checked={value.includes(opt)}
+            data-testid={`${testIdPrefix}-${opt}`}
+            onCheckedChange={(checked) =>
+              onChange(checked ? [...value, opt] : value.filter((v) => v !== opt))
+            }
+          />
+          {opt}
+        </label>
+      ))}
+    </div>
+  );
+}
 
 export default function Report() {
   const { t } = useTranslation();
-  const [year, setYear] = useState('');
-  const [standard, setStandard] = useState('');
+  const { toast } = useToast();
+  const { supplyChainId } = useAuth();
+  const [activeReport, setActiveReport] = useState(null); // {key, modal, table, ...}
+  const [generating, setGenerating] = useState(false);
+  const [filters, setFilters] = useState({
+    year: '', startYear: '', endYear: '', dateFrom: '', dateTo: '', products: [], standards: [],
+  });
 
-  const { data: standards = [] } = useConstants('standard');
-  const { data, isLoading } = useReportData({ year, standard });
-
-  const years = useMemo(() => {
-    const current = new Date().getFullYear();
-    return Array.from({ length: 9 }, (_, i) => String(current - 4 + i));
-  }, []);
-
-  const summary = useMemo(() => {
-    const tx = data?.transactions || [];
-    const totalQuantity = tx.reduce((sum, t) => sum + (Number(t.quantity) || 0), 0);
-    const totalAmount = tx.reduce((sum, t) => sum + (Number(t.total_amount) || 0), 0);
-    const received = tx.filter((t) => t.direction === 'Received').length;
-    const sent = tx.filter((t) => t.direction === 'Send').length;
-    return { totalQuantity, totalAmount, received, sent, count: tx.length };
-  }, [data]);
-
-  const handleExportTransactions = () => {
-    exportToCsv(
-      `transactions-report-${year || 'all'}.csv`,
-      data?.transactions || [],
-      [
-        { key: 'transaction_date', label: 'Date' },
-        { key: 'actor', label: 'Actor', accessor: (r) => r.actors?.contact_name || r.actors?.traceability_code },
-        { key: 'product', label: 'Product' },
-        { key: 'standard', label: 'Standard' },
-        { key: 'quantity', label: 'Quantity' },
-        { key: 'unit', label: 'Unit' },
-        { key: 'total_amount', label: 'Total amount' },
-        { key: 'direction', label: 'Direction' },
-      ]
-    );
+  const openReport = (report) => {
+    setFilters({ year: '', startYear: '', endYear: '', dateFrom: '', dateTo: '', products: [], standards: [] });
+    setActiveReport(report);
   };
 
-  const handleExportContracts = () => {
-    exportToCsv(
-      `contracts-report-${year || 'all'}.csv`,
-      data?.contracts || [],
-      [
-        { key: 'year', label: 'Year' },
-        { key: 'actor', label: 'Actor', accessor: (r) => r.actors?.contact_name },
-        { key: 'contract_type', label: 'Type' },
-        { key: 'standard', label: 'Standard' },
-        { key: 'expected_quantity', label: 'Expected quantity' },
-        { key: 'total_amount', label: 'Total amount' },
-      ]
-    );
+  const generate = async () => {
+    setGenerating(true);
+    try {
+      let query = supabase.from(activeReport.table).select('*').eq('supply_chain_id', supplyChainId);
+      if (activeReport.status) query = query.eq('status', activeReport.status);
+      if (activeReport.direction) query = query.eq('direction', activeReport.direction);
+      if (activeReport.modal === 'yearOnly' && filters.year) query = query.eq('year', Number(filters.year));
+      if (activeReport.modal === 'yearRange') {
+        if (filters.startYear) query = query.gte('year', Number(filters.startYear));
+        if (filters.endYear) query = query.lte('year', Number(filters.endYear));
+      }
+      if (activeReport.modal === 'dateProducts') {
+        if (filters.dateFrom) query = query.gte('transaction_date', filters.dateFrom);
+        if (filters.dateTo) query = query.lte('transaction_date', filters.dateTo);
+        if (filters.products.length > 0) query = query.in('product', filters.products);
+      }
+      if (filters.standards.length > 0) query = query.in('standard', filters.standards);
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const rows = data || [];
+      if (rows.length === 0) {
+        toast({ title: t('report.noData') });
+        return;
+      }
+      const columns = Object.keys(rows[0]).map((k) => ({ key: k, label: k }));
+      exportToCsv(`${activeReport.key}-report.csv`, rows, columns);
+      toast({ title: t('report.generated') });
+      setActiveReport(null);
+    } catch (err) {
+      toast({ title: t('report.generateFailed'), description: err.message, variant: 'destructive' });
+    } finally {
+      setGenerating(false);
+    }
   };
+
+  const renderButtons = (reports, testIdPrefix) => (
+    <div className="flex flex-wrap gap-3 pt-5">
+      {reports.map((r) => (
+        <Button
+          key={r.key}
+          variant="outline"
+          data-testid={`${testIdPrefix}-${r.key}`}
+          className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#ebf6ff]"
+          onClick={() => openReport(r)}
+        >
+          {t(`report.${r.key}`)}
+        </Button>
+      ))}
+    </div>
+  );
 
   return (
     <AppLayout hideDefaultHeader>
       <h1 className="text-lg font-black text-[#0f48aa] mb-4">{t('nav.report')}</h1>
 
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <Select value={year || 'all'} onValueChange={(v) => setYear(v === 'all' ? '' : v)}>
-          <SelectTrigger className="w-[140px] bg-white border-[#cfd8e6] text-[#032b71]">
-            <SelectValue placeholder="Year" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All years</SelectItem>
-            {years.map((y) => (
-              <SelectItem key={y} value={y}>{y}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <Tabs defaultValue="partners">
+        <TabsList className="bg-transparent border-b border-[#cfd8e6] p-0 rounded-none h-auto gap-6 justify-start">
+          <TabsTrigger
+            value="partners"
+            data-testid="report-tab-partners"
+            className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+          >
+            {t('report.commercialPartners')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="transactions"
+            data-testid="report-tab-transactions"
+            className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+          >
+            {t('nav.transactions')}
+          </TabsTrigger>
+        </TabsList>
 
-        <Select value={standard || 'all'} onValueChange={(v) => setStandard(v === 'all' ? '' : v)}>
-          <SelectTrigger className="w-[180px] bg-white border-[#cfd8e6] text-[#032b71]">
-            <SelectValue placeholder="Standard" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All standards</SelectItem>
-            {standards.map((s) => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        <TabsContent value="partners">{renderButtons(PARTNER_REPORTS, 'report-partner')}</TabsContent>
+        <TabsContent value="transactions">{renderButtons(TRANSACTION_REPORTS, 'report-tx')}</TabsContent>
+      </Tabs>
 
-      {isLoading ? (
-        <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-10 text-center text-sm text-[#7089b4]">
-          Loading report data...
-        </div>
-      ) : summary.count === 0 ? (
-        <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-10 text-center text-sm text-[#7089b4]">
-          {t('common.noRecordsFound')}
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5">
-              <p className="text-sm text-[#032b71]">Total transactions</p>
-              <p className="text-2xl font-black text-[#0f48aa] mt-1">{summary.count}</p>
-            </div>
-            <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5">
-              <p className="text-sm text-[#032b71]">Total quantity</p>
-              <p className="text-2xl font-black text-[#0f48aa] mt-1">{summary.totalQuantity.toLocaleString()}</p>
-            </div>
-            <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5">
-              <p className="text-sm text-[#032b71]">Total amount</p>
-              <p className="text-2xl font-black text-[#0f48aa] mt-1">{summary.totalAmount.toLocaleString()}</p>
-            </div>
-            <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5">
-              <p className="text-sm text-[#032b71]">Received / Sent</p>
-              <p className="text-2xl font-black text-[#0f48aa] mt-1">{summary.received} / {summary.sent}</p>
-            </div>
-          </div>
+      <Dialog open={!!activeReport} onOpenChange={(open) => !open && setActiveReport(null)}>
+        <DialogContent className="max-w-md bg-white" data-testid="report-modal">
+          <DialogHeader>
+            <DialogTitle className="text-[#032b71] font-black">
+              {activeReport ? t(`report.${activeReport.key}`) : ''}
+            </DialogTitle>
+          </DialogHeader>
 
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="border-[#0f48aa] text-[#0f48aa]"
-              onClick={handleExportTransactions}
-              data-testid="export-transactions-report"
-            >
-              <Download className="h-4 w-4 mr-1" /> Export transactions CSV
+          {activeReport?.modal === 'yearOnly' && (
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[#7089b4]">{t('contractWizard.year')} *</Label>
+              <Select value={filters.year} onValueChange={(v) => setFilters((f) => ({ ...f, year: v }))}>
+                <SelectTrigger data-testid="report-year"><SelectValue placeholder={t('contractWizard.selectYear')} /></SelectTrigger>
+                <SelectContent>
+                  {YEARS.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {activeReport?.modal === 'yearRange' && (
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[#7089b4]">{t('report.startYear')} *</Label>
+                  <Select value={filters.startYear} onValueChange={(v) => setFilters((f) => ({ ...f, startYear: v }))}>
+                    <SelectTrigger data-testid="report-start-year"><SelectValue placeholder={t('report.selectStartYear')} /></SelectTrigger>
+                    <SelectContent>
+                      {YEARS.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[#7089b4]">{t('report.endYear')} *</Label>
+                  <Select value={filters.endYear} onValueChange={(v) => setFilters((f) => ({ ...f, endYear: v }))}>
+                    <SelectTrigger data-testid="report-end-year"><SelectValue placeholder={t('report.selectEndYear')} /></SelectTrigger>
+                    <SelectContent>
+                      {YEARS.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-[#7089b4]">{t('report.standards')} *</Label>
+                <MultiCheck
+                  options={STANDARDS}
+                  allLabel={t('report.allStandards')}
+                  value={filters.standards}
+                  onChange={(v) => setFilters((f) => ({ ...f, standards: v }))}
+                  testIdPrefix="report-standard"
+                />
+              </div>
+            </div>
+          )}
+
+          {activeReport?.modal === 'dateProducts' && (
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[#7089b4]">{t('report.dateFrom')}</Label>
+                  <Input type="date" data-testid="report-date-from" value={filters.dateFrom} onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[#7089b4]">{t('report.dateTo')}</Label>
+                  <Input type="date" data-testid="report-date-to" value={filters.dateTo} onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))} />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-[#7089b4]">{t('report.products')}</Label>
+                <MultiCheck
+                  options={PRODUCTS}
+                  allLabel={t('report.allProducts')}
+                  value={filters.products}
+                  onChange={(v) => setFilters((f) => ({ ...f, products: v }))}
+                  testIdPrefix="report-product"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-[#7089b4]">{t('report.standards')}</Label>
+                <MultiCheck
+                  options={STANDARDS}
+                  allLabel={t('report.allStandards')}
+                  value={filters.standards}
+                  onChange={(v) => setFilters((f) => ({ ...f, standards: v }))}
+                  testIdPrefix="report-standard"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => setActiveReport(null)}>
+              {t('common.cancel')}
             </Button>
-            <Button
-              variant="outline"
-              className="border-[#0f48aa] text-[#0f48aa]"
-              onClick={handleExportContracts}
-              data-testid="export-contracts-report"
-            >
-              <Download className="h-4 w-4 mr-1" /> Export contracts CSV
+            <Button data-testid="report-generate" disabled={generating} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={generate}>
+              {generating ? t('report.generating') : t('report.generateReport')}
             </Button>
-          </div>
-        </>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

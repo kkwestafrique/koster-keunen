@@ -13,7 +13,12 @@ import VillagesList from '@/pages/villages/VillagesList';
 import ConnectionsList from '@/pages/connections/ConnectionsList';
 import CompanyProfile from '@/pages/company/CompanyProfile';
 import ContractsList from '@/pages/contracts/ContractsList';
+import ContractWizard from '@/pages/contracts/ContractWizard';
+import ContractDetail from '@/pages/contracts/ContractDetail';
 import TransactionsList from '@/pages/transactions/TransactionsList';
+import ReceiveStockForm from '@/pages/transactions/ReceiveStockForm';
+import ProcessStockForm from '@/pages/transactions/ProcessStockForm';
+import SendStockForm from '@/pages/transactions/SendStockForm';
 import StocksList from '@/pages/stocks/StocksList';
 import BulkUploads from '@/pages/bulkUploads/BulkUploads';
 import Report from '@/pages/report/Report';
@@ -71,8 +76,13 @@ function AppRoutes() {
 
       {/* Contracts */}
       <Route path="/contracts" element={<ProtectedRoute><ContractsList /></ProtectedRoute>} />
+      <Route path="/contracts/new" element={<ProtectedRoute><ContractWizard /></ProtectedRoute>} />
+      <Route path="/contracts/:id" element={<ProtectedRoute><ContractDetail /></ProtectedRoute>} />
 
       {/* Transactions */}
+      <Route path="/transactions/received/new" element={<ProtectedRoute><ReceiveStockForm /></ProtectedRoute>} />
+      <Route path="/transactions/processing/new" element={<ProtectedRoute><ProcessStockForm /></ProtectedRoute>} />
+      <Route path="/transactions/send/new" element={<ProtectedRoute><SendStockForm /></ProtectedRoute>} />
       <Route
         path="/transactions/received"
         element={<ProtectedRoute><TransactionsList direction="Received" title="Received transactions" actionLabel="Receive stock" testId="transactions-received-table" /></ProtectedRoute>}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
@@ -13,6 +14,12 @@ import { useConstants } from '@/hooks/useConstants';
 // The live MIS uses the same table shape for all three, only the title, action and direction filter differ.
 export default function TransactionsList({ direction, title, actionLabel, testId }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const NEW_ROUTES = {
+    Received: '/transactions/received/new',
+    Processing: '/transactions/processing/new',
+    Send: '/transactions/send/new',
+  };
   const [search, setSearch] = useState('');
   const [product, setProduct] = useState('');
   const [standard, setStandard] = useState('');
@@ -52,7 +59,11 @@ export default function TransactionsList({ direction, title, actionLabel, testId
     <AppLayout hideDefaultHeader>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-black text-[#0f48aa]">{title}</h1>
-        <Button data-testid={`${testId}-action-button`} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
+        <Button
+          data-testid={`${testId}-action-button`}
+          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+          onClick={() => navigate(NEW_ROUTES[direction])}
+        >
           <Plus className="h-4 w-4 mr-1" /> {actionLabel}
         </Button>
       </div>

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import AddressFields from '@/components/common/AddressFields';
 import { useConstants } from '@/hooks/useConstants';
 import { useCreateActor } from '@/hooks/useActors';
 import { uploadMediaFile } from '@/lib/supabaseClient';
@@ -32,7 +33,6 @@ export default function ActorFormDialog({ open, onOpenChange }) {
   const [logoFile, setLogoFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const { data: actorTypes = [] } = useConstants('actor_type');
-  const { data: countries = [] } = useConstants('country');
   const createActor = useCreateActor();
   const { toast } = useToast();
 
@@ -89,27 +89,16 @@ export default function ActorFormDialog({ open, onOpenChange }) {
             <Label className="text-[#7089b4]">{t('forms.contactPhone')}</Label>
             <Input data-testid="actor-form-contact-phone" value={form.contact_phone} onChange={(e) => set('contact_phone')(e.target.value)} />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.country')}</Label>
-            <Select value={form.country} onValueChange={set('country')}>
-              <SelectTrigger data-testid="actor-form-country"><SelectValue placeholder={t('forms.selectCountry')} /></SelectTrigger>
-              <SelectContent>
-                {countries.map((c) => <SelectItem key={c.id} value={c.value}>{c.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.stateRegion')}</Label>
-            <Input data-testid="actor-form-state" value={form.state_region} onChange={(e) => set('state_region')(e.target.value)} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.lgaMunicipality')}</Label>
-            <Input data-testid="actor-form-lga" value={form.lga_municipality} onChange={(e) => set('lga_municipality')(e.target.value)} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.village')}</Label>
-            <Input data-testid="actor-form-village" value={form.village} onChange={(e) => set('village')(e.target.value)} />
-          </div>
+          <AddressFields
+            testIdPrefix="actor-form"
+            value={{
+              country: form.country,
+              state_region: form.state_region,
+              lga_municipality: form.lga_municipality,
+              village: form.village,
+            }}
+            onChange={(addr) => setForm((f) => ({ ...f, ...addr }))}
+          />
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.status')}</Label>
             <Select value={form.status} onValueChange={set('status')}>

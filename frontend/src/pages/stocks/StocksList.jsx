@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
@@ -12,6 +13,7 @@ import { useConstants } from '@/hooks/useConstants';
 // Shared list for Stocks > Raw material / Final product / Loss.
 export default function StocksList({ stockType, title, actionLabel, testId }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [product, setProduct] = useState('');
   const [standard, setStandard] = useState('');
@@ -37,13 +39,23 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
     },
   ];
 
+  // Per the live-site audit: only Raw material supports Receive stock.
+  // Final product and Loss are read-only lists (Select/Select all only).
+  const canReceive = stockType === 'Raw Material';
+
   return (
     <AppLayout hideDefaultHeader>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-black text-[#0f48aa]">{title}</h1>
-        <Button data-testid={`${testId}-action-button`} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
-          <Plus className="h-4 w-4 mr-1" /> {actionLabel}
-        </Button>
+        {canReceive && (
+          <Button
+            data-testid={`${testId}-action-button`}
+            className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+            onClick={() => navigate('/transactions/received/new')}
+          >
+            <Plus className="h-4 w-4 mr-1" /> {actionLabel}
+          </Button>
+        )}
       </div>
 
       <FilterBar

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite, useActorTypeCounts } from '@/hooks/useActors';
 import { useBeekeeperAggregates } from '@/hooks/useBeekeepers';
 import { useConstants } from '@/hooks/useConstants';
+import { COUNTRIES } from '@/data/regions';
 import {
   Select,
   SelectContent,
@@ -176,8 +177,11 @@ export default function Dashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t('dashboard.allCountry')}</SelectItem>
-                    {countries.map((c) => (
-                      <SelectItem key={c.id} value={c.value}>{c.label}</SelectItem>
+                    {(countries.length > 0
+                      ? countries.map((c) => ({ key: c.id, value: c.value, label: c.label }))
+                      : COUNTRIES.map((c) => ({ key: c, value: c, label: c }))
+                    ).map((c) => (
+                      <SelectItem key={c.key} value={c.value}>{c.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

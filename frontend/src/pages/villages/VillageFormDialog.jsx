@@ -5,20 +5,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useConstants } from '@/hooks/useConstants';
+import { COUNTRIES, getStatesForCountry, getLgasForState } from '@/data/regions';
 import { useCreateVillage } from '@/hooks/useVillages';
 import { useToast } from '@/hooks/use-toast';
 
 const EMPTY = { name: '', country: '', state_region: '', lga_municipality: '' };
 
+// Village creation uses the same cascading Country -> State -> LGA pattern as
+// the shared AddressFields component, minus the trailing free-text Village
+// field (the village's own name is the primary field here instead).
 export default function VillageFormDialog({ open, onOpenChange }) {
   const { t } = useTranslation();
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
-  const { data: countries = [] } = useConstants('country');
   const createVillage = useCreateVillage();
   const { toast } = useToast();
 
+  const states = getStatesForCountry(form.country);
+  const lgas = getLgasForState(form.state_region);
+
+  const setCountry = (c) => setForm((f) => ({ ...f, country: c, state_region: '', lga_municipality: '' }));
+  const setState = (s) => setForm((f) => ({ ...f, state_region: s, lga_municipality: '' }));
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
   const handleSubmit = async (e) => {
@@ -50,20 +57,44 @@ export default function VillageFormDialog({ open, onOpenChange }) {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.country')}</Label>
-            <Select value={form.country} onValueChange={set('country')}>
+            <Select value={form.country} onValueChange={setCountry}>
               <SelectTrigger data-testid="village-form-country"><SelectValue placeholder={t('forms.selectCountry')} /></SelectTrigger>
               <SelectContent>
-                {countries.map((c) => <SelectItem key={c.id} value={c.value}>{c.label}</SelectItem>)}
+                {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.stateRegion')}</Label>
-            <Input data-testid="village-form-state" value={form.state_region} onChange={(e) => set('state_region')(e.target.value)} />
+            <Select value={form.state_region} onValueChange={setState} disabled={!form.country}>
+              <SelectTrigger data-testid="village-form-state">
+                <SelectValue placeholder={form.country ? t('forms.selectState') : t('forms.selectCountryFirst')} />
+              </SelectTrigger>
+              <SelectContent>
+                {states.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.lgaMunicipality')}</Label>
-            <Input data-testid="village-form-lga" value={form.lga_municipality} onChange={(e) => set('lga_municipality')(e.target.value)} />
+            {lgas.length > 0 ? (
+              <Select value={form.lga_municipality} onValueChange={set('lga_municipality')} disabled={!form.state_region}>
+                <SelectTrigger data-testid="village-form-lga">
+                  <SelectValue placeholder={form.state_region ? t('forms.selectLga') : t('forms.selectStateFirst')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {lgas.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                data-testid="village-form-lga"
+                value={form.lga_municipality}
+                disabled={!form.state_region}
+                placeholder={form.state_region ? t('forms.enterLga') : t('forms.selectStateFirst')}
+                onChange={(e) => set('lga_municipality')(e.target.value)}
+              />
+            )}
           </div>
 
           <DialogFooter className="mt-2">
