@@ -441,5 +441,8 @@
     "id": "Id",
     "status": "Status",
     "allStatus": "All status"
+  },
+  "transactionDetail": {
+    "title": "Transaction Detail"
   }
 }

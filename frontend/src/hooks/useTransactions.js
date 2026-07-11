@@ -43,6 +43,22 @@ export function useTransactions({ direction, page = 1, search = '', product = ''
   });
 }
 
+export function useTransaction(id) {
+  return useQuery({
+    queryKey: ['transaction', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*, actors(traceability_code, contact_name, country), beekeepers(traceability_code, full_name, villages(name))')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();

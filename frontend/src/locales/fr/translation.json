@@ -441,5 +441,8 @@
     "id": "Id",
     "status": "Statut",
     "allStatus": "Tous les statuts"
+  },
+  "transactionDetail": {
+    "title": "Détail de la transaction"
   }
 }

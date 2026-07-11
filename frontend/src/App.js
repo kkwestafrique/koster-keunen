@@ -19,6 +19,7 @@ import TransactionsList from '@/pages/transactions/TransactionsList';
 import ReceiveStockForm from '@/pages/transactions/ReceiveStockForm';
 import ProcessStockForm from '@/pages/transactions/ProcessStockForm';
 import SendStockForm from '@/pages/transactions/SendStockForm';
+import TransactionDetail from '@/pages/transactions/TransactionDetail';
 import StocksList from '@/pages/stocks/StocksList';
 import BulkUploads from '@/pages/bulkUploads/BulkUploads';
 import Report from '@/pages/report/Report';
@@ -83,6 +84,7 @@ function AppRoutes() {
       <Route path="/transactions/received/new" element={<ProtectedRoute><ReceiveStockForm /></ProtectedRoute>} />
       <Route path="/transactions/processing/new" element={<ProtectedRoute><ProcessStockForm /></ProtectedRoute>} />
       <Route path="/transactions/send/new" element={<ProtectedRoute><SendStockForm /></ProtectedRoute>} />
+      <Route path="/transactions/:direction/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
       <Route
         path="/transactions/received"
         element={<ProtectedRoute><TransactionsList direction="Received" title="Received transactions" actionLabel="Receive stock" testId="transactions-received-table" /></ProtectedRoute>}
