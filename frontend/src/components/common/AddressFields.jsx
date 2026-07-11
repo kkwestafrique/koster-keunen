@@ -3,10 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { COUNTRIES, getStatesForCountry, getLgasForState } from '@/data/regions';
+import { COUNTRIES } from '@/data/regions';
+import { useStatesForCountry, useLgasForState } from '@/hooks/useRegions';
 
 // Cascading address block used by Add Actor / Add Beekeeper / Add Village:
 // Country -> State/Region/Departement -> LGA/Municipality/Province -> Village.
+// States/LGAs are fetched from the `regions` table in Supabase (not
+// hardcoded) so corrections/additions don't require a code deploy.
 // Note: the live site has the State and LGA labels swapped against their data
 // (audit finding, July 2026). We implement the labels CORRECTLY here — states
 // under State, LGAs under LGA — rather than replicating the bug.
@@ -16,8 +19,8 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
   const { t } = useTranslation();
   const { country = '', state_region = '', lga_municipality = '', village = '' } = value || {};
 
-  const states = getStatesForCountry(country);
-  const lgas = getLgasForState(country, state_region);
+  const { data: states = [] } = useStatesForCountry(country);
+  const { data: lgas = [] } = useLgasForState(country, state_region);
 
   const set = (patch) => onChange({ ...value, ...patch });
 

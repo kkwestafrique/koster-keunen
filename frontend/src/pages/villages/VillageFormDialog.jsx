@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { COUNTRIES, getStatesForCountry, getLgasForState } from '@/data/regions';
+import { COUNTRIES } from '@/data/regions';
+import { useStatesForCountry, useLgasForState } from '@/hooks/useRegions';
 import { useCreateVillage } from '@/hooks/useVillages';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,8 +22,8 @@ export default function VillageFormDialog({ open, onOpenChange }) {
   const createVillage = useCreateVillage();
   const { toast } = useToast();
 
-  const states = getStatesForCountry(form.country);
-  const lgas = getLgasForState(form.country, form.state_region);
+  const { data: states = [] } = useStatesForCountry(form.country);
+  const { data: lgas = [] } = useLgasForState(form.country, form.state_region);
 
   const setCountry = (c) => setForm((f) => ({ ...f, country: c, state_region: '', lga_municipality: '' }));
   const setState = (s) => setForm((f) => ({ ...f, state_region: s, lga_municipality: '' }));
