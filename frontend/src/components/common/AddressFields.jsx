@@ -17,7 +17,7 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
   const { country = '', state_region = '', lga_municipality = '', village = '' } = value || {};
 
   const states = getStatesForCountry(country);
-  const lgas = getLgasForState(state_region);
+  const lgas = getLgasForState(country, state_region);
 
   const set = (patch) => onChange({ ...value, ...patch });
 

@@ -22,7 +22,7 @@ export default function VillageFormDialog({ open, onOpenChange }) {
   const { toast } = useToast();
 
   const states = getStatesForCountry(form.country);
-  const lgas = getLgasForState(form.state_region);
+  const lgas = getLgasForState(form.country, form.state_region);
 
   const setCountry = (c) => setForm((f) => ({ ...f, country: c, state_region: '', lga_municipality: '' }));
   const setState = (s) => setForm((f) => ({ ...f, state_region: s, lga_municipality: '' }));
