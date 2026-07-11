@@ -38,6 +38,28 @@ export const BULK_UPLOAD_TEMPLATES = {
   },
 };
 
+// Generates and downloads an .xlsx template for the given template key —
+// header row matches template.columns labels, with one example row to show
+// the expected format. Used by the "Download excel template" buttons inside
+// the Multiple-transaction flows (Received / Send).
+export function downloadTemplate(templateKey, filename) {
+  const template = BULK_UPLOAD_TEMPLATES[templateKey];
+  if (!template) throw new Error(`Unknown bulk upload template: ${templateKey}`);
+
+  const headers = template.columns.map((c) => c.label);
+  const exampleRow = template.columns.map((c) => {
+    if (c.allowed) return c.allowed[0];
+    if (c.type === 'number') return 0;
+    if (c.key === 'transaction_date') return '2026-01-15';
+    return '';
+  });
+
+  const worksheet = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, template.label);
+  XLSX.writeFile(workbook, filename || `${template.label.toLowerCase()}-template.xlsx`);
+}
+
 function parseFile(file) {
   return new Promise((resolve, reject) => {
     const ext = file.name.split('.').pop().toLowerCase();

@@ -338,7 +338,17 @@
     "selectVillageFirst": "Select a village first",
     "uploadAndVerify": "Upload and verify excel template",
     "uploadFileVerify": "Upload file and verify data",
-    "submit": "Receive stock"
+    "submit": "Receive stock",
+    "validRows": "{{count}} valid row(s)",
+    "errorRows": "{{count}} row(s) with errors",
+    "row": "Row",
+    "status": "Status",
+    "issues": "Issues",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "bulkImportComplete": "Imported {{count}} transaction(s) successfully",
+    "bulkImportFailed": "Import failed — please check the file and try again",
+    "importValidRows": "Import {{count}} valid row(s)"
   },
   "processForm": {
     "title": "Process stock",

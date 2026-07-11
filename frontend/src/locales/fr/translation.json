@@ -338,7 +338,17 @@
     "selectVillageFirst": "Sélectionnez d'abord un village",
     "uploadAndVerify": "Télécharger et vérifier le modèle Excel",
     "uploadFileVerify": "Télécharger le fichier et vérifier les données",
-    "submit": "Recevoir le stock"
+    "submit": "Recevoir le stock",
+    "validRows": "{{count}} ligne(s) valide(s)",
+    "errorRows": "{{count}} ligne(s) avec erreurs",
+    "row": "Ligne",
+    "status": "Statut",
+    "issues": "Problèmes",
+    "valid": "Valide",
+    "invalid": "Invalide",
+    "bulkImportComplete": "{{count}} transaction(s) importée(s) avec succès",
+    "bulkImportFailed": "Échec de l'importation — veuillez vérifier le fichier et réessayer",
+    "importValidRows": "{{count}} ligne(s) valide(s) à importer"
   },
   "processForm": {
     "title": "Traiter le stock",
