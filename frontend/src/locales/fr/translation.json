@@ -236,6 +236,7 @@
     "actorCreateFailed": "Échec de la création de l'acteur",
     "addBeekeeper": "Ajouter un apiculteur",
     "addBeekeeperDescription": "Saisissez les détails de l'apiculteur ci-dessous.",
+    "editBeekeeper": "Modifier l'apiculteur",
     "fullName": "Nom complet",
     "gender": "Genre",
     "selectGender": "Sélectionner un genre",

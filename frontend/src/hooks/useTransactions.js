@@ -43,6 +43,25 @@ export function useTransactions({ direction, page = 1, search = '', product = ''
   });
 }
 
+// Transactions where this actor is the counterpart (currently only Send
+// rows set actor_id — Received rows link to a beekeeper instead). Used by
+// the Transactions tab on an actor's detail page.
+export function useActorTransactions(actorId) {
+  return useQuery({
+    queryKey: ['actor-transactions', actorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('id, transaction_date, direction, product, quantity, unit, total_amount, currency')
+        .eq('actor_id', actorId)
+        .order('transaction_date', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!actorId,
+  });
+}
+
 export function useTransaction(id) {
   return useQuery({
     queryKey: ['transaction', id],

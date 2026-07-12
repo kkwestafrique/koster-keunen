@@ -236,6 +236,7 @@
     "actorCreateFailed": "Failed to create actor",
     "addBeekeeper": "Add Beekeeper",
     "addBeekeeperDescription": "Enter the beekeeper's details below.",
+    "editBeekeeper": "Edit Beekeeper",
     "fullName": "Full Name",
     "gender": "Gender",
     "selectGender": "Select gender",
