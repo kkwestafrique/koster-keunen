@@ -27,7 +27,14 @@
     "french": "Français",
     "myProfile": "Mon profil",
     "logout": "Déconnexion",
-    "downloadUnavailable": "Export non disponible pour le moment"
+    "downloadUnavailable": "Export non disponible pour le moment",
+    "downloads": "Téléchargements",
+    "noDownloadsYet": "Aucun téléchargement pour le moment",
+    "downloadInProgress": "Préparation de l'export...",
+    "downloadRowCount": "{{count}} ligne exportée",
+    "downloadRowCount_other": "{{count}} lignes exportées",
+    "downloadFailed": "Échec de l'export",
+    "downloadAgain": "Télécharger"
   },
   "login": {
     "title": "Connectez-vous à",
@@ -70,6 +77,21 @@
     "passwordsDontMatch": "Les mots de passe ne correspondent pas",
     "resetFailed": "Échec de la réinitialisation du mot de passe",
     "linkExpiredTitle": "Le lien de réinitialisation a expiré !!",
+    "tryAgain": "Réessayer ?",
+    "login": "Connexion"
+  },
+  "setUpPassword": {
+    "welcome": "Bienvenue {{name}} !",
+    "instructions": "Nous sommes ravis de vous accueillir. Sécurisons tout avant de commencer : créez un mot de passe pour votre compte",
+    "enterPassword": "Saisir le mot de passe",
+    "reenterPassword": "Ressaisir le mot de passe",
+    "agreePolicy": "J'accepte la politique de confidentialité de Koster Keunen",
+    "continue": "Connectez-vous à votre compte",
+    "saving": "Enregistrement...",
+    "passwordsDontMatch": "Les mots de passe ne correspondent pas",
+    "mustAgree": "Vous devez accepter la politique de confidentialité pour continuer",
+    "setupFailed": "Échec de la configuration du mot de passe",
+    "linkExpiredTitle": "Le lien d'invitation a expiré !!",
     "tryAgain": "Réessayer ?",
     "login": "Connexion"
   },

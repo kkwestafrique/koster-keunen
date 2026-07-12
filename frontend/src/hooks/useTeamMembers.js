@@ -20,17 +20,31 @@ export function useTeamMembers(actorId) {
   });
 }
 
+// Invites a team member with a REAL login — calls the invite-team-member
+// edge function (which holds the service-role key needed to create an
+// auth.users account) rather than inserting into team_members directly.
+// The function itself creates the team_members row too, so a successful
+// call here fully replaces what a direct insert used to do.
 export function useInviteTeamMember() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ actorId, name, email, role }) => {
-      const { data, error } = await supabase
-        .from('team_members')
-        .insert({ actor_id: actorId, name, email, role, status: 'Invited' })
-        .select()
-        .single();
+      // Deployed slug is 'Invite-a-team-member' (from the dashboard deploy
+      // flow), not 'invite-team-member' as originally written — Supabase
+      // function names are exact-match, so this string must match whatever
+      // the function is actually deployed as.
+      const { data, error } = await supabase.functions.invoke('Invite-a-team-member', {
+        body: {
+          name,
+          email,
+          role,
+          actorId,
+          redirectTo: `${window.location.origin}/set-up-password`,
+        },
+      });
       if (error) throw error;
-      return data;
+      if (data?.error) throw new Error(data.error);
+      return data.team_member;
     },
     onSuccess: (_, { actorId }) => queryClient.invalidateQueries({ queryKey: ['team_members', actorId] }),
   });

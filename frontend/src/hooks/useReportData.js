@@ -35,7 +35,7 @@ export function useReportData({ year = '', standard = '' } = {}) {
   });
 }
 
-export function exportToCsv(filename, rows, columns) {
+export function csvBlobFromRows(rows, columns) {
   const header = columns.map((c) => c.label).join(',');
   const body = rows
     .map((row) =>
@@ -49,8 +49,10 @@ export function exportToCsv(filename, rows, columns) {
     )
     .join('\n');
   const csv = `${header}\n${body}`;
+  return new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+}
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+export function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -59,4 +61,8 @@ export function exportToCsv(filename, rows, columns) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+export function exportToCsv(filename, rows, columns) {
+  downloadBlob(csvBlobFromRows(rows, columns), filename);
 }

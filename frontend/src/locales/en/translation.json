@@ -27,7 +27,14 @@
     "french": "French",
     "myProfile": "My profile",
     "logout": "Logout",
-    "downloadUnavailable": "Export not available yet"
+    "downloadUnavailable": "Export not available yet",
+    "downloads": "Downloads",
+    "noDownloadsYet": "No downloads yet",
+    "downloadInProgress": "Preparing export...",
+    "downloadRowCount": "{{count}} row exported",
+    "downloadRowCount_other": "{{count}} rows exported",
+    "downloadFailed": "Export failed",
+    "downloadAgain": "Download"
   },
   "login": {
     "title": "Login to",
@@ -70,6 +77,21 @@
     "passwordsDontMatch": "Passwords don't match",
     "resetFailed": "Failed to reset password",
     "linkExpiredTitle": "Reset password link expired!!",
+    "tryAgain": "Try again?",
+    "login": "Login"
+  },
+  "setUpPassword": {
+    "welcome": "Welcome {{name}}!",
+    "instructions": "We are glad to see you onboard. Let's secure everything before getting started, create a password for your account",
+    "enterPassword": "Enter password",
+    "reenterPassword": "Re enter password",
+    "agreePolicy": "I agree to Koster Keunen's privacy policy agreement",
+    "continue": "Login to your account",
+    "saving": "Saving...",
+    "passwordsDontMatch": "Passwords don't match",
+    "mustAgree": "You must agree to the privacy policy to continue",
+    "setupFailed": "Failed to set up your password",
+    "linkExpiredTitle": "Invite link expired!!",
     "tryAgain": "Try again?",
     "login": "Login"
   },
