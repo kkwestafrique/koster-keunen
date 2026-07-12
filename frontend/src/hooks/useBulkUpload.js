@@ -92,7 +92,36 @@ function parseFile(file) {
   });
 }
 
-function validateRows(rows, template) {
+// Resolves the human-readable codes people actually type into a CSV/Excel
+// sheet (village name, actor/beekeeper traceability code) into the real
+// UUID foreign keys the tables need. Without this, bulk rows were being
+// inserted with columns like village_name/actor_code/beekeeper_code, which
+// don't exist on beekeepers/transactions at all — Supabase rejects the
+// whole batch before anything is written.
+async function fetchLookups(supplyChainId, templateKey) {
+  const lookups = { villagesByName: {}, actorsByCode: {}, beekeepersByCode: {} };
+
+  if (templateKey === 'beekeepers') {
+    const { data, error } = await supabase.from('villages').select('id, name').eq('supply_chain_id', supplyChainId);
+    if (error) throw error;
+    data.forEach((v) => { lookups.villagesByName[v.name.trim().toLowerCase()] = v.id; });
+  }
+
+  if (templateKey === 'transactions') {
+    const [actorsRes, beekeepersRes] = await Promise.all([
+      supabase.from('actors').select('id, traceability_code').eq('supply_chain_id', supplyChainId),
+      supabase.from('beekeepers').select('id, traceability_code').eq('supply_chain_id', supplyChainId),
+    ]);
+    if (actorsRes.error) throw actorsRes.error;
+    if (beekeepersRes.error) throw beekeepersRes.error;
+    actorsRes.data.forEach((a) => { if (a.traceability_code) lookups.actorsByCode[a.traceability_code.trim().toLowerCase()] = a.id; });
+    beekeepersRes.data.forEach((b) => { if (b.traceability_code) lookups.beekeepersByCode[b.traceability_code.trim().toLowerCase()] = b.id; });
+  }
+
+  return lookups;
+}
+
+function validateRows(rows, template, lookups) {
   return rows.map((row, index) => {
     const errors = [];
     const cleaned = {};
@@ -111,8 +140,43 @@ function validateRows(rows, template) {
         errors.push(`${col.label} must be a number`);
       }
 
-      cleaned[col.key] = col.type === 'number' && value !== '' ? Number(value) : value;
+      const numericValue = col.type === 'number' && value !== '' ? Number(value) : value;
+
+      // Resolve text codes/names to the real FK columns instead of storing
+      // them verbatim under a column name the table doesn't have.
+      if (col.key === 'village_name') {
+        if (value) {
+          const id = lookups.villagesByName[String(value).toLowerCase()];
+          if (!id) errors.push(`Village "${value}" not found`);
+          cleaned.village_id = id || null;
+        }
+      } else if (col.key === 'actor_code') {
+        if (value) {
+          const id = lookups.actorsByCode[String(value).toLowerCase()];
+          if (!id) errors.push(`Actor code "${value}" not found`);
+          cleaned.actor_id = id || null;
+        }
+      } else if (col.key === 'beekeeper_code') {
+        if (value) {
+          const id = lookups.beekeepersByCode[String(value).toLowerCase()];
+          if (!id) errors.push(`Beekeeper code "${value}" not found`);
+          cleaned.beekeeper_id = id || null;
+        }
+      } else {
+        cleaned[col.key] = numericValue;
+      }
     });
+
+    // Received transactions need a resolved beekeeper; Send needs a
+    // resolved actor — cross-check now that direction is known.
+    if (template.table === 'transactions') {
+      if (cleaned.direction === 'Received' && !cleaned.beekeeper_id) {
+        errors.push('Beekeeper traceability code is required for Received transactions');
+      }
+      if (cleaned.direction === 'Send' && !cleaned.actor_id) {
+        errors.push('Actor traceability code is required for Send transactions');
+      }
+    }
 
     return { rowNumber: index + 2, data: cleaned, errors };
   });
@@ -124,14 +188,23 @@ export function useBulkUpload(templateKey) {
   const [rows, setRows] = useState([]);
   const [fileName, setFileName] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [parsing, setParsing] = useState(false);
   const [result, setResult] = useState(null);
 
   const loadFile = useCallback(async (file) => {
     setFileName(file.name);
     setResult(null);
-    const rawRows = await parseFile(file);
-    setRows(validateRows(rawRows, template));
-  }, [template]);
+    setParsing(true);
+    try {
+      const [rawRows, lookups] = await Promise.all([
+        parseFile(file),
+        fetchLookups(supplyChainId, templateKey),
+      ]);
+      setRows(validateRows(rawRows, template, lookups));
+    } finally {
+      setParsing(false);
+    }
+  }, [template, templateKey, supplyChainId]);
 
   const validCount = rows.filter((r) => r.errors.length === 0).length;
   const errorCount = rows.length - validCount;
@@ -192,6 +265,7 @@ export function useBulkUpload(templateKey) {
     setRows([]);
     setFileName('');
     setResult(null);
+    setParsing(false);
   }, []);
 
   return {
@@ -201,6 +275,7 @@ export function useBulkUpload(templateKey) {
     validCount,
     errorCount,
     uploading,
+    parsing,
     result,
     loadFile,
     submit,
