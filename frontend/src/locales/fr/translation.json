@@ -80,6 +80,21 @@
     "tryAgain": "Réessayer ?",
     "login": "Connexion"
   },
+  "setUpPassword": {
+    "welcome": "Bienvenue {{name}} !",
+    "instructions": "Nous sommes ravis de vous accueillir. Sécurisons tout avant de commencer : créez un mot de passe pour votre compte",
+    "enterPassword": "Saisir le mot de passe",
+    "reenterPassword": "Ressaisir le mot de passe",
+    "agreePolicy": "J'accepte la politique de confidentialité de Koster Keunen",
+    "continue": "Connectez-vous à votre compte",
+    "saving": "Enregistrement...",
+    "passwordsDontMatch": "Les mots de passe ne correspondent pas",
+    "mustAgree": "Vous devez accepter la politique de confidentialité pour continuer",
+    "setupFailed": "Échec de la configuration du mot de passe",
+    "linkExpiredTitle": "Le lien d'invitation a expiré !!",
+    "tryAgain": "Réessayer ?",
+    "login": "Connexion"
+  },
   "dashboard": {
     "title": "Tableau de bord",
     "greeting": "Bonjour {{name}}, vous gérez maintenant {{company}}",

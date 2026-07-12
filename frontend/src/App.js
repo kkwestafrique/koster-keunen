@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Login from '@/pages/Login';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+import SetUpPassword from '@/pages/SetUpPassword';
 import Dashboard from '@/pages/Dashboard';
 import ActorsList from '@/pages/actors/ActorsList';
 import ActorDetail from '@/pages/actors/ActorDetail';
@@ -45,6 +46,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/set-up-password" element={<SetUpPassword />} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
 
       {/* Actor profile (self / company profile) */}
