@@ -4,20 +4,22 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const PAGE_SIZE = 25;
 
-export function useStocks({ stockType, page = 1, search = '', product = '', standard = '', village = '' } = {}) {
+export function useStocks({ stockType, page = 1, search = '', product = '', standard = '', village = '', date = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['stocks', { stockType, page, search, product, standard, village, supplyChainId }],
+    queryKey: ['stocks', { stockType, page, search, product, standard, village, date, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('stocks')
-        .select('*', { count: 'exact' })
+        .select('*, villages(name)', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
         .eq('stock_type', stockType)
         .order('created_at', { ascending: false });
 
       if (product) query = query.eq('product', product);
       if (standard) query = query.eq('standard', standard);
+      if (village) query = query.eq('village_id', village);
+      if (date) query = query.gte('created_at', `${date}T00:00:00`).lte('created_at', `${date}T23:59:59`);
 
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
