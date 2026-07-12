@@ -56,7 +56,7 @@ export function useAllActorsLite() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('actors')
-        .select('id, traceability_code, contact_name, actor_type, logo_url')
+        .select('id, traceability_code, contact_name, actor_type, logo_url, country')
         .eq('supply_chain_id', supplyChainId)
         .order('created_at', { ascending: false });
       if (error) throw error;

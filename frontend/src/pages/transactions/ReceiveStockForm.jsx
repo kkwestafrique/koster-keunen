@@ -59,8 +59,6 @@ export default function ReceiveStockForm() {
         beekeeper_id: form.beekeeper_id,
         currency: form.currency,
         products: form.products,
-        quantity: form.products.reduce((s, p) => s + (Number(p.quantity) || 0), 0),
-        total_amount: form.products.reduce((s, p) => s + (Number(p.quantity) || 0) * (Number(p.price) || 0), 0),
         transaction_date: form.transaction_date,
       });
       toast({ title: t('receiveForm.created') });

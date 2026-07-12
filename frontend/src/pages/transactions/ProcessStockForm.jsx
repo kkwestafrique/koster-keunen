@@ -44,7 +44,6 @@ export default function ProcessStockForm() {
         direction: 'Processing',
         standard: form.standard,
         products: form.rows,
-        quantity: form.rows.reduce((s, r) => s + (Number(r.quantity) || 0), 0),
         transaction_date: form.transaction_date,
       });
       toast({ title: t('processForm.created') });

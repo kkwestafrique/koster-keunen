@@ -43,32 +43,76 @@ export function useContracts({ page = 1, search = '', year = '', standard = '', 
   });
 }
 
+// Contract detail: contracts are stored one row per product line sharing a
+// contract_group_id, so viewing "a contract" means first resolving which
+// group the clicked row belongs to, then fetching every row in that group.
 export function useContract(id) {
   return useQuery({
     queryKey: ['contract', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: clicked, error: clickedError } = await supabase
         .from('contracts')
-        .select('*, actors(traceability_code, contact_name)')
+        .select('contract_group_id')
         .eq('id', id)
         .single();
+      if (clickedError) throw clickedError;
+
+      const { data: rows, error } = await supabase
+        .from('contracts')
+        .select('*, actors(traceability_code, contact_name, country)')
+        .eq('contract_group_id', clicked.contract_group_id)
+        .order('created_at', { ascending: true });
       if (error) throw error;
-      return data;
+      if (!rows.length) return null;
+
+      const [first] = rows;
+      return {
+        ...first,
+        products: rows.map((r) => ({
+          product: r.product,
+          expected_quantity: r.expected_quantity,
+          unit: r.unit,
+          price: r.price,
+        })),
+        total_quantity_expected: rows.reduce((sum, r) => sum + (Number(r.expected_quantity) || 0), 0),
+      };
     },
     enabled: !!id,
   });
 }
 
+// Contract creation: one row per product line (the live site's "Add more
+// products" step means a single contract-creation action can cover multiple
+// products), sharing a contract_group_id so the detail page can reconstruct
+// the full multi-product set. Callers pass { products: [...], ...sharedFields }
+// where sharedFields are the columns common to every row (year, standard,
+// actor_id, currency, contract_type, country, advance_amount_paid,
+// advance_percent, comments, signature_date) and each entry in `products` is
+// { product, expected_quantity, unit, price }.
 export function useCreateContract() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();
   return useMutation({
-    mutationFn: async (payload) => {
+    mutationFn: async ({ products, ...shared }) => {
+      const contract_group_id = crypto.randomUUID();
+      const rows = products.map((p) => {
+        const expected_quantity = Number(p.expected_quantity) || 0;
+        const price = p.price !== '' && p.price != null ? Number(p.price) : null;
+        return {
+          ...shared,
+          contract_group_id,
+          supply_chain_id: supplyChainId,
+          product: p.product,
+          expected_quantity,
+          unit: p.unit || 'Kg',
+          price,
+          total_amount: price != null ? expected_quantity * price : null,
+        };
+      });
       const { data, error } = await supabase
         .from('contracts')
-        .insert([{ ...payload, supply_chain_id: supplyChainId }])
-        .select()
-        .single();
+        .insert(rows)
+        .select();
       if (error) throw error;
       return data;
     },
