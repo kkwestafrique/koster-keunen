@@ -59,16 +59,44 @@ export function useTransaction(id) {
   });
 }
 
+// Transaction creation: one row per product line (Received/Processing both
+// support "Add more product"), sharing a transaction_group_id so the detail
+// page can reconstruct the full multi-product set — matches the
+// sync_transaction_to_stock DB trigger, which fires per-row and expects a
+// single product/quantity (or source_product/source_quantity for
+// Processing) per transaction row. Callers pass
+// { products: [...], ...sharedFields } where sharedFields are the columns
+// common to every row (direction, standard, actor_id, beekeeper_id,
+// currency, invoice_number, bl_number, transaction_date) and each entry in
+// `products` is either { product, quantity, unit, price } (Received) or
+// { source_product, source_quantity, converted_product, quantity, unit }
+// (Processing, mapped to product = converted_product below).
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();
   return useMutation({
-    mutationFn: async (payload) => {
+    mutationFn: async ({ products, ...shared }) => {
+      const transaction_group_id = crypto.randomUUID();
+      const rows = products.map((p) => {
+        const quantity = Number(p.quantity) || 0;
+        const price = p.price !== '' && p.price != null ? Number(p.price) : null;
+        return {
+          ...shared,
+          transaction_group_id,
+          supply_chain_id: supplyChainId,
+          product: p.converted_product ?? p.product ?? null,
+          source_product: p.source_product ?? null,
+          source_quantity: p.source_quantity !== undefined && p.source_quantity !== '' ? Number(p.source_quantity) : null,
+          quantity,
+          unit: p.unit || 'Kg',
+          price,
+          total_amount: price != null ? quantity * price : null,
+        };
+      });
       const { data, error } = await supabase
         .from('transactions')
-        .insert([{ ...payload, supply_chain_id: supplyChainId }])
-        .select()
-        .single();
+        .insert(rows)
+        .select();
       if (error) throw error;
       return data;
     },

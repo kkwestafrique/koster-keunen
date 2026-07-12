@@ -61,15 +61,15 @@ export default function ContractWizard() {
       await createContract.mutateAsync({
         year: Number(form.year),
         standard: form.standard,
-        supplier_actor_id: form.supplier_actor_id || null,
+        actor_id: form.supplier_actor_id || null,
         currency: form.currency,
         products: form.products,
-        total_quantity_expected: totalQuantity,
         advance_amount_paid: Number(form.advance_amount_paid) || 0,
         advance_percent: Number(form.advance_percent) || 0,
         comments: form.comments,
         signature_date: form.signature_date,
         contract_type: 'Send',
+        country: supplier?.country || null,
       });
       toast({ title: t('contractWizard.created') });
       navigate('/contracts');
