@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Download, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite } from '@/hooks/useActors';
@@ -52,6 +53,7 @@ function LanguageSwitcher() {
 
 export default function TopBar() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { data: actors = [] } = useAllActorsLite();
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -72,7 +74,9 @@ export default function TopBar() {
 
         <button
           data-testid="top-bar-download"
-          className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[#f5f5f5] transition-colors"
+          disabled
+          title={t('topbar.downloadUnavailable')}
+          className="h-9 w-9 flex items-center justify-center rounded-full opacity-40 cursor-not-allowed"
         >
           <Download className="h-5 w-5 text-[#032b71]" />
         </button>
@@ -96,7 +100,7 @@ export default function TopBar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem data-testid="top-bar-my-profile">
+            <DropdownMenuItem data-testid="top-bar-my-profile" onClick={() => navigate('/company-profile')}>
               {t('topbar.myProfile')}
             </DropdownMenuItem>
             <DropdownMenuItem data-testid="logout-button" onClick={signOut}>

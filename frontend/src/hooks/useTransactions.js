@@ -62,6 +62,41 @@ export function useActorTransactions(actorId) {
   });
 }
 
+// Transaction Overview tab on the Dashboard: total quantity per direction
+// for the selected year, plus a per-product breakdown for Received (the
+// most common direction to actually have volume in early on).
+export function useDashboardTransactionSummary({ year = '' } = {}) {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['dashboard-transaction-summary', supplyChainId, year],
+    queryFn: async () => {
+      let query = supabase
+        .from('transactions')
+        .select('direction, product, quantity, total_amount')
+        .eq('supply_chain_id', supplyChainId);
+      if (year) query = query.gte('transaction_date', `${year}-01-01`).lte('transaction_date', `${year}-12-31`);
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const byDirection = { Received: 0, Processing: 0, Send: 0 };
+      const byProduct = {};
+      data.forEach((row) => {
+        byDirection[row.direction] = (byDirection[row.direction] || 0) + (Number(row.quantity) || 0);
+        if (row.product) byProduct[row.product] = (byProduct[row.product] || 0) + (Number(row.quantity) || 0);
+      });
+
+      return {
+        total: data.length,
+        byDirection,
+        byProduct: Object.entries(byProduct).map(([product, quantity]) => ({ product, quantity })),
+      };
+    },
+    enabled: !!supplyChainId,
+    staleTime: 30_000,
+  });
+}
+
 export function useTransaction(id) {
   return useQuery({
     queryKey: ['transaction', id],

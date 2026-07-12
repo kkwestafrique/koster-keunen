@@ -76,15 +76,21 @@ export function useCreateBeekeeper() {
   });
 }
 
-export function useBeekeeperAggregates() {
+export function useBeekeeperAggregates({ country = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['beekeeper-aggregates', supplyChainId],
+    queryKey: ['beekeeper-aggregates', supplyChainId, country],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('beekeepers')
-        .select('gender, hives_traditional_single, hives_traditional_double, hives_modern, hives_other')
+        .select(
+          country
+            ? 'gender, hives_traditional_single, hives_traditional_double, hives_modern, hives_other, villages!inner(country)'
+            : 'gender, hives_traditional_single, hives_traditional_double, hives_modern, hives_other'
+        )
         .eq('supply_chain_id', supplyChainId);
+      if (country) query = query.eq('villages.country', country);
+      const { data, error } = await query;
       if (error) throw error;
       const agg = {
         total: data.length,

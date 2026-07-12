@@ -151,7 +151,12 @@ export default function Login() {
                   <input type="checkbox" className="rounded border-[#cfd8e6]" />
                   {t('login.keepLoggedIn')}
                 </label>
-                <button type="button" className="text-sm font-bold text-[#032b71] hover:text-[#0f48aa]">
+                <button
+                  type="button"
+                  data-testid="login-forgot-password"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-sm font-bold text-[#032b71] hover:text-[#0f48aa]"
+                >
                   {t('login.forgotPassword')}
                 </button>
               </div>

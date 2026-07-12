@@ -26,7 +26,8 @@
     "english": "Anglais",
     "french": "Français",
     "myProfile": "Mon profil",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "downloadUnavailable": "Export non disponible pour le moment"
   },
   "login": {
     "title": "Connectez-vous à",
@@ -40,6 +41,37 @@
     "loginButton": "Connectez-vous à votre compte",
     "signingIn": "Connexion en cours...",
     "invalidCredentials": "E-mail ou mot de passe invalide."
+  },
+  "forgotPassword": {
+    "back": "Retour",
+    "havingTrouble": "Des difficultés ?",
+    "getHelp": "Obtenir de l'aide",
+    "title": "Mot de passe oublié",
+    "instructions": "Veuillez saisir votre adresse e-mail. Nous vous enverrons un e-mail pour réinitialiser votre mot de passe.",
+    "email": "E-mail",
+    "continue": "Continuer",
+    "sending": "Envoi en cours...",
+    "checkEmailTitle": "Veuillez vérifier votre e-mail !!",
+    "checkEmailBody": "Nous avons envoyé un lien à {{email}} pour réinitialiser votre mot de passe.",
+    "cantFindIt": "Vous ne le trouvez pas ?",
+    "resendMail": "Renvoyer l'e-mail",
+    "sendFailed": "Échec de l'envoi de l'e-mail de réinitialisation"
+  },
+  "resetPassword": {
+    "title": "Réinitialisez votre mot de passe",
+    "instructions": "Créez un nouveau mot de passe pour vous connecter à votre compte.",
+    "enterPassword": "Saisir le mot de passe",
+    "reenterPassword": "Ressaisir le mot de passe",
+    "ruleLetters": "8 lettres",
+    "ruleNumericals": "Chiffres",
+    "ruleSymbols": "Symboles spéciaux",
+    "continue": "Continuer",
+    "saving": "Enregistrement...",
+    "passwordsDontMatch": "Les mots de passe ne correspondent pas",
+    "resetFailed": "Échec de la réinitialisation du mot de passe",
+    "linkExpiredTitle": "Le lien de réinitialisation a expiré !!",
+    "tryAgain": "Réessayer ?",
+    "login": "Connexion"
   },
   "dashboard": {
     "title": "Tableau de bord",
