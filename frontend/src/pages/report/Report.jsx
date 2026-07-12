@@ -32,9 +32,9 @@ const PARTNER_REPORTS = [
 ];
 
 const TRANSACTION_REPORTS = [
-  { key: 'contract', modal: 'dateProducts', table: 'contracts' },
-  { key: 'receivedBeekeepers', modal: 'dateProducts', table: 'transactions', direction: 'Received' },
-  { key: 'receivedActors', modal: 'dateProducts', table: 'transactions', direction: 'Received' },
+  { key: 'contract', modal: 'dateProducts', table: 'contracts', dateField: 'signature_date' },
+  { key: 'receivedBeekeepers', modal: 'dateProducts', table: 'transactions', direction: 'Received', counterpart: 'beekeeper_id' },
+  { key: 'receivedActors', modal: 'dateProducts', table: 'transactions', direction: 'Received', counterpart: 'actor_id' },
   { key: 'processing', modal: 'dateProducts', table: 'transactions', direction: 'Processing' },
   { key: 'sent', modal: 'dateProducts', table: 'transactions', direction: 'Send' },
 ];
@@ -88,17 +88,35 @@ export default function Report() {
       let query = supabase.from(activeReport.table).select('*').eq('supply_chain_id', supplyChainId);
       if (activeReport.status) query = query.eq('status', activeReport.status);
       if (activeReport.direction) query = query.eq('direction', activeReport.direction);
-      if (activeReport.modal === 'yearOnly' && filters.year) query = query.eq('year', Number(filters.year));
+      if (activeReport.counterpart) query = query.not(activeReport.counterpart, 'is', null);
+
+      // beekeepers/actors have no `year` column — "year" here means the
+      // year the record was created.
+      const isCreatedAtYear = activeReport.table === 'beekeepers' || activeReport.table === 'actors';
+      if (activeReport.modal === 'yearOnly' && filters.year) {
+        if (isCreatedAtYear) {
+          query = query.gte('created_at', `${filters.year}-01-01`).lte('created_at', `${filters.year}-12-31T23:59:59`);
+        } else {
+          query = query.eq('year', Number(filters.year));
+        }
+      }
       if (activeReport.modal === 'yearRange') {
-        if (filters.startYear) query = query.gte('year', Number(filters.startYear));
-        if (filters.endYear) query = query.lte('year', Number(filters.endYear));
+        if (isCreatedAtYear) {
+          if (filters.startYear) query = query.gte('created_at', `${filters.startYear}-01-01`);
+          if (filters.endYear) query = query.lte('created_at', `${filters.endYear}-12-31T23:59:59`);
+        } else {
+          if (filters.startYear) query = query.gte('year', Number(filters.startYear));
+          if (filters.endYear) query = query.lte('year', Number(filters.endYear));
+        }
       }
       if (activeReport.modal === 'dateProducts') {
-        if (filters.dateFrom) query = query.gte('transaction_date', filters.dateFrom);
-        if (filters.dateTo) query = query.lte('transaction_date', filters.dateTo);
+        const dateField = activeReport.dateField || 'transaction_date';
+        if (filters.dateFrom) query = query.gte(dateField, filters.dateFrom);
+        if (filters.dateTo) query = query.lte(dateField, filters.dateTo);
         if (filters.products.length > 0) query = query.in('product', filters.products);
       }
-      if (filters.standards.length > 0) query = query.in('standard', filters.standards);
+      const tableHasStandard = activeReport.table !== 'beekeepers' && activeReport.table !== 'actors';
+      if (tableHasStandard && filters.standards.length > 0) query = query.in('standard', filters.standards);
 
       const { data, error } = await query;
       if (error) throw error;
