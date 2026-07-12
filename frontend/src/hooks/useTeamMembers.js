@@ -29,7 +29,11 @@ export function useInviteTeamMember() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ actorId, name, email, role }) => {
-      const { data, error } = await supabase.functions.invoke('invite-team-member', {
+      // Deployed slug is 'Invite-a-team-member' (from the dashboard deploy
+      // flow), not 'invite-team-member' as originally written — Supabase
+      // function names are exact-match, so this string must match whatever
+      // the function is actually deployed as.
+      const { data, error } = await supabase.functions.invoke('Invite-a-team-member', {
         body: {
           name,
           email,
