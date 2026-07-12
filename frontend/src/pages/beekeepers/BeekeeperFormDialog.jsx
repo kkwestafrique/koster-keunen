@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAllVillagesLite } from '@/hooks/useVillages';
+import AddressFields from '@/components/common/AddressFields';
+import { useFindOrCreateVillage } from '@/hooks/useVillages';
 import { useAllActorsLite } from '@/hooks/useActors';
 import { useCreateBeekeeper } from '@/hooks/useBeekeepers';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +15,10 @@ const EMPTY = {
   traceability_code: '',
   full_name: '',
   gender: '',
-  village_id: '',
+  country: '',
+  state_region: '',
+  lga_municipality: '',
+  village: '',
   actor_id: '',
   hives_traditional_single: 0,
   hives_traditional_double: 0,
@@ -24,22 +28,39 @@ const EMPTY = {
   status: 'Potential',
 };
 
+// Address block matches the live-site audit: Add Beekeeper captures a full
+// Country -> State/Region -> LGA/Municipality -> Village address inline
+// (cascading dropdowns backed by the `regions` table), rather than picking
+// from an existing village list. On submit we resolve that address to a
+// village_id — reusing a matching village if one already exists for this
+// supply chain, otherwise creating it — since beekeepers link to villages
+// via village_id under the hood.
 export default function BeekeeperFormDialog({ open, onOpenChange }) {
   const { t } = useTranslation();
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
-  const { data: villages = [] } = useAllVillagesLite();
   const { data: actors = [] } = useAllActorsLite();
   const createBeekeeper = useCreateBeekeeper();
+  const findOrCreateVillage = useFindOrCreateVillage();
   const { toast } = useToast();
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+
+  const addressValid = form.country && form.state_region && form.lga_municipality && form.village;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await createBeekeeper.mutateAsync(form);
+      const village_id = await findOrCreateVillage.mutateAsync({
+        country: form.country,
+        state_region: form.state_region,
+        lga_municipality: form.lga_municipality,
+        name: form.village,
+      });
+
+      const { country, state_region, lga_municipality, village, ...beekeeperFields } = form;
+      await createBeekeeper.mutateAsync({ ...beekeeperFields, village_id });
       toast({ title: t('forms.beekeeperCreated'), description: t('forms.beekeeperCreatedDescription', { name: form.full_name }) });
       setForm(EMPTY);
       onOpenChange(false);
@@ -76,15 +97,16 @@ export default function BeekeeperFormDialog({ open, onOpenChange }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.village')}</Label>
-            <Select value={form.village_id} onValueChange={set('village_id')}>
-              <SelectTrigger data-testid="bk-form-village"><SelectValue placeholder={t('forms.selectVillage')} /></SelectTrigger>
-              <SelectContent>
-                {villages.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          <AddressFields
+            testIdPrefix="bk-form"
+            value={{
+              country: form.country,
+              state_region: form.state_region,
+              lga_municipality: form.lga_municipality,
+              village: form.village,
+            }}
+            onChange={(addr) => setForm((f) => ({ ...f, ...addr }))}
+          />
           <div className="flex flex-col gap-1.5 col-span-2">
             <Label className="text-[#7089b4]">{t('forms.organisation')}</Label>
             <Select value={form.actor_id} onValueChange={set('actor_id')}>
@@ -127,7 +149,7 @@ export default function BeekeeperFormDialog({ open, onOpenChange }) {
 
           <DialogFooter className="col-span-2 mt-2">
             <Button type="button" variant="outline" className="border-[#0f48aa] text-[#0f48aa]" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-            <Button type="submit" data-testid="bk-form-submit" disabled={saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
+            <Button type="submit" data-testid="bk-form-submit" disabled={saving || !addressValid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
               {saving ? t('forms.saving') : t('forms.saveBeekeeper')}
             </Button>
           </DialogFooter>
