@@ -27,7 +27,14 @@
     "french": "Français",
     "myProfile": "Mon profil",
     "logout": "Déconnexion",
-    "downloadUnavailable": "Export non disponible pour le moment"
+    "downloadUnavailable": "Export non disponible pour le moment",
+    "downloads": "Téléchargements",
+    "noDownloadsYet": "Aucun téléchargement pour le moment",
+    "downloadInProgress": "Préparation de l'export...",
+    "downloadRowCount": "{{count}} ligne exportée",
+    "downloadRowCount_other": "{{count}} lignes exportées",
+    "downloadFailed": "Échec de l'export",
+    "downloadAgain": "Télécharger"
   },
   "login": {
     "title": "Connectez-vous à",

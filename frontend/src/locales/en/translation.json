@@ -27,7 +27,14 @@
     "french": "French",
     "myProfile": "My profile",
     "logout": "Logout",
-    "downloadUnavailable": "Export not available yet"
+    "downloadUnavailable": "Export not available yet",
+    "downloads": "Downloads",
+    "noDownloadsYet": "No downloads yet",
+    "downloadInProgress": "Preparing export...",
+    "downloadRowCount": "{{count}} row exported",
+    "downloadRowCount_other": "{{count}} rows exported",
+    "downloadFailed": "Export failed",
+    "downloadAgain": "Download"
   },
   "login": {
     "title": "Login to",

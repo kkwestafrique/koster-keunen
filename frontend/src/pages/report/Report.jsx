@@ -9,9 +9,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PRODUCTS, STANDARDS } from '@/data/regions';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, uploadMediaFile } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
-import { exportToCsv } from '@/hooks/useReportData';
+import { csvBlobFromRows, downloadBlob } from '@/hooks/useReportData';
+import { useCreateExport, useUpdateExport } from '@/hooks/useExports';
 import { useToast } from '@/hooks/use-toast';
 
 const YEARS = ['2027', '2026', '2025', '2024', '2023', '2022'];
@@ -71,6 +72,8 @@ export default function Report() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { supplyChainId } = useAuth();
+  const createExport = useCreateExport();
+  const updateExport = useUpdateExport();
   const [activeReport, setActiveReport] = useState(null); // {key, modal, table, ...}
   const [generating, setGenerating] = useState(false);
   const [filters, setFilters] = useState({
@@ -84,6 +87,16 @@ export default function Report() {
 
   const generate = async () => {
     setGenerating(true);
+    const fileName = `${activeReport.key}-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    let exportRow;
+    try {
+      exportRow = await createExport.mutateAsync({ reportKey: activeReport.key, fileName });
+    } catch (err) {
+      // If we can't even create the tracking row, still let the report
+      // generate — the downloads panel just won't show this one.
+      exportRow = null;
+    }
+
     try {
       let query = supabase.from(activeReport.table).select('*').eq('supply_chain_id', supplyChainId);
       if (activeReport.status) query = query.eq('status', activeReport.status);
@@ -124,13 +137,42 @@ export default function Report() {
       const rows = data || [];
       if (rows.length === 0) {
         toast({ title: t('report.noData') });
+        if (exportRow) {
+          await updateExport.mutateAsync({ id: exportRow.id, status: 'Failed', error_message: 'No matching records', completed_at: new Date().toISOString() });
+        }
         return;
       }
+
       const columns = Object.keys(rows[0]).map((k) => ({ key: k, label: k }));
-      exportToCsv(`${activeReport.key}-report.csv`, rows, columns);
+      const blob = csvBlobFromRows(rows, columns);
+      downloadBlob(blob, fileName);
+
+      // Upload the same file to storage so the downloads panel can offer a
+      // real re-download later, from any device — not just this browser tab.
+      let fileUrl = null;
+      try {
+        fileUrl = await uploadMediaFile(new File([blob], fileName, { type: 'text/csv' }), 'exports');
+      } catch (uploadErr) {
+        // The person already has their local download; a storage-upload
+        // failure shouldn't be treated as the whole export failing.
+      }
+
+      if (exportRow) {
+        await updateExport.mutateAsync({
+          id: exportRow.id,
+          status: 'Completed',
+          row_count: rows.length,
+          file_url: fileUrl,
+          completed_at: new Date().toISOString(),
+        });
+      }
+
       toast({ title: t('report.generated') });
       setActiveReport(null);
     } catch (err) {
+      if (exportRow) {
+        await updateExport.mutateAsync({ id: exportRow.id, status: 'Failed', error_message: err.message, completed_at: new Date().toISOString() }).catch(() => {});
+      }
       toast({ title: t('report.generateFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setGenerating(false);
