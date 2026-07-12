@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { identifyUser, resetIdentity } from '@/lib/posthog';
 
 const AuthContext = createContext(null);
 
@@ -38,11 +39,13 @@ export function AuthProvider({ children }) {
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    if (data?.user) identifyUser(data.user.id, { email: data.user.email });
     return data;
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    resetIdentity();
   };
 
   const switchActor = async (actorId) => {
