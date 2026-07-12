@@ -72,3 +72,46 @@ export function useCreateConnection() {
     },
   });
 }
+
+// Finds the connection record linking two actors (direction-agnostic — a
+// connection could have either actor as actor_from/actor_to), used by the
+// Enable/disable toggle on an actor's detail page.
+export function useConnectionBetween(actorAId, actorBId) {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['connection-between', actorAId, actorBId, supplyChainId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('connections')
+        .select('*')
+        .eq('supply_chain_id', supplyChainId)
+        .or(
+          `and(actor_from_id.eq.${actorAId},actor_to_id.eq.${actorBId}),and(actor_from_id.eq.${actorBId},actor_to_id.eq.${actorAId})`
+        )
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!actorAId && !!actorBId && !!supplyChainId,
+  });
+}
+
+export function useUpdateConnectionStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }) => {
+      const { data, error } = await supabase
+        .from('connections')
+        .update({ status })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['connection-between'] });
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+    },
+  });
+}

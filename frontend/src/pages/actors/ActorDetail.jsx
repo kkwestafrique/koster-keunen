@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -8,13 +8,32 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { ChevronLeft } from 'lucide-react';
 import { useActor } from '@/hooks/useActors';
+import { useConnectionBetween, useUpdateConnectionStatus } from '@/hooks/useConnections';
+import { useActorTransactions } from '@/hooks/useTransactions';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ActorDetail() {
   const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { profile } = useAuth();
   const { data: actor, isLoading } = useActor(id);
-  const [active, setActive] = useState(true);
+  const { data: connection } = useConnectionBetween(profile?.current_actor_id, id);
+  const updateConnectionStatus = useUpdateConnectionStatus();
+  const { data: transactions = [] } = useActorTransactions(id);
+
+  const isActive = connection?.status === 'Active';
+
+  const handleToggle = async (checked) => {
+    if (!connection) return; // nothing to toggle if there's no connection record linking the two actors
+    try {
+      await updateConnectionStatus.mutateAsync({ id: connection.id, status: checked ? 'Active' : 'Revoked' });
+    } catch (err) {
+      toast({ title: t('actorProfile.connectionUpdateFailed') || 'Failed to update connection', description: err.message, variant: 'destructive' });
+    }
+  };
 
   if (isLoading || !actor) {
     return (
@@ -89,7 +108,30 @@ export default function ActorDetail() {
             </TabsContent>
 
             <TabsContent value="transactions" className="pt-5">
-              <p className="text-sm text-[#7089b4]">{t('common.noRecordsFound')}</p>
+              {transactions.length === 0 ? (
+                <p className="text-sm text-[#7089b4]">{t('common.noRecordsFound')}</p>
+              ) : (
+                <table className="w-full text-sm" data-testid="actor-transactions-table">
+                  <thead>
+                    <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                      <th className="py-2">{t('transactions.date')}</th>
+                      <th className="py-2">{t('contractWizard.product')}</th>
+                      <th className="py-2">{t('transactions.quantityDelivered')}</th>
+                      <th className="py-2">{t('transactions.totalAmount')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((tx) => (
+                      <tr key={tx.id} className="border-b border-[#f0f0f0] text-[#032b71]">
+                        <td className="py-2">{tx.transaction_date}</td>
+                        <td className="py-2">{tx.product}</td>
+                        <td className="py-2">{tx.quantity} {tx.unit}</td>
+                        <td className="py-2">{tx.total_amount != null ? tx.total_amount.toLocaleString() : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </TabsContent>
           </Tabs>
         </div>
@@ -97,9 +139,16 @@ export default function ActorDetail() {
         <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5 flex items-center justify-between gap-4" data-testid="actor-connection-panel">
           <div>
             <p className="text-sm font-bold text-[#032b71]">{t('actorProfile.enableDisableConnection')}</p>
-            <p className="text-xs text-[#219653] font-medium mt-1">{t('actorProfile.statusActive')}</p>
+            <p className={`text-xs font-medium mt-1 ${isActive ? 'text-[#219653]' : 'text-[#ba550c]'}`}>
+              {isActive ? t('actorProfile.statusActive') : t('common.revoked')}
+            </p>
           </div>
-          <Switch checked={active} onCheckedChange={setActive} data-testid="actor-connection-toggle" />
+          <Switch
+            checked={isActive}
+            onCheckedChange={handleToggle}
+            disabled={!connection || updateConnectionStatus.isPending}
+            data-testid="actor-connection-toggle"
+          />
         </div>
       </div>
     </AppLayout>

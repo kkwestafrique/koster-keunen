@@ -26,7 +26,8 @@
     "english": "English",
     "french": "French",
     "myProfile": "My profile",
-    "logout": "Logout"
+    "logout": "Logout",
+    "downloadUnavailable": "Export not available yet"
   },
   "login": {
     "title": "Login to",
@@ -40,6 +41,37 @@
     "loginButton": "Login to your account",
     "signingIn": "Signing in...",
     "invalidCredentials": "Invalid email or password."
+  },
+  "forgotPassword": {
+    "back": "Back",
+    "havingTrouble": "Having trouble?",
+    "getHelp": "Get help",
+    "title": "Forgot password",
+    "instructions": "Please enter your email ID. We will sent you an email to reset your password.",
+    "email": "Email",
+    "continue": "Continue",
+    "sending": "Sending...",
+    "checkEmailTitle": "Kindly check your email!!",
+    "checkEmailBody": "We have sent a link to {{email}} to reset your password.",
+    "cantFindIt": "Can't find it?",
+    "resendMail": "Resend mail",
+    "sendFailed": "Failed to send reset email"
+  },
+  "resetPassword": {
+    "title": "Reset your password",
+    "instructions": "Create a new password to login to your account.",
+    "enterPassword": "Enter password",
+    "reenterPassword": "Re enter password",
+    "ruleLetters": "8 letters",
+    "ruleNumericals": "Numericals",
+    "ruleSymbols": "Special symbols",
+    "continue": "Continue",
+    "saving": "Saving...",
+    "passwordsDontMatch": "Passwords don't match",
+    "resetFailed": "Failed to reset password",
+    "linkExpiredTitle": "Reset password link expired!!",
+    "tryAgain": "Try again?",
+    "login": "Login"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -75,6 +107,7 @@
     "searchPlaceholder": "Search by code or name...",
     "allActorType": "All actor type",
     "allStatus": "All status",
+    "allCountry": "All country",
     "traceabilityCode": "Traceability code",
     "actorName": "Actor name",
     "actorType": "Actor type",
@@ -236,6 +269,7 @@
     "actorCreateFailed": "Failed to create actor",
     "addBeekeeper": "Add Beekeeper",
     "addBeekeeperDescription": "Enter the beekeeper's details below.",
+    "editBeekeeper": "Edit Beekeeper",
     "fullName": "Full Name",
     "gender": "Gender",
     "selectGender": "Select gender",

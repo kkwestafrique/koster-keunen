@@ -10,10 +10,11 @@ export function useBeekeepers({
   gender = '',
   villageId = '',
   status = '',
+  year = '',
 } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['beekeepers', { page, search, gender, villageId, status, supplyChainId }],
+    queryKey: ['beekeepers', { page, search, gender, villageId, status, year, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('beekeepers')
@@ -27,6 +28,9 @@ export function useBeekeepers({
       if (gender) query = query.eq('gender', gender);
       if (villageId) query = query.eq('village_id', villageId);
       if (status) query = query.eq('status', status);
+      // beekeepers has no `year` column — "year" here means the year the
+      // record was added, same convention used by the Report page.
+      if (year) query = query.gte('created_at', `${year}-01-01`).lte('created_at', `${year}-12-31T23:59:59`);
 
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
@@ -47,7 +51,7 @@ export function useBeekeeper(id) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('beekeepers')
-        .select('*, villages(name, country), actors(contact_name, traceability_code)')
+        .select('*, villages(name, country, state_region, lga_municipality), actors(contact_name, traceability_code)')
         .eq('id', id)
         .single();
       if (error) throw error;
@@ -76,15 +80,21 @@ export function useCreateBeekeeper() {
   });
 }
 
-export function useBeekeeperAggregates() {
+export function useBeekeeperAggregates({ country = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['beekeeper-aggregates', supplyChainId],
+    queryKey: ['beekeeper-aggregates', supplyChainId, country],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('beekeepers')
-        .select('gender, hives_traditional_single, hives_traditional_double, hives_modern, hives_other')
+        .select(
+          country
+            ? 'gender, hives_traditional_single, hives_traditional_double, hives_modern, hives_other, villages!inner(country)'
+            : 'gender, hives_traditional_single, hives_traditional_double, hives_modern, hives_other'
+        )
         .eq('supply_chain_id', supplyChainId);
+      if (country) query = query.eq('villages.country', country);
+      const { data, error } = await query;
       if (error) throw error;
       const agg = {
         total: data.length,

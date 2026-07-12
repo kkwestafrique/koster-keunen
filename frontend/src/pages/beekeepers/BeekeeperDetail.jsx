@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -7,12 +7,14 @@ import StatusBadge from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { useBeekeeper } from '@/hooks/useBeekeepers';
+import BeekeeperFormDialog from './BeekeeperFormDialog';
 
 export default function BeekeeperDetail() {
   const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: bk, isLoading } = useBeekeeper(id);
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading || !bk) {
     return (
@@ -45,7 +47,12 @@ export default function BeekeeperDetail() {
           </div>
           <div className="flex items-center gap-3">
             <StatusBadge status={bk.status} />
-            <Button variant="outline" disabled className="border-[#0f48aa] text-[#0f48aa] bg-white">
+            <Button
+              variant="outline"
+              data-testid="beekeeper-edit-button"
+              className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#f5f5f5]"
+              onClick={() => setEditOpen(true)}
+            >
               <Pencil className="h-4 w-4 mr-1" /> {t('actorProfile.edit')}
             </Button>
           </div>
@@ -63,6 +70,8 @@ export default function BeekeeperDetail() {
           <DetailField label={t('beekeeperDetail.activeYears')} value={bk.active_years} testId="bk-field-years" />
         </div>
       </div>
+
+      <BeekeeperFormDialog open={editOpen} onOpenChange={setEditOpen} beekeeper={bk} />
     </AppLayout>
   );
 }

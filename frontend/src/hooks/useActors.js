@@ -87,15 +87,14 @@ export function useCreateActor() {
   });
 }
 
-export function useActorTypeCounts() {
+export function useActorTypeCounts({ country = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['actor-type-counts', supplyChainId],
+    queryKey: ['actor-type-counts', supplyChainId, country],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('actors')
-        .select('actor_type')
-        .eq('supply_chain_id', supplyChainId);
+      let query = supabase.from('actors').select('actor_type').eq('supply_chain_id', supplyChainId);
+      if (country) query = query.eq('country', country);
+      const { data, error } = await query;
       if (error) throw error;
       const counts = { Buyer: 0, 'Local Partner': 0, Aggregator: 0, 'Producer Organisation': 0 };
       data.forEach((row) => {

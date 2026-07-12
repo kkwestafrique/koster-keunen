@@ -4,6 +4,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite, useActorTypeCounts } from '@/hooks/useActors';
 import { useBeekeeperAggregates } from '@/hooks/useBeekeepers';
+import { useDashboardTransactionSummary } from '@/hooks/useTransactions';
 import { useConstants } from '@/hooks/useConstants';
 import { COUNTRIES } from '@/data/regions';
 import {
@@ -13,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 function StatCard({ label, value, testId }) {
   return (
@@ -68,19 +69,21 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { profile } = useAuth();
   const { data: actors = [] } = useAllActorsLite();
-  const { data: actorCounts } = useActorTypeCounts();
-  const { data: bkAgg } = useBeekeeperAggregates();
-  const { data: countries = [] } = useConstants('country');
   const [tab, setTab] = useState('supply');
   const [country, setCountry] = useState('');
   const [actorFilter, setActorFilter] = useState('');
   const [year, setYear] = useState('2026');
 
+  const { data: actorCounts } = useActorTypeCounts({ country });
+  const { data: bkAgg } = useBeekeeperAggregates({ country });
+  const { data: txSummary } = useDashboardTransactionSummary({ year });
+  const { data: countries = [] } = useConstants('country');
+
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
 
   const actorTypeData = actorCounts
     ? Object.entries(actorCounts.byType)
-        .filter(([, v]) => v > 0)
+        .filter(([name, v]) => v > 0 && (!actorFilter || name === actorFilter))
         .map(([name, value]) => ({ name, translatedName: t(CATEGORY_TRANSLATION_KEY[name] || name), value }))
     : [];
 
@@ -171,7 +174,7 @@ export default function Dashboard() {
             <div className="flex gap-4">
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-bold text-[#032b71]">{t('dashboard.country')}</span>
-                <Select value={country} onValueChange={setCountry}>
+                <Select value={country || 'all'} onValueChange={(v) => setCountry(v === 'all' ? '' : v)}>
                   <SelectTrigger data-testid="dashboard-filter-country" className="w-[180px] bg-white border-[#cfd8e6]">
                     <SelectValue placeholder={t('dashboard.allCountry')} />
                   </SelectTrigger>
@@ -188,7 +191,7 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-bold text-[#032b71]">{t('dashboard.actors')}</span>
-                <Select value={actorFilter} onValueChange={setActorFilter}>
+                <Select value={actorFilter || 'all'} onValueChange={(v) => setActorFilter(v === 'all' ? '' : v)}>
                   <SelectTrigger data-testid="dashboard-filter-actor-type" className="w-[180px] bg-white border-[#cfd8e6]">
                     <SelectValue placeholder={t('dashboard.allActors')} />
                   </SelectTrigger>
@@ -264,11 +267,44 @@ export default function Dashboard() {
               </ChartCard>
             </div>
           ) : (
-            <div
-              className="bg-white border border-[#cfd8e6] rounded-[5px] p-10 text-center text-sm text-[#7089b4]"
-              data-testid="dashboard-transactions-placeholder"
-            >
-              {t('common.noRecordsFound')}
+            <div className="flex flex-wrap gap-6" data-testid="dashboard-charts-transactions">
+              <ChartCard title={t('dashboard.transactionOverview')} testId="chart-transactions-by-direction">
+                {txSummary && txSummary.total > 0 ? (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart
+                      data={[
+                        { name: t('nav.received'), value: txSummary.byDirection.Received },
+                        { name: t('nav.processing'), value: txSummary.byDirection.Processing },
+                        { name: t('nav.send'), value: txSummary.byDirection.Send },
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#7089b4' }} />
+                      <YAxis tick={{ fontSize: 12, fill: '#7089b4' }} />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#0f48aa" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-sm text-[#7089b4] text-center py-16">{t('common.noRecordsFound')}</p>
+                )}
+              </ChartCard>
+
+              <ChartCard title={t('contractWizard.products')} testId="chart-transactions-by-product">
+                {txSummary && txSummary.byProduct.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={txSummary.byProduct} layout="vertical" margin={{ left: 24 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
+                      <XAxis type="number" tick={{ fontSize: 12, fill: '#7089b4' }} />
+                      <YAxis type="category" dataKey="product" width={110} tick={{ fontSize: 11, fill: '#7089b4' }} />
+                      <Tooltip />
+                      <Bar dataKey="quantity" fill="#2d9cdb" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-sm text-[#7089b4] text-center py-16">{t('common.noRecordsFound')}</p>
+                )}
+              </ChartCard>
             </div>
           )}
         </div>

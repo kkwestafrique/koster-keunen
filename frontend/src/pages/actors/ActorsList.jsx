@@ -68,7 +68,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
           },
           {
             key: 'country',
-            label: t('actorsList.allStatus'),
+            label: t('actorsList.allCountry'),
             value: country,
             onChange: (v) => { setCountry(v); setPage(1); },
             options: countries.map((c) => ({ value: c.value, label: c.label })),

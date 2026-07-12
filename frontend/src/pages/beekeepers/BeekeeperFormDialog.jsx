@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAllVillagesLite } from '@/hooks/useVillages';
+import AddressFields from '@/components/common/AddressFields';
+import { useFindOrCreateVillage } from '@/hooks/useVillages';
 import { useAllActorsLite } from '@/hooks/useActors';
-import { useCreateBeekeeper } from '@/hooks/useBeekeepers';
+import { useCreateBeekeeper, useUpdateBeekeeper } from '@/hooks/useBeekeepers';
 import { useToast } from '@/hooks/use-toast';
 
 const EMPTY = {
   traceability_code: '',
   full_name: '',
   gender: '',
-  village_id: '',
+  country: '',
+  state_region: '',
+  lga_municipality: '',
+  village: '',
   actor_id: '',
   hives_traditional_single: 0,
   hives_traditional_double: 0,
@@ -24,24 +28,76 @@ const EMPTY = {
   status: 'Potential',
 };
 
-export default function BeekeeperFormDialog({ open, onOpenChange }) {
+// beekeeper: pass an existing beekeeper record (as returned by useBeekeeper,
+// with its joined villages row) to open this dialog in edit mode instead of
+// create mode.
+//
+// Address block matches the live-site audit: Add Beekeeper captures a full
+// Country -> State/Region -> LGA/Municipality -> Village address inline
+// (cascading dropdowns backed by the `regions` table), rather than picking
+// from an existing village list. On submit we resolve that address to a
+// village_id — reusing a matching village if one already exists for this
+// supply chain, otherwise creating it — since beekeepers link to villages
+// via village_id under the hood.
+export default function BeekeeperFormDialog({ open, onOpenChange, beekeeper = null }) {
   const { t } = useTranslation();
+  const isEdit = !!beekeeper;
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
-  const { data: villages = [] } = useAllVillagesLite();
   const { data: actors = [] } = useAllActorsLite();
   const createBeekeeper = useCreateBeekeeper();
+  const updateBeekeeper = useUpdateBeekeeper();
+  const findOrCreateVillage = useFindOrCreateVillage();
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (!open) return;
+    if (beekeeper) {
+      setForm({
+        traceability_code: beekeeper.traceability_code || '',
+        full_name: beekeeper.full_name || '',
+        gender: beekeeper.gender || '',
+        country: beekeeper.villages?.country || '',
+        state_region: beekeeper.villages?.state_region || '',
+        lga_municipality: beekeeper.villages?.lga_municipality || '',
+        village: beekeeper.villages?.name || '',
+        actor_id: beekeeper.actor_id || '',
+        hives_traditional_single: beekeeper.hives_traditional_single || 0,
+        hives_traditional_double: beekeeper.hives_traditional_double || 0,
+        hives_modern: beekeeper.hives_modern || 0,
+        hives_other: beekeeper.hives_other || 0,
+        active_years: beekeeper.active_years || 0,
+        status: beekeeper.status || 'Potential',
+      });
+    } else {
+      setForm(EMPTY);
+    }
+  }, [open, beekeeper]);
+
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+
+  const addressValid = form.country && form.state_region && form.lga_municipality && form.village;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await createBeekeeper.mutateAsync(form);
-      toast({ title: t('forms.beekeeperCreated'), description: t('forms.beekeeperCreatedDescription', { name: form.full_name }) });
-      setForm(EMPTY);
+      const village_id = await findOrCreateVillage.mutateAsync({
+        country: form.country,
+        state_region: form.state_region,
+        lga_municipality: form.lga_municipality,
+        name: form.village,
+      });
+
+      const { country, state_region, lga_municipality, village, ...beekeeperFields } = form;
+      if (isEdit) {
+        await updateBeekeeper.mutateAsync({ id: beekeeper.id, ...beekeeperFields, village_id });
+        toast({ title: t('companyProfile.updated') });
+      } else {
+        await createBeekeeper.mutateAsync({ ...beekeeperFields, village_id });
+        toast({ title: t('forms.beekeeperCreated'), description: t('forms.beekeeperCreatedDescription', { name: form.full_name }) });
+        setForm(EMPTY);
+      }
       onOpenChange(false);
     } catch (err) {
       toast({ title: t('forms.beekeeperCreateFailed'), description: err.message, variant: 'destructive' });
@@ -54,8 +110,8 @@ export default function BeekeeperFormDialog({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-white" data-testid="beekeeper-form-dialog">
         <DialogHeader>
-          <DialogTitle className="text-[#032b71] font-black">{t('forms.addBeekeeper')}</DialogTitle>
-          <DialogDescription>{t('forms.addBeekeeperDescription')}</DialogDescription>
+          <DialogTitle className="text-[#032b71] font-black">{isEdit ? t('forms.editBeekeeper') : t('forms.addBeekeeper')}</DialogTitle>
+          <DialogDescription>{isEdit ? '' : t('forms.addBeekeeperDescription')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
@@ -76,15 +132,16 @@ export default function BeekeeperFormDialog({ open, onOpenChange }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.village')}</Label>
-            <Select value={form.village_id} onValueChange={set('village_id')}>
-              <SelectTrigger data-testid="bk-form-village"><SelectValue placeholder={t('forms.selectVillage')} /></SelectTrigger>
-              <SelectContent>
-                {villages.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          <AddressFields
+            testIdPrefix="bk-form"
+            value={{
+              country: form.country,
+              state_region: form.state_region,
+              lga_municipality: form.lga_municipality,
+              village: form.village,
+            }}
+            onChange={(addr) => setForm((f) => ({ ...f, ...addr }))}
+          />
           <div className="flex flex-col gap-1.5 col-span-2">
             <Label className="text-[#7089b4]">{t('forms.organisation')}</Label>
             <Select value={form.actor_id} onValueChange={set('actor_id')}>
@@ -127,8 +184,8 @@ export default function BeekeeperFormDialog({ open, onOpenChange }) {
 
           <DialogFooter className="col-span-2 mt-2">
             <Button type="button" variant="outline" className="border-[#0f48aa] text-[#0f48aa]" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-            <Button type="submit" data-testid="bk-form-submit" disabled={saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
-              {saving ? t('forms.saving') : t('forms.saveBeekeeper')}
+            <Button type="submit" data-testid="bk-form-submit" disabled={saving || !addressValid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
+              {saving ? t('forms.saving') : isEdit ? t('companyProfile.saveChanges') : t('forms.saveBeekeeper')}
             </Button>
           </DialogFooter>
         </form>
