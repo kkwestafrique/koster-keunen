@@ -107,6 +107,7 @@
     "searchPlaceholder": "Rechercher par code ou nom...",
     "allActorType": "Tous les types d'acteurs",
     "allStatus": "Tous les statuts",
+    "allCountry": "Tous les pays",
     "traceabilityCode": "Code de traçabilité",
     "actorName": "Nom de l'acteur",
     "actorType": "Type d'acteur",

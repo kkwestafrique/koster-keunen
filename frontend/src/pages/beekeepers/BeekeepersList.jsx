@@ -29,6 +29,7 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
     gender,
     villageId,
     status: fixedStatus || '',
+    year,
   });
 
   const columns = [
@@ -36,10 +37,10 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
     { key: 'full_name', label: t('beekeepersList.fullName') },
     { key: 'gender', label: t('beekeepersList.gender') },
     { key: 'village', label: t('beekeepersList.village'), render: (row) => row.villages?.name || '—' },
-    { key: 'traditional_single', label: t('beekeepersList.traditionalSingle'), render: (row) => row.traditional_single ?? 0 },
-    { key: 'traditional_double', label: t('beekeepersList.traditionalDouble'), render: (row) => row.traditional_double ?? 0 },
-    { key: 'modern_hives', label: t('beekeepersList.modernHives'), render: (row) => row.modern_hives ?? 0 },
-    { key: 'other', label: t('beekeepersList.other'), render: (row) => row.other_hives ?? 0 },
+    { key: 'traditional_single', label: t('beekeepersList.traditionalSingle'), render: (row) => row.hives_traditional_single ?? 0 },
+    { key: 'traditional_double', label: t('beekeepersList.traditionalDouble'), render: (row) => row.hives_traditional_double ?? 0 },
+    { key: 'modern_hives', label: t('beekeepersList.modernHives'), render: (row) => row.hives_modern ?? 0 },
+    { key: 'other', label: t('beekeepersList.other'), render: (row) => row.hives_other ?? 0 },
   ];
 
   return (
@@ -72,7 +73,7 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
             key: 'year',
             label: t('beekeepersList.allYear'),
             value: year,
-            onChange: (v) => setYear(v),
+            onChange: (v) => { setYear(v); setPage(1); },
             options: ['2026', '2025', '2024'].map((y) => ({ value: y, label: y })),
           },
           {

@@ -10,10 +10,11 @@ export function useBeekeepers({
   gender = '',
   villageId = '',
   status = '',
+  year = '',
 } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['beekeepers', { page, search, gender, villageId, status, supplyChainId }],
+    queryKey: ['beekeepers', { page, search, gender, villageId, status, year, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('beekeepers')
@@ -27,6 +28,9 @@ export function useBeekeepers({
       if (gender) query = query.eq('gender', gender);
       if (villageId) query = query.eq('village_id', villageId);
       if (status) query = query.eq('status', status);
+      // beekeepers has no `year` column — "year" here means the year the
+      // record was added, same convention used by the Report page.
+      if (year) query = query.gte('created_at', `${year}-01-01`).lte('created_at', `${year}-12-31T23:59:59`);
 
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
