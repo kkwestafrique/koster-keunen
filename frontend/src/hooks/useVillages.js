@@ -84,3 +84,42 @@ export function useCreateVillage() {
     },
   });
 }
+
+// Used by forms (e.g. Add Beekeeper) that capture a full Country -> State ->
+// LGA -> Village address inline rather than picking from an existing village
+// list — matches the live-site audit, where Village is a free-text field.
+// Looks for an existing village with the same country/state/lga/name for
+// this supply chain first (case-insensitive on name) and reuses it, so we
+// don't create duplicate village rows every time the same address is typed;
+// creates a new one only if no match is found.
+export function useFindOrCreateVillage() {
+  const { supplyChainId } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ country, state_region, lga_municipality, name }) => {
+      const { data: existing, error: findError } = await supabase
+        .from('villages')
+        .select('id')
+        .eq('supply_chain_id', supplyChainId)
+        .eq('country', country)
+        .eq('state_region', state_region)
+        .eq('lga_municipality', lga_municipality)
+        .ilike('name', name)
+        .maybeSingle();
+      if (findError) throw findError;
+      if (existing) return existing.id;
+
+      const { data: created, error: createError } = await supabase
+        .from('villages')
+        .insert([{ country, state_region, lga_municipality, name, supply_chain_id: supplyChainId }])
+        .select('id')
+        .single();
+      if (createError) throw createError;
+      return created.id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['villages'] });
+      queryClient.invalidateQueries({ queryKey: ['villages-lite'] });
+    },
+  });
+}
