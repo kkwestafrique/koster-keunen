@@ -13,8 +13,14 @@ import { useStatesForCountry, useLgasForState } from '@/hooks/useRegions';
 // Note: the live site has the State and LGA labels swapped against their data
 // (audit finding, July 2026). We implement the labels CORRECTLY here — states
 // under State, LGAs under LGA — rather than replicating the bug.
-// LGA falls back to free text when no list exists for the chosen state.
-// Village is free text, matching the live site.
+// LGA falls back to free text when no list exists for the chosen state, and
+// always includes an "Other" option even when a list does exist — some
+// region's district data (e.g. Ghana) was populated from best-available
+// reference material rather than a verified government source, so a real
+// district that's missing or misspelled in our data must never block someone
+// from just typing what they actually have.
+const OTHER_LGA_VALUE = '__other__';
+
 export default function AddressFields({ value, onChange, testIdPrefix = 'address' }) {
   const { t } = useTranslation();
   const { country = '', state_region = '', lga_municipality = '', village = '' } = value || {};
@@ -22,7 +28,21 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
   const { data: states = [] } = useStatesForCountry(country);
   const { data: lgas = [] } = useLgasForState(country, state_region);
 
+  const [lgaIsOther, setLgaIsOther] = React.useState(false);
+
   const set = (patch) => onChange({ ...value, ...patch });
+
+  const lgaSelectValue = lgaIsOther ? OTHER_LGA_VALUE : lga_municipality;
+
+  const handleLgaSelect = (v) => {
+    if (v === OTHER_LGA_VALUE) {
+      setLgaIsOther(true);
+      set({ lga_municipality: '' });
+    } else {
+      setLgaIsOther(false);
+      set({ lga_municipality: v });
+    }
+  };
 
   return (
     <>
@@ -30,7 +50,7 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
         <Label className="text-[#7089b4]">{t('forms.country')}</Label>
         <Select
           value={country}
-          onValueChange={(v) => set({ country: v, state_region: '', lga_municipality: '' })}
+          onValueChange={(v) => { set({ country: v, state_region: '', lga_municipality: '' }); setLgaIsOther(false); }}
         >
           <SelectTrigger data-testid={`${testIdPrefix}-country`}>
             <SelectValue placeholder={t('forms.selectCountry')} />
@@ -47,7 +67,7 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
         <Label className="text-[#7089b4]">{t('forms.stateRegion')}</Label>
         <Select
           value={state_region}
-          onValueChange={(v) => set({ state_region: v, lga_municipality: '' })}
+          onValueChange={(v) => { set({ state_region: v, lga_municipality: '' }); setLgaIsOther(false); }}
           disabled={!country}
         >
           <SelectTrigger data-testid={`${testIdPrefix}-state`}>
@@ -63,8 +83,8 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
 
       <div className="flex flex-col gap-1.5">
         <Label className="text-[#7089b4]">{t('forms.lgaMunicipality')}</Label>
-        {lgas.length > 0 ? (
-          <Select value={lga_municipality} onValueChange={(v) => set({ lga_municipality: v })} disabled={!state_region}>
+        {lgas.length > 0 && !lgaIsOther ? (
+          <Select value={lgaSelectValue} onValueChange={handleLgaSelect} disabled={!state_region}>
             <SelectTrigger data-testid={`${testIdPrefix}-lga`}>
               <SelectValue placeholder={state_region ? t('forms.selectLga') : t('forms.selectStateFirst')} />
             </SelectTrigger>
@@ -72,6 +92,7 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
               {lgas.map((l) => (
                 <SelectItem key={l} value={l}>{l}</SelectItem>
               ))}
+              <SelectItem value={OTHER_LGA_VALUE}>{t('forms.otherNotListed')}</SelectItem>
             </SelectContent>
           </Select>
         ) : (
@@ -82,6 +103,16 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
             placeholder={state_region ? t('forms.enterLga') : t('forms.selectStateFirst')}
             onChange={(e) => set({ lga_municipality: e.target.value })}
           />
+        )}
+        {lgaIsOther && lgas.length > 0 && (
+          <button
+            type="button"
+            data-testid={`${testIdPrefix}-lga-back-to-list`}
+            onClick={() => setLgaIsOther(false)}
+            className="text-xs text-[#0f48aa] hover:underline self-start"
+          >
+            {t('forms.chooseFromList')}
+          </button>
         )}
       </div>
 

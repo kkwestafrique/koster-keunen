@@ -333,7 +333,9 @@
     "selectCountryFirst": "Sélectionnez d'abord un pays",
     "selectStateFirst": "Sélectionnez d'abord un état",
     "enterLga": "Saisir le LGA/municipalité",
-    "enterVillage": "Saisir le village"
+    "enterVillage": "Saisir le village",
+    "otherNotListed": "Autre (non répertorié)",
+    "chooseFromList": "Choisir dans la liste à la place"
   },
   "contractWizard": {
     "stepDetails": "Détails du contrat",

@@ -333,7 +333,9 @@
     "selectCountryFirst": "Select a country first",
     "selectStateFirst": "Select a state first",
     "enterLga": "Enter LGA/municipality",
-    "enterVillage": "Enter village"
+    "enterVillage": "Enter village",
+    "otherNotListed": "Other (not listed)",
+    "chooseFromList": "Choose from list instead"
   },
   "contractWizard": {
     "stepDetails": "Contract details",
