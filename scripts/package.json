@@ -1,0 +1,12 @@
+{
+  "name": "kkwa-scripts",
+  "private": true,
+  "description": "Standalone maintenance/test scripts for the KKWA MIS — not part of the frontend build.",
+  "scripts": {
+    "smoke-test": "node smoke-test.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2",
+    "dotenv": "^16.4.5"
+  }
+}
