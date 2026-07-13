@@ -10,6 +10,7 @@ import AddressFields from '@/components/common/AddressFields';
 import { useConstants } from '@/hooks/useConstants';
 import { useCreateActor } from '@/hooks/useActors';
 import { uploadMediaFile } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const EMPTY = {
@@ -34,6 +35,7 @@ export default function ActorFormDialog({ open, onOpenChange }) {
   const [saving, setSaving] = useState(false);
   const { data: actorTypes = [] } = useConstants('actor_type');
   const createActor = useCreateActor();
+  const { supplyChainId } = useAuth();
   const { toast } = useToast();
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
@@ -43,7 +45,7 @@ export default function ActorFormDialog({ open, onOpenChange }) {
     setSaving(true);
     try {
       let logo_url = null;
-      if (logoFile) logo_url = await uploadMediaFile(logoFile, 'actors');
+      if (logoFile) logo_url = await uploadMediaFile(logoFile, 'actors', supplyChainId);
       await createActor.mutateAsync({ ...form, logo_url });
       toast({ title: t('forms.actorCreated'), description: t('forms.actorCreatedDescription', { name: form.contact_name }) });
       setForm(EMPTY);

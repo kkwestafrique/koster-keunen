@@ -151,7 +151,7 @@ export default function Report() {
       // real re-download later, from any device — not just this browser tab.
       let fileUrl = null;
       try {
-        fileUrl = await uploadMediaFile(new File([blob], fileName, { type: 'text/csv' }), 'exports');
+        fileUrl = await uploadMediaFile(new File([blob], fileName, { type: 'text/csv' }), 'exports', supplyChainId);
       } catch (uploadErr) {
         // The person already has their local download; a storage-upload
         // failure shouldn't be treated as the whole export failing.

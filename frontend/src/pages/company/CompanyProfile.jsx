@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function CompanyProfile() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { profile, supplyChainId } = useAuth();
   const actorId = profile?.current_actor_id;
   const { data: currentActor } = useActor(actorId);
   const actor = currentActor || {};
@@ -64,7 +64,7 @@ export default function CompanyProfile() {
     setSaving(true);
     try {
       let patch = { contact_name: editForm.contact_name, actor_type: editForm.actor_type };
-      if (logoFile) patch.logo_url = await uploadMediaFile(logoFile, 'actors');
+      if (logoFile) patch.logo_url = await uploadMediaFile(logoFile, 'actors', supplyChainId);
       await updateActor.mutateAsync({ id: actorId, ...patch });
       toast({ title: t('companyProfile.saved') });
       setEditing(false);

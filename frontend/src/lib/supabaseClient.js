@@ -19,10 +19,15 @@ export function getPublicMediaUrl(path) {
   return data.publicUrl;
 }
 
-export async function uploadMediaFile(file, folder) {
+export async function uploadMediaFile(file, folder, supplyChainId) {
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-  const filePath = `${folder}/${fileName}`;
+  // Path is folder/{supply_chain_id}/filename — the storage RLS policies
+  // check that middle segment against the caller's own supply chain, so
+  // one tenant can never overwrite or delete another tenant's files even
+  // though the bucket itself is public-read (needed for logos/exports to
+  // be viewable via a plain URL).
+  const filePath = `${folder}/${supplyChainId}/${fileName}`;
   const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(filePath, file);
   if (error) throw error;
   return getPublicMediaUrl(filePath);
