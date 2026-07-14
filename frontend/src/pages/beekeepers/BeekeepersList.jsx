@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useBeekeepers } from '@/hooks/useBeekeepers';
 import { useAllVillagesLite } from '@/hooks/useVillages';
-import BeekeeperFormDialog from '@/pages/beekeepers/BeekeeperFormDialog';
+import AddBeekeeperDialog from '@/pages/beekeepers/AddBeekeeperDialog';
 
 // fixedStatus: 'Potential' | 'Actual' | null (full list)
 export default function BeekeepersList({ fixedStatus, title, testId }) {
@@ -112,7 +112,7 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
         onRowClick={(row) => navigate(`/beekeepers/${row.id}`)}
       />
 
-      <BeekeeperFormDialog open={formOpen} onOpenChange={setFormOpen} />
+      <AddBeekeeperDialog open={formOpen} onOpenChange={setFormOpen} />
     </AppLayout>
   );
 }

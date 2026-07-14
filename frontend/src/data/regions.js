@@ -32,6 +32,15 @@ export const UNITS = ['Kg'];
 
 export const STANDARDS = ['Sustainable', 'Organic', 'Conventional'];
 
+// "Commitment of beekeeper" checkboxes on the Add Beekeeper form (distinct
+// from PRODUCTS above — this is a 3-item declaration, not the full
+// transaction product catalog). Casing matches the live site exactly
+// ("Crude honey" lowercase h, vs PRODUCTS' "Crude Honey").
+export const COMMITMENT_OF_BEEKEEPER = ['Crude honey', 'Honey', 'Beeswax'];
+
+// "Number of hives spread per crop" inputs on the Add Beekeeper form.
+export const HIVE_SPREAD_CROPS = ['Cashew', 'Mango', 'Shea', 'Forest', 'Other forage'];
+
 export const TEAM_ROLES = ['Admin', 'Member', 'Field Officer'];
 
 // Must match the exact values in the `actors.actor_type` CHECK constraint
