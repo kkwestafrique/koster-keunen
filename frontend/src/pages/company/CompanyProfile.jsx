@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,7 +17,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Pencil, MoreVertical, Plus } from 'lucide-react';
-import { ACTOR_TYPES, TEAM_ROLES } from '@/data/regions';
+import { ACTOR_TYPES, STANDARDS, TEAM_ROLES } from '@/data/regions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActor, useUpdateActor } from '@/hooks/useActors';
 import {
@@ -44,7 +45,7 @@ export default function CompanyProfile() {
   const removeMember = useRemoveTeamMember();
 
   const EMPTY_EDIT_FORM = {
-    contact_name: '', actor_type: '', description: '',
+    contact_name: '', actor_type: '', description: '', standards: [],
     country: '', state_region: '', lga_municipality: '', village: '',
     contact_email: '', contact_phone: '',
   };
@@ -68,6 +69,7 @@ export default function CompanyProfile() {
       contact_name: actor.contact_name || '',
       actor_type: actor.actor_type || '',
       description: actor.description || '',
+      standards: actor.standards || [],
       country: actor.country || '',
       state_region: actor.state_region || '',
       lga_municipality: actor.lga_municipality || '',
@@ -78,6 +80,11 @@ export default function CompanyProfile() {
     setLogoFile(null);
     setEditing(true);
   };
+
+  const toggleStandard = (std) => setEditForm((f) => ({
+    ...f,
+    standards: f.standards.includes(std) ? f.standards.filter((s) => s !== std) : [...f.standards, std],
+  }));
 
   const saveEdit = async () => {
     setSaving(true);
@@ -152,7 +159,7 @@ export default function CompanyProfile() {
                   ) : (
                     <div className="flex items-center gap-3 flex-wrap">
                       <h2 className="text-xl font-black text-[#032b71]" data-testid="company-name">{actor.contact_name || '—'}</h2>
-                      {['Sustainable', 'Organic', 'Conventional'].map((s) => (
+                      {(actor.standards || []).map((s) => (
                         <StandardBadge key={s} standard={s} />
                       ))}
                     </div>
@@ -195,6 +202,16 @@ export default function CompanyProfile() {
                       </label>
                     ))}
                   </RadioGroup>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[#7089b4]">{t('forms.addStandards')}</Label>
+                  <div className="flex gap-6">
+                    {STANDARDS.map((std) => (
+                      <label key={std} className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
+                        <Checkbox data-testid={`company-edit-standard-${std}`} checked={editForm.standards.includes(std)} onCheckedChange={() => toggleStandard(std)} /> {std}
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex flex-col gap-1.5 max-w-xs">
                   <Label className="text-[#7089b4]">{t('forms.logo')}</Label>

@@ -59,7 +59,7 @@ export default function ActorDetail() {
           <ActorHeaderCard
             name={actor.contact_name}
             logoUrl={actor.logo_url}
-            pills={[actor.standard || 'Sustainable']}
+            pills={actor.standards || []}
             fields={[
               { label: t('actorProfile.actorType'), value: actor.actor_type },
               { label: t('actorProfile.traceabilityCode'), value: actor.traceability_code },

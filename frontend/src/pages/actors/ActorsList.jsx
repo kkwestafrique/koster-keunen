@@ -9,11 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useActors } from '@/hooks/useActors';
 import ActorFormDialog from '@/pages/actors/ActorFormDialog';
+import { ACTOR_TYPES } from '@/data/regions';
 
 // Matches the live site's Actor Type filter exactly — 'Buyer' is a valid
 // actor_type value elsewhere in the app but is not offered here or in the
 // Add Actor radios, same audited discrepancy noted in ActorFormDialog.
-const ACTOR_TYPE_FILTER_OPTIONS = ['Local Partner', 'Aggregator', 'Producer Organisation'];
+// Reuses the same ACTOR_TYPES constant as ActorFormDialog's radios so the
+// two can never silently drift apart.
+const ACTOR_TYPE_FILTER_OPTIONS = ACTOR_TYPES;
 
 // fixedStatus: 'Inactive' -> Potential actors, 'Active' -> Actual (confirmed) actors, null -> all
 export default function ActorsList({ fixedStatus, title, testId }) {
