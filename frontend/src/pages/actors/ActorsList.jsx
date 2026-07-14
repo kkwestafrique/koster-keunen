@@ -8,28 +8,30 @@ import StatusBadge from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useActors } from '@/hooks/useActors';
-import { useConstants } from '@/hooks/useConstants';
 import ActorFormDialog from '@/pages/actors/ActorFormDialog';
+
+// Matches the live site's Actor Type filter exactly — 'Buyer' is a valid
+// actor_type value elsewhere in the app but is not offered here or in the
+// Add Actor radios, same audited discrepancy noted in ActorFormDialog.
+const ACTOR_TYPE_FILTER_OPTIONS = ['Local Partner', 'Aggregator', 'Producer Organisation'];
 
 // fixedStatus: 'Inactive' -> Potential actors, 'Active' -> Actual (confirmed) actors, null -> all
 export default function ActorsList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [search, setSearch] = useState('');
   const [actorType, setActorType] = useState('');
-  const [country, setCountry] = useState('');
+  const [status, setStatus] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { data: actorTypes = [] } = useConstants('actor_type');
-  const { data: countries = [] } = useConstants('country');
-
   const { data, isLoading } = useActors({
     page,
+    pageSize,
     search,
     actorType,
-    country,
-    status: fixedStatus || '',
+    status: fixedStatus || status,
   });
 
   const columns = [
@@ -64,15 +66,19 @@ export default function ActorsList({ fixedStatus, title, testId }) {
             label: t('actorsList.allActorType'),
             value: actorType,
             onChange: (v) => { setActorType(v); setPage(1); },
-            options: actorTypes.map((t2) => ({ value: t2.value, label: t2.label })),
+            options: ACTOR_TYPE_FILTER_OPTIONS.map((v) => ({ value: v, label: v })),
           },
-          {
-            key: 'country',
-            label: t('actorsList.allCountry'),
-            value: country,
-            onChange: (v) => { setCountry(v); setPage(1); },
-            options: countries.map((c) => ({ value: c.value, label: c.label })),
-          },
+          ...(fixedStatus ? [] : [{
+            key: 'status',
+            label: t('actorsList.allStatus'),
+            value: status,
+            onChange: (v) => { setStatus(v); setPage(1); },
+            options: [
+              { value: 'Active', label: t('common.active') },
+              { value: 'Inactive', label: t('common.inactive') },
+              { value: 'Disabled', label: t('common.disabled') },
+            ],
+          }]),
         ]}
       />
 
@@ -82,6 +88,9 @@ export default function ActorsList({ fixedStatus, title, testId }) {
         rows={data?.rows || []}
         total={data?.total || 0}
         page={page}
+        pageSize={pageSize}
+        onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
+        showFirstLast={false}
         onPageChange={setPage}
         loading={isLoading}
         emptyMessage={t('common.noRecordsFound')}

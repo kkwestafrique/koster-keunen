@@ -2,12 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
-
-export function useActors({ page = 1, search = '', actorType = '', country = '', status = '' } = {}) {
+export function useActors({ page = 1, pageSize = 5, search = '', actorType = '', country = '', status = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['actors', { page, search, actorType, country, status, supplyChainId }],
+    queryKey: ['actors', { page, pageSize, search, actorType, country, status, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('actors')
@@ -24,8 +22,8 @@ export function useActors({ page = 1, search = '', actorType = '', country = '',
       if (country) query = query.eq('country', country);
       if (status) query = query.eq('status', status);
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       const { data, error, count } = await query;

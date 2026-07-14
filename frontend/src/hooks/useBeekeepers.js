@@ -2,10 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
-
 export function useBeekeepers({
   page = 1,
+  pageSize = 5,
   search = '',
   gender = '',
   villageId = '',
@@ -14,7 +13,7 @@ export function useBeekeepers({
 } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['beekeepers', { page, search, gender, villageId, status, year, supplyChainId }],
+    queryKey: ['beekeepers', { page, pageSize, search, gender, villageId, status, year, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('beekeepers')
@@ -32,8 +31,8 @@ export function useBeekeepers({
       // record was added, same convention used by the Report page.
       if (year) query = query.gte('created_at', `${year}-01-01`).lte('created_at', `${year}-12-31T23:59:59`);
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       const { data, error, count } = await query;

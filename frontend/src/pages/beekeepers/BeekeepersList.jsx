@@ -14,6 +14,7 @@ import BeekeeperFormDialog from '@/pages/beekeepers/BeekeeperFormDialog';
 export default function BeekeepersList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [search, setSearch] = useState('');
   const [gender, setGender] = useState('');
   const [villageId, setVillageId] = useState('');
@@ -25,6 +26,7 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
 
   const { data, isLoading } = useBeekeepers({
     page,
+    pageSize,
     search,
     gender,
     villageId,
@@ -41,7 +43,11 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
     { key: 'traditional_double', label: t('beekeepersList.traditionalDouble'), render: (row) => row.hives_traditional_double ?? 0 },
     { key: 'modern_hives', label: t('beekeepersList.modernHives'), render: (row) => row.hives_modern ?? 0 },
     { key: 'other', label: t('beekeepersList.other'), render: (row) => row.hives_other ?? 0 },
+    { key: 'total_hives', label: t('beekeepersList.totalHives'), render: (row) => row.total_hives ?? 0 },
+    { key: 'active_years', label: t('beekeepersList.activeYears'), render: (row) => row.active_years ?? 0 },
   ];
+
+  const YEAR_OPTIONS = ['2027', '2026', '2025', '2024', '2023'].map((y) => ({ value: y, label: y }));
 
   return (
     <AppLayout hideDefaultHeader>
@@ -74,14 +80,18 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
             label: t('beekeepersList.allYear'),
             value: year,
             onChange: (v) => { setYear(v); setPage(1); },
-            options: ['2026', '2025', '2024'].map((y) => ({ value: y, label: y })),
+            options: YEAR_OPTIONS,
           },
           {
             key: 'gender',
             label: t('beekeepersList.allGender'),
             value: gender,
             onChange: (v) => { setGender(v); setPage(1); },
-            options: [{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }],
+            options: [
+              { value: 'Male', label: 'Male' },
+              { value: 'Female', label: 'Female' },
+              { value: 'Other', label: 'Other' },
+            ],
           },
         ]}
       />
@@ -92,6 +102,9 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
         rows={data?.rows || []}
         total={data?.total || 0}
         page={page}
+        pageSize={pageSize}
+        onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
+        showFirstLast
         onPageChange={setPage}
         loading={isLoading}
         emptyMessage={t('common.noRecordsFound')}

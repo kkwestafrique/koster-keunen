@@ -16,14 +16,30 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from '@/components/ui/pagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 
-// Generic paginated zebra-stripe table used on every list screen
+const PAGE_SIZE_OPTIONS = [5, 15, 30];
+
+// Generic paginated zebra-stripe table used on every list screen.
+// Pagination style is deliberately inconsistent on the live site between
+// the Beekeeper List (First/Prev/Next/Last) and the Actors List
+// (Prev/Next only) — showFirstLast lets each page match its own reference
+// rather than forcing one shared style.
 export default function DataTable({
   columns,
   rows,
   total,
   page,
-  pageSize = 25,
+  pageSize = 5,
+  onPageSizeChange,
+  showFirstLast = false,
   onPageChange,
   onRowClick,
   loading,
@@ -78,36 +94,81 @@ export default function DataTable({
         </TableBody>
       </Table>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-[#cfd8e6]">
-          <span className="text-sm text-[#7089b4]" data-testid={`${testId}-summary`}>
-            {t('common.page')} {page} {t('common.of')} {totalPages} &middot; {total} {t('common.records')}
-          </span>
-          <Pagination className="justify-end w-auto mx-0">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  data-testid={`${testId}-prev`}
-                  onClick={() => page > 1 && onPageChange(page - 1)}
-                  className={page <= 1 ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink isActive className="border-[#0f48aa] text-[#0f48aa] rounded-[3px]">
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext
-                  data-testid={`${testId}-next`}
-                  onClick={() => page < totalPages && onPageChange(page + 1)}
-                  className={page >= totalPages ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+      <div className="flex items-center justify-between px-4 py-3 border-t border-[#cfd8e6]">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-[#7089b4]">{t('common.itemsPerPage')}</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(v) => onPageSizeChange && onPageSizeChange(Number(v))}
+          >
+            <SelectTrigger data-testid={`${testId}-page-size`} className="w-[70px] h-8 bg-white border-[#cfd8e6] text-[#032b71]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-[#7089b4]" data-testid={`${testId}-summary`}>
+              {t('common.page')} {page} {t('common.of')} {totalPages} &middot; {total} {t('common.records')}
+            </span>
+            <Pagination className="justify-end w-auto mx-0">
+              <PaginationContent>
+                {showFirstLast && (
+                  <PaginationItem>
+                    <button
+                      type="button"
+                      data-testid={`${testId}-first`}
+                      onClick={() => page > 1 && onPageChange(1)}
+                      disabled={page <= 1}
+                      className={`h-9 w-9 flex items-center justify-center rounded-[3px] ${page <= 1 ? 'opacity-40 pointer-events-none' : 'cursor-pointer hover:bg-[#f5f5f5]'}`}
+                    >
+                      <ChevronsLeft className="h-4 w-4 text-[#0f48aa]" />
+                    </button>
+                  </PaginationItem>
+                )}
+                <PaginationItem>
+                  <PaginationPrevious
+                    data-testid={`${testId}-prev`}
+                    onClick={() => page > 1 && onPageChange(page - 1)}
+                    className={page <= 1 ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink isActive className="border-[#0f48aa] text-[#0f48aa] rounded-[3px]">
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    data-testid={`${testId}-next`}
+                    onClick={() => page < totalPages && onPageChange(page + 1)}
+                    className={page >= totalPages ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                {showFirstLast && (
+                  <PaginationItem>
+                    <button
+                      type="button"
+                      data-testid={`${testId}-last`}
+                      onClick={() => page < totalPages && onPageChange(totalPages)}
+                      disabled={page >= totalPages}
+                      className={`h-9 w-9 flex items-center justify-center rounded-[3px] ${page >= totalPages ? 'opacity-40 pointer-events-none' : 'cursor-pointer hover:bg-[#f5f5f5]'}`}
+                    >
+                      <ChevronsRight className="h-4 w-4 text-[#0f48aa]" />
+                    </button>
+                  </PaginationItem>
+                )}
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
