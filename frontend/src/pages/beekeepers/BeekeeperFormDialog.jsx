@@ -12,7 +12,6 @@ import { useCreateBeekeeper, useUpdateBeekeeper } from '@/hooks/useBeekeepers';
 import { useToast } from '@/hooks/use-toast';
 
 const EMPTY = {
-  traceability_code: '',
   full_name: '',
   gender: '',
   country: '',
@@ -54,7 +53,6 @@ export default function BeekeeperFormDialog({ open, onOpenChange, beekeeper = nu
     if (!open) return;
     if (beekeeper) {
       setForm({
-        traceability_code: beekeeper.traceability_code || '',
         full_name: beekeeper.full_name || '',
         gender: beekeeper.gender || '',
         country: beekeeper.villages?.country || '',
@@ -114,10 +112,6 @@ export default function BeekeeperFormDialog({ open, onOpenChange, beekeeper = nu
           <DialogDescription>{isEdit ? '' : t('forms.addBeekeeperDescription')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.traceabilityCode')}</Label>
-            <Input data-testid="bk-form-code" required value={form.traceability_code} onChange={(e) => set('traceability_code')(e.target.value)} />
-          </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.fullName')}</Label>
             <Input data-testid="bk-form-name" required value={form.full_name} onChange={(e) => set('full_name')(e.target.value)} />

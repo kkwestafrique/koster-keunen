@@ -14,7 +14,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const EMPTY = {
-  traceability_code: '',
   actor_type: '',
   country: '',
   state_region: '',
@@ -25,7 +24,6 @@ const EMPTY = {
   contact_email: '',
   contact_phone: '',
   status: 'Inactive',
-  profile_completeness: 0,
 };
 
 export default function ActorFormDialog({ open, onOpenChange }) {
@@ -67,10 +65,6 @@ export default function ActorFormDialog({ open, onOpenChange }) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.traceabilityCode')}</Label>
-            <Input data-testid="actor-form-code" required value={form.traceability_code} onChange={(e) => set('traceability_code')(e.target.value)} />
-          </div>
-          <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.actorType')}</Label>
             <Select value={form.actor_type} onValueChange={set('actor_type')}>
               <SelectTrigger data-testid="actor-form-type"><SelectValue placeholder={t('forms.selectType')} /></SelectTrigger>
@@ -110,10 +104,6 @@ export default function ActorFormDialog({ open, onOpenChange }) {
                 <SelectItem value="Inactive">{t('common.inactive')}</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.profileCompleteness')}</Label>
-            <Input type="number" min="0" max="100" data-testid="actor-form-completeness" value={form.profile_completeness} onChange={(e) => set('profile_completeness')(Number(e.target.value))} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.logo')}</Label>

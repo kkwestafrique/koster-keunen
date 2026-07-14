@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import DetailField from '@/components/common/DetailField';
+import AddressFields from '@/components/common/AddressFields';
 import StandardBadge from '@/components/common/StandardBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,8 +43,14 @@ export default function CompanyProfile() {
   const updateRole = useUpdateTeamMemberRole();
   const removeMember = useRemoveTeamMember();
 
+  const EMPTY_EDIT_FORM = {
+    contact_name: '', actor_type: '', description: '',
+    country: '', state_region: '', lga_municipality: '', village: '',
+    contact_email: '', contact_phone: '',
+  };
+
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ contact_name: '', actor_type: '' });
+  const [editForm, setEditForm] = useState(EMPTY_EDIT_FORM);
   const [logoFile, setLogoFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -52,10 +59,22 @@ export default function CompanyProfile() {
   const [editRoleFor, setEditRoleFor] = useState(null); // member object
   const [roleValue, setRoleValue] = useState('');
 
+  // profile_completeness is computed server-side (weighted by field
+  // importance) via a DB trigger — never set manually here.
   const completeness = actor.profile_completeness ?? 0;
 
   const startEdit = () => {
-    setEditForm({ contact_name: actor.contact_name || '', actor_type: actor.actor_type || '' });
+    setEditForm({
+      contact_name: actor.contact_name || '',
+      actor_type: actor.actor_type || '',
+      description: actor.description || '',
+      country: actor.country || '',
+      state_region: actor.state_region || '',
+      lga_municipality: actor.lga_municipality || '',
+      village: actor.village || '',
+      contact_email: actor.contact_email || '',
+      contact_phone: actor.contact_phone || '',
+    });
     setLogoFile(null);
     setEditing(true);
   };
@@ -63,7 +82,7 @@ export default function CompanyProfile() {
   const saveEdit = async () => {
     setSaving(true);
     try {
-      let patch = { contact_name: editForm.contact_name, actor_type: editForm.actor_type };
+      let patch = { ...editForm };
       if (logoFile) patch.logo_url = await uploadMediaFile(logoFile, 'actors', supplyChainId);
       await updateActor.mutateAsync({ id: actorId, ...patch });
       toast({ title: t('companyProfile.saved') });
@@ -154,6 +173,15 @@ export default function CompanyProfile() {
 
             {editing ? (
               <div className="flex flex-col gap-4" data-testid="company-edit-form">
+                <div className="flex flex-col gap-1.5 max-w-md">
+                  <Label className="text-[#7089b4]">{t('actorProfile.contactFullName')}</Label>
+                  <Input
+                    className="bg-white"
+                    data-testid="company-edit-contact-name"
+                    value={editForm.contact_name}
+                    onChange={(e) => setEditForm((f) => ({ ...f, contact_name: e.target.value }))}
+                  />
+                </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[#7089b4]">{t('forms.actorType')}</Label>
                   <RadioGroup
@@ -172,6 +200,54 @@ export default function CompanyProfile() {
                   <Label className="text-[#7089b4]">{t('forms.logo')}</Label>
                   <Input type="file" accept="image/*" className="bg-white" data-testid="company-edit-logo" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
                 </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[#7089b4]">{t('actorProfile.actorDescription')}</Label>
+                  <textarea
+                    data-testid="company-edit-description"
+                    className="border border-[#cfd8e6] rounded-[5px] bg-white text-[#032b71] text-sm p-3 min-h-[80px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0f48aa]"
+                    value={editForm.description}
+                    onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                  />
+                </div>
+
+                <h3 className="text-sm font-black text-[#032b71]">{t('actorProfile.address')}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <AddressFields
+                    testIdPrefix="company-edit"
+                    value={{
+                      country: editForm.country,
+                      state_region: editForm.state_region,
+                      lga_municipality: editForm.lga_municipality,
+                      village: editForm.village,
+                    }}
+                    onChange={(addr) => setEditForm((f) => ({ ...f, ...addr }))}
+                  />
+                </div>
+
+                <h3 className="text-sm font-black text-[#032b71]">{t('actorProfile.contactInformation')}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-[#7089b4]">{t('actorProfile.contactEmail')}</Label>
+                    <Input
+                      type="email"
+                      className="bg-white"
+                      data-testid="company-edit-contact-email"
+                      value={editForm.contact_email}
+                      onChange={(e) => setEditForm((f) => ({ ...f, contact_email: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-[#7089b4]">{t('actorProfile.contactNumber')}</Label>
+                    <Input
+                      className="bg-white"
+                      data-testid="company-edit-contact-phone"
+                      value={editForm.contact_phone}
+                      onChange={(e) => setEditForm((f) => ({ ...f, contact_phone: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
                 <div className="flex gap-3">
                   <Button variant="outline" className="border-[#cfd8e6] text-[#032b71] bg-white" data-testid="company-edit-discard" onClick={() => setEditing(false)}>
                     {t('companyProfile.discard')}

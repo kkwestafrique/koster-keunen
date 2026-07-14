@@ -70,8 +70,16 @@ export default function SetUpPassword() {
     }
     setSaving(true);
     try {
-      const { error: err } = await supabase.auth.updateUser({ password });
+      const { data: updateData, error: err } = await supabase.auth.updateUser({ password });
       if (err) throw err;
+      // Verification complete: this is the moment the invited member becomes
+      // real (has a working login), so this is what moves them out of
+      // "Pending" in the team members list. Matched by user_id, set on the
+      // team_members row when the invite was sent.
+      const userId = updateData?.user?.id;
+      if (userId) {
+        await supabase.from('team_members').update({ status: 'Active' }).eq('user_id', userId);
+      }
       navigate('/');
     } catch (err) {
       setError(err.message || t('setUpPassword.setupFailed'));
