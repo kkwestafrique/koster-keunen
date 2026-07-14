@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -9,10 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StandardBadge from '@/components/common/StandardBadge';
 import { Plus, Trash2 } from 'lucide-react';
-import { CURRENCIES, PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
+import { CURRENCIES, PRODUCTS, UNITS, STANDARDS, COUNTRY_CURRENCY } from '@/data/regions';
 import { useAllActorsLite } from '@/hooks/useActors';
 import { useCreateContract } from '@/hooks/useContracts';
 import { useToast } from '@/hooks/use-toast';
+import { uploadMediaFile } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
 
 const YEARS = ['2027', '2026', '2025', '2024', '2023', '2022'];
 const EMPTY_PRODUCT_ROW = { product: '', expected_quantity: '', unit: 'Kg', price: '' };
@@ -23,11 +25,14 @@ export default function ContractWizard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { supplyChainId } = useAuth();
   const { data: actors = [] } = useAllActorsLite();
   const createContract = useCreateContract();
 
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [contractFile, setContractFile] = useState(null);
+  const fileInputRef = useRef(null);
   const [form, setForm] = useState({
     year: '',
     standard: '',
@@ -35,12 +40,26 @@ export default function ContractWizard() {
     currency: '',
     products: [{ ...EMPTY_PRODUCT_ROW }],
     advance_amount_paid: '',
-    advance_percent: '',
     comments: '',
     signature_date: '',
   });
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+
+  // Auto-fills Currency from the selected supplier's country (audit:
+  // "selecting a supplier auto-filled Currency"). Still just a normal
+  // Select afterward — the person can change it manually if needed, this
+  // only sets a sensible default at the moment of selection.
+  const handleSupplierChange = (actorId) => {
+    const selected = actors.find((a) => a.id === actorId);
+    const mappedCurrency = selected?.country ? COUNTRY_CURRENCY[selected.country] : null;
+    setForm((f) => ({
+      ...f,
+      supplier_actor_id: actorId,
+      currency: mappedCurrency || f.currency,
+    }));
+  };
+
   const setProductRow = (idx, patch) =>
     setForm((f) => ({
       ...f,
@@ -52,12 +71,31 @@ export default function ContractWizard() {
 
   const supplier = actors.find((a) => a.id === form.supplier_actor_id);
   const totalQuantity = form.products.reduce((sum, p) => sum + (Number(p.expected_quantity) || 0), 0);
+  const totalContractAmount = form.products.reduce(
+    (sum, p) => sum + (Number(p.expected_quantity) || 0) * (Number(p.price) || 0), 0
+  );
+  const yellowWaxQuantity = form.products
+    .filter((p) => p.product === 'Beeswax-Yellow')
+    .reduce((sum, p) => sum + (Number(p.expected_quantity) || 0), 0);
+  const percentageYellowWax = totalQuantity > 0 ? Math.round((yellowWaxQuantity / totalQuantity) * 100) : null;
+  // Advance(%) is NOT user-entered — audit confirms it's a greyed,
+  // auto-calculated field (Advance amount paid ÷ Total contract amount).
+  const advancePercent = totalContractAmount > 0
+    ? Math.round(((Number(form.advance_amount_paid) || 0) / totalContractAmount) * 100)
+    : 0;
+  // The live totals box only appears once at least one row has both
+  // quantity and price filled in (audit finding).
+  const showTotalsSummary = form.products.some((p) => p.expected_quantity && p.price);
   const detailsValid = form.year && form.standard && form.currency && form.signature_date
     && form.products.every((p) => p.product && p.expected_quantity);
 
   const handleSubmit = async () => {
     setSaving(true);
     try {
+      let attachment_url = null;
+      if (contractFile) {
+        attachment_url = await uploadMediaFile(contractFile, 'contracts', supplyChainId);
+      }
       await createContract.mutateAsync({
         year: Number(form.year),
         standard: form.standard,
@@ -65,11 +103,12 @@ export default function ContractWizard() {
         currency: form.currency,
         products: form.products,
         advance_amount_paid: Number(form.advance_amount_paid) || 0,
-        advance_percent: Number(form.advance_percent) || 0,
+        advance_percent: advancePercent,
         comments: form.comments,
         signature_date: form.signature_date,
         contract_type: 'Send',
         country: supplier?.country || null,
+        attachment_url,
       });
       toast({ title: t('contractWizard.created') });
       navigate('/contracts');
@@ -108,7 +147,7 @@ export default function ContractWizard() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.supplier')}</Label>
-                <Select value={form.supplier_actor_id} onValueChange={set('supplier_actor_id')}>
+                <Select value={form.supplier_actor_id} onValueChange={handleSupplierChange}>
                   <SelectTrigger data-testid="contract-supplier"><SelectValue placeholder={t('contractWizard.selectSupplier')} /></SelectTrigger>
                   <SelectContent>
                     {actors.length === 0 ? (
@@ -171,13 +210,41 @@ export default function ContractWizard() {
                 </Button>
               </div>
 
+              {showTotalsSummary && (
+                <div className="col-span-full grid grid-cols-3 gap-4 bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4" data-testid="contract-totals-summary">
+                  <SummaryField label={t('contractWizard.totalQuantityExpected')} value={`${totalQuantity}`} />
+                  <SummaryField label={t('contractWizard.totalContractAmount')} value={totalContractAmount.toLocaleString()} />
+                  <SummaryField label={t('contractWizard.percentageYellowWax')} value={percentageYellowWax != null ? `${percentageYellowWax}%` : '—'} />
+                </div>
+              )}
+
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.advanceAmountPaid')}</Label>
                 <Input type="number" min="0" data-testid="contract-advance-amount" value={form.advance_amount_paid} onChange={(e) => set('advance_amount_paid')(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.advancePercent')}</Label>
-                <Input type="number" min="0" max="100" data-testid="contract-advance-percent" value={form.advance_percent} onChange={(e) => set('advance_percent')(e.target.value)} />
+                <Input disabled data-testid="contract-advance-percent" value={`${advancePercent}%`} className="bg-[#f4f6fa] text-[#7089b4]" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-[#7089b4]">{t('contractWizard.uploadContract')}</Label>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-[#0f48aa] text-[#0f48aa] shrink-0"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {t('contractWizard.uploadFile')}
+                  </Button>
+                  <span className="text-sm text-[#7089b4] truncate">{contractFile?.name || t('forms.noFileChosen')}</span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => setContractFile(e.target.files?.[0] || null)}
+                  />
+                </div>
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.signatureDate')}</Label>
@@ -215,9 +282,11 @@ export default function ContractWizard() {
                 <SummaryField label={t('contractWizard.supplier')} value={supplier?.contact_name || '—'} />
                 <SummaryField label={t('contractWizard.currency')} value={form.currency} />
                 <SummaryField label={t('contractWizard.advanceAmountPaid')} value={form.advance_amount_paid || '0'} />
-                <SummaryField label={t('contractWizard.advancePercent')} value={`${form.advance_percent || 0}%`} />
+                <SummaryField label={t('contractWizard.advancePercent')} value={`${advancePercent}%`} />
                 <SummaryField label={t('contractWizard.signatureDate')} value={form.signature_date} />
                 <SummaryField label={t('contractWizard.totalQuantityExpected')} value={`${totalQuantity} Kg`} />
+                <SummaryField label={t('contractWizard.totalContractAmount')} value={totalContractAmount.toLocaleString()} />
+                <SummaryField label={t('contractWizard.percentageYellowWax')} value={percentageYellowWax != null ? `${percentageYellowWax}%` : '—'} />
               </div>
 
               <table className="w-full text-sm mb-6">
@@ -240,6 +309,11 @@ export default function ContractWizard() {
                   ))}
                 </tbody>
               </table>
+
+              <div className="mb-6">
+                <span className="text-xs text-[#7089b4]">{t('contractWizard.attachedFile')}</span>
+                <p className="text-sm text-[#032b71]">{contractFile?.name || t('contractWizard.noAttachedFiles')}</p>
+              </div>
 
               {form.comments && (
                 <div className="mb-6">

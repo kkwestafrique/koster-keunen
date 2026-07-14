@@ -17,6 +17,22 @@ export const COUNTRIES = [
 
 export const CURRENCIES = ['GHS', 'NGN', 'SLL', 'USD', 'XOF'];
 
+// Auto-fills the Create Contract wizard's Currency field when a supplier
+// is selected, based on the supplier's country (audit: "selecting a
+// supplier auto-filled Currency (Floxy Ventures -> NGN)"). XOF (CFA franc)
+// is shared across several West African countries; USD isn't tied to any
+// single supported country and is only ever chosen manually.
+export const COUNTRY_CURRENCY = {
+  Nigeria: 'NGN',
+  Ghana: 'GHS',
+  'Sierra Leone': 'SLL',
+  Benin: 'XOF',
+  'Burkina Faso': 'XOF',
+  "Côte d'Ivoire": 'XOF',
+  Mali: 'XOF',
+  Togo: 'XOF',
+};
+
 export const PRODUCTS = [
   'Royal Jelly',
   'Pollen',
