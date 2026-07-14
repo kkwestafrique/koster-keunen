@@ -66,6 +66,7 @@ export function useContract(code) {
       return {
         ...first,
         products: rows.map((r) => ({
+          id: r.id,
           product: r.product,
           expected_quantity: r.expected_quantity,
           unit: r.unit,
@@ -119,22 +120,47 @@ export function useCreateContract() {
   });
 }
 
-export function useUpdateContract() {
+// Update-contract modal: Year/Actor/Standard are read-only per the audit,
+// so the only things that can change are per-line-item Expected
+// quantity/Maximum price, plus the shared fields (Advance amount paid,
+// attachment, Updated on) applied identically to every row in the group.
+// Each product row's own `id` (added to useContract's products mapping
+// above) targets which physical row gets which quantity/price -- Supabase
+// has no single-call "update N rows with N different values" operation,
+// so this issues one update per row.
+export function useUpdateContractGroup() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...payload }) => {
-      const { data, error } = await supabase
-        .from('contracts')
-        .update(payload)
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+    mutationFn: async ({ contractCode, products, advance_amount_paid, attachment_url, updated_at }) => {
+      const totalContractAmount = products.reduce(
+        (sum, p) => sum + (Number(p.expected_quantity) || 0) * (Number(p.price) || 0), 0
+      );
+      const advance_percent = totalContractAmount > 0
+        ? Math.round(((Number(advance_amount_paid) || 0) / totalContractAmount) * 100)
+        : 0;
+
+      const results = await Promise.all(products.map((p) => {
+        const expected_quantity = Number(p.expected_quantity) || 0;
+        const price = Number(p.price) || 0;
+        const payload = {
+          expected_quantity,
+          price,
+          total_amount: expected_quantity * price,
+          advance_amount_paid: Number(advance_amount_paid) || 0,
+          advance_percent,
+          updated_at,
+        };
+        if (attachment_url !== undefined) payload.attachment_url = attachment_url;
+        return supabase.from('contracts').update(payload).eq('id', p.id).select().single();
+      }));
+
+      const failed = results.find((r) => r.error);
+      if (failed) throw failed.error;
+      return results.map((r) => r.data);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
-      queryClient.invalidateQueries({ queryKey: ['contract', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['contract', variables.contractCode] });
     },
   });
 }

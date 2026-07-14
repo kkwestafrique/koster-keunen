@@ -455,7 +455,14 @@
     "title": "Contract details",
     "contract": "Contract",
     "contractId": "Contract Id",
-    "noSupplier": "No supplier"
+    "noSupplier": "No supplier",
+    "lastUpdatedOn": "Last updated on",
+    "updateContract": "Update contract",
+    "updated": "Contract updated",
+    "updateFailed": "Failed to update contract",
+    "expectedQuantityKg": "Expected quantity(Kg)",
+    "maximumPricePerKg": "Maximum price / Kg",
+    "updatedOn": "Updated on"
   },
   "receiveForm": {
     "singleTransaction": "Single transaction",
