@@ -218,6 +218,7 @@
     "back": "Retour"
   },
   "common": {
+    "note": "Remarque",
     "loading": "Chargement...",
     "itemsPerPage": "Éléments par page",
     "of": "sur",
@@ -331,6 +332,9 @@
     "uploadAndVerifyTemplate": "Téléverser et vérifier le modèle Excel",
     "uploadAndVerifyData": "Téléverser le fichier et vérifier les données",
     "verifying": "Vérification...",
+    "verifyingTemplate": "Vérification de votre modèle",
+    "progressPercentage": "Pourcentage de progression",
+    "leavePageNote": "Vous pouvez quitter cette page, ce processus s'exécutera automatiquement en arrière-plan. Nous vous informerons une fois terminé",
     "noFileChosen": "Aucun fichier choisi",
     "verifySummary": "{{valid}} ligne(s) vérifiée(s), {{error}} ligne(s) en erreur.",
     "rowError": "Ligne {{row}} : {{errors}}",

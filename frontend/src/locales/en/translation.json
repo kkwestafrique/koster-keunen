@@ -218,6 +218,7 @@
     "back": "Back"
   },
   "common": {
+    "note": "Note",
     "loading": "Loading...",
     "itemsPerPage": "Items per page",
     "of": "of",
@@ -331,6 +332,9 @@
     "uploadAndVerifyTemplate": "Upload and verify excel template",
     "uploadAndVerifyData": "Upload file and verify data",
     "verifying": "Verifying...",
+    "verifyingTemplate": "Verifying your template",
+    "progressPercentage": "Progress percentage",
+    "leavePageNote": "You can leave this page as this process will run automatically in the background. We will notify you once its complete",
     "noFileChosen": "No file chosen",
     "verifySummary": "{{valid}} row(s) verified, {{error}} row(s) with errors.",
     "rowError": "Row {{row}}: {{errors}}",

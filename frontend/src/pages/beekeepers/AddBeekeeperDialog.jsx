@@ -74,54 +74,80 @@ function MultiUploadPanel({ multiMode, onToggle }) {
   );
 }
 
-// 2-step Excel flow behind "Switch to multiple upload" (audit Fig 3.8):
-// Step 1 downloads a template pre-filled with the right headers, Step 2
-// uploads it back and verifies each row. Reuses the same useBulkUpload
-// infrastructure already powering Received/Send stock's multi-transaction
-// uploads, rather than a bespoke parser for this one flow.
+// 2-step Excel flow behind "Switch to multiple upload" (audit Fig 3.8 +
+// corrected against real screenshots of the live site): step 1's circle
+// becomes a checkmark once a template has been downloaded, and selecting a
+// file drives one continuous progress bar through parse -> verify -> insert
+// rather than a separate "Go to details page" click. Reuses the same
+// useBulkUpload infrastructure already powering Received/Send stock's
+// multi-transaction uploads for the actual parse/validate/insert work —
+// only the staged progress/UI orchestration below is specific to this
+// dialog, so Received/Send stock's existing behavior is untouched.
+//
+// Honest simplification: this still runs in the same request/tab rather
+// than a genuinely detached background job — for these file sizes that
+// completes in well under a second, so the "you can leave this page..."
+// messaging is copied for visual fidelity with the live site, not because
+// there's a real server-side job running after the browser call returns.
 function MultiUploadBody({ onDone }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const fileInputRef = useRef(null);
   const [fileLabel, setFileLabel] = useState('');
-  const { rows, validCount, errorCount, uploading, parsing, loadFile, submit } = useBulkUpload('beekeepers');
+  const [downloaded, setDownloaded] = useState(false);
+  const [phase, setPhase] = useState('idle'); // idle | processing | done
+  const [progress, setProgress] = useState(0);
+  const { rows, validCount, errorCount, loadFile, submit } = useBulkUpload('beekeepers');
+
+  const handleDownload = () => {
+    downloadTemplate('beekeepers', 'beekeepers-template.xlsx');
+    setDownloaded(true);
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setFileLabel(file.name);
+    setPhase('processing');
+    setProgress(20);
     try {
       await loadFile(file);
+      setProgress(60);
+      const result = await submit();
+      setProgress(100);
+      setPhase('done');
+      if (result.inserted > 0) {
+        toast({ title: t('forms.bulkUploadComplete'), description: t('forms.bulkUploadCompleteDescription', { inserted: result.inserted, failed: result.failed }) });
+      } else {
+        toast({ title: t('forms.bulkUploadFailed'), description: t('forms.bulkUploadFailedDescription'), variant: 'destructive' });
+      }
     } catch (err) {
+      setPhase('idle');
+      setProgress(0);
       toast({ title: t('forms.fileParseFailed'), description: err.message, variant: 'destructive' });
     }
   };
 
-  const handleGoToDetails = async () => {
-    const result = await submit();
-    if (result.inserted > 0) {
-      toast({ title: t('forms.bulkUploadComplete'), description: t('forms.bulkUploadCompleteDescription', { inserted: result.inserted, failed: result.failed }) });
-      onDone();
-    } else {
-      toast({ title: t('forms.bulkUploadFailed'), description: t('forms.bulkUploadFailedDescription'), variant: 'destructive' });
-    }
-  };
-
-  const verified = rows.length > 0;
+  const processing = phase === 'processing';
+  const done = phase === 'done';
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-3 items-start">
-        <div className="w-6 h-6 rounded-full bg-[#0f48aa] text-white text-xs font-bold flex items-center justify-center shrink-0">1</div>
+        <div className="w-6 h-6 rounded-full bg-[#0f48aa] text-white text-xs font-bold flex items-center justify-center shrink-0">
+          {downloaded ? '✓' : '1'}
+        </div>
         <div className="flex flex-col gap-2 flex-1">
           <p className="font-black text-[#032b71]">{t('forms.downloadExcelTemplate')}</p>
-          <p className="text-xs text-[#7089b4]">{t('forms.downloadTemplateNote')}</p>
+          <div className="bg-[#f4f6fa] rounded-[5px] p-3 text-sm text-[#032b71]">
+            <span className="font-bold">{t('common.note')}:</span> {t('forms.downloadTemplateNote')}
+          </div>
           <Button
             type="button"
             variant="outline"
             data-testid="bk-wizard-download-template"
             className="border-[#0f48aa] text-[#0f48aa] self-start"
-            onClick={() => downloadTemplate('beekeepers', 'beekeepers-template.xlsx')}
+            onClick={handleDownload}
           >
             {t('forms.downloadExcelTemplate')}
           </Button>
@@ -135,18 +161,37 @@ function MultiUploadBody({ onDone }) {
           <div className="flex gap-2 items-center">
             <Button
               type="button"
+              variant={processing ? 'outline' : 'default'}
               data-testid="bk-wizard-upload-verify"
-              disabled={parsing}
+              disabled={processing}
               onClick={() => fileInputRef.current?.click()}
-              className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+              className={processing ? 'border-[#0f48aa] text-[#0f48aa]' : 'bg-[#0f48aa] text-white hover:bg-[#0d3d91]'}
             >
-              {parsing ? t('forms.verifying') : t('forms.uploadAndVerifyData')}
+              {processing ? t('forms.verifyingTemplate') : t('forms.uploadAndVerifyData')}
             </Button>
             <span className="text-sm text-[#7089b4]">{fileLabel || t('forms.noFileChosen')}</span>
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
           </div>
 
-          {verified && (
+          {(processing || done) && (
+            <div className="flex flex-col gap-1" data-testid="bk-wizard-progress">
+              <span className="text-xs text-[#7089b4]">{t('forms.progressPercentage')}</span>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full bg-[#e3e9f5] overflow-hidden">
+                  <div className="h-full bg-[#a9bce8] transition-all" style={{ width: `${progress}%` }} />
+                </div>
+                <span className="text-sm text-[#032b71] font-bold">{progress}%</span>
+              </div>
+            </div>
+          )}
+
+          {done && (
+            <p className="text-sm text-[#032b71]" data-testid="bk-wizard-leave-page-note">
+              {t('forms.leavePageNote')}
+            </p>
+          )}
+
+          {done && (
             <div className="bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-3 text-sm" data-testid="bk-wizard-verify-summary">
               <p className="text-[#032b71] font-bold">{t('forms.verifySummary', { valid: validCount, error: errorCount })}</p>
               {errorCount > 0 && (
@@ -162,8 +207,8 @@ function MultiUploadBody({ onDone }) {
       </div>
 
       <DialogFooter>
-        <Button type="button" data-testid="bk-wizard-multi-go-details" disabled={!verified || uploading} onClick={handleGoToDetails} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
-          {uploading ? t('forms.saving') : t('forms.goToDetailsPage')}
+        <Button type="button" data-testid="bk-wizard-multi-go-details" disabled={!done} onClick={onDone} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
+          {t('forms.goToDetailsPage')}
         </Button>
       </DialogFooter>
     </div>
