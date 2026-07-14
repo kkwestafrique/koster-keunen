@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RequiredLabel from '@/components/common/RequiredLabel';
+import SearchableSelect from '@/components/common/SearchableSelect';
 import { COUNTRIES } from '@/data/regions';
 import { useStatesForCountry, useLgasForState } from '@/hooks/useRegions';
 
@@ -21,7 +21,7 @@ import { useStatesForCountry, useLgasForState } from '@/hooks/useRegions';
 // from just typing what they actually have.
 const OTHER_LGA_VALUE = '__other__';
 
-export default function AddressFields({ value, onChange, testIdPrefix = 'address' }) {
+export default function AddressFields({ value, onChange, testIdPrefix = 'address', required = true }) {
   const { t } = useTranslation();
   const { country = '', state_region = '', lga_municipality = '', village = '' } = value || {};
 
@@ -47,54 +47,39 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
   return (
     <>
       <div className="flex flex-col gap-1.5">
-        <Label className="text-[#7089b4]">{t('forms.country')}</Label>
-        <Select
+        <RequiredLabel required={required} spaced={false}>{t('forms.country')}</RequiredLabel>
+        <SearchableSelect
+          testId={`${testIdPrefix}-country`}
           value={country}
-          onValueChange={(v) => { set({ country: v, state_region: '', lga_municipality: '' }); setLgaIsOther(false); }}
-        >
-          <SelectTrigger data-testid={`${testIdPrefix}-country`}>
-            <SelectValue placeholder={t('forms.selectCountry')} />
-          </SelectTrigger>
-          <SelectContent>
-            {COUNTRIES.map((c) => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(v) => { set({ country: v, state_region: '', lga_municipality: '' }); setLgaIsOther(false); }}
+          placeholder={t('forms.selectCountry')}
+          options={COUNTRIES.map((c) => ({ value: c, label: c }))}
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label className="text-[#7089b4]">{t('forms.stateRegion')}</Label>
-        <Select
+        <RequiredLabel required={required}>{t('forms.stateRegion')}</RequiredLabel>
+        <SearchableSelect
+          testId={`${testIdPrefix}-state`}
           value={state_region}
-          onValueChange={(v) => { set({ state_region: v, lga_municipality: '' }); setLgaIsOther(false); }}
+          onChange={(v) => { set({ state_region: v, lga_municipality: '' }); setLgaIsOther(false); }}
           disabled={!country}
-        >
-          <SelectTrigger data-testid={`${testIdPrefix}-state`}>
-            <SelectValue placeholder={country ? t('forms.selectState') : t('forms.selectCountryFirst')} />
-          </SelectTrigger>
-          <SelectContent>
-            {states.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder={country ? t('forms.selectState') : t('forms.selectCountryFirst')}
+          options={states.map((s) => ({ value: s, label: s }))}
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label className="text-[#7089b4]">{t('forms.lgaMunicipality')}</Label>
+        <RequiredLabel required={required}>{t('forms.lgaMunicipality')}</RequiredLabel>
         {lgas.length > 0 && !lgaIsOther ? (
-          <Select value={lgaSelectValue} onValueChange={handleLgaSelect} disabled={!state_region}>
-            <SelectTrigger data-testid={`${testIdPrefix}-lga`}>
-              <SelectValue placeholder={state_region ? t('forms.selectLga') : t('forms.selectStateFirst')} />
-            </SelectTrigger>
-            <SelectContent>
-              {lgas.map((l) => (
-                <SelectItem key={l} value={l}>{l}</SelectItem>
-              ))}
-              <SelectItem value={OTHER_LGA_VALUE}>{t('forms.otherNotListed')}</SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            testId={`${testIdPrefix}-lga`}
+            value={lgaSelectValue}
+            onChange={handleLgaSelect}
+            disabled={!state_region}
+            placeholder={state_region ? t('forms.selectLga') : t('forms.selectStateFirst')}
+            options={[...lgas.map((l) => ({ value: l, label: l })), { value: OTHER_LGA_VALUE, label: t('forms.otherNotListed') }]}
+          />
         ) : (
           <Input
             data-testid={`${testIdPrefix}-lga`}
@@ -117,7 +102,7 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label className="text-[#7089b4]">{t('forms.village')}</Label>
+        <RequiredLabel required={required}>{t('forms.village')}</RequiredLabel>
         <Input
           data-testid={`${testIdPrefix}-village`}
           value={village}

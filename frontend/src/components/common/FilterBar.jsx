@@ -8,10 +8,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import SearchableSelect from '@/components/common/SearchableSelect';
 
 // Standard filter bar: search box on the left, dropdown filters to the right.
 // Search matches the live site's behavior: it only actually queries when
 // Enter is pressed (or the input loses focus), not on every keystroke.
+// Individual filters can opt into `searchable: true` (e.g. the Village
+// filter on the Beekeeper List) to render as a searchable listbox instead
+// of a plain dropdown — matches the live site's Country/State/LGA/Village
+// pattern for long option lists.
 export default function FilterBar({ search, onSearchChange, searchPlaceholder = 'Search...', filters = [], testId = 'filter-bar' }) {
   const [draft, setDraft] = useState(search || '');
 
@@ -35,26 +40,38 @@ export default function FilterBar({ search, onSearchChange, searchPlaceholder = 
         />
       </div>
       {filters.map((f) => (
-        <Select
-          key={f.key}
-          value={f.value || 'all'}
-          onValueChange={(v) => f.onChange(v === 'all' ? '' : v)}
-        >
-          <SelectTrigger
-            data-testid={`${testId}-filter-${f.key}`}
-            className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
+        f.searchable ? (
+          <div key={f.key} className="w-[180px]">
+            <SearchableSelect
+              testId={`${testId}-filter-${f.key}`}
+              value={f.value || 'all'}
+              onChange={(v) => f.onChange(v === 'all' ? '' : v)}
+              placeholder={f.label}
+              options={[{ value: 'all', label: f.label }, ...f.options]}
+            />
+          </div>
+        ) : (
+          <Select
+            key={f.key}
+            value={f.value || 'all'}
+            onValueChange={(v) => f.onChange(v === 'all' ? '' : v)}
           >
-            <SelectValue placeholder={f.label} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{f.label}</SelectItem>
-            {f.options.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <SelectTrigger
+              data-testid={`${testId}-filter-${f.key}`}
+              className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
+            >
+              <SelectValue placeholder={f.label} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{f.label}</SelectItem>
+              {f.options.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
       ))}
     </div>
   );
