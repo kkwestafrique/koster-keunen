@@ -42,12 +42,12 @@ export default function ContractsList() {
     {
       key: 'expected_quantity',
       label: t('contracts.totalQuantityExpected'),
-      render: (row) => (row.expected_quantity != null ? `${row.expected_quantity} ${row.unit || ''}` : '—'),
+      render: (row) => (row.total_quantity_expected != null ? `${row.total_quantity_expected} Kg` : '—'),
     },
     {
       key: 'total_amount',
       label: t('contracts.totalAmount') || 'Total amount',
-      render: (row) => (row.total_amount != null ? row.total_amount.toLocaleString() : '—'),
+      render: (row) => (row.total_contract_amount != null ? Number(row.total_contract_amount).toLocaleString() : '—'),
     },
   ];
 
@@ -104,7 +104,7 @@ export default function ContractsList() {
         total={data?.total || 0}
         page={page}
         onPageChange={setPage}
-        onRowClick={(row) => navigate(`/contracts/${row.id}`)}
+        onRowClick={(row) => navigate(`/contracts/${row.contract_group_id}`)}
         loading={isLoading}
         emptyMessage={t('common.noRecordsFound')}
       />

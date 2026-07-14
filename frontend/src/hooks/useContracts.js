@@ -2,15 +2,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
-
-export function useContracts({ page = 1, search = '', year = '', standard = '', contractType = '', country = '' } = {}) {
+export function useContracts({ page = 1, pageSize = 5, search = '', year = '', standard = '', contractType = '', country = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['contracts', { page, search, year, standard, contractType, country, supplyChainId }],
+    queryKey: ['contracts', { page, pageSize, search, year, standard, contractType, country, supplyChainId }],
     queryFn: async () => {
+      // Query the contract_groups view (one row per real contract, line
+      // items aggregated) rather than the raw contracts table, which is
+      // one row per product line and would otherwise show a multi-product
+      // contract as several separate rows.
       let query = supabase
-        .from('contracts')
+        .from('contract_groups')
         .select('*, actors(traceability_code, contact_name)', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
         .order('created_at', { ascending: false });
@@ -20,8 +22,8 @@ export function useContracts({ page = 1, search = '', year = '', standard = '', 
       if (contractType) query = query.eq('contract_type', contractType);
       if (country) query = query.eq('country', country);
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       const { data, error, count } = await query;
@@ -44,23 +46,17 @@ export function useContracts({ page = 1, search = '', year = '', standard = '', 
 }
 
 // Contract detail: contracts are stored one row per product line sharing a
-// contract_group_id, so viewing "a contract" means first resolving which
-// group the clicked row belongs to, then fetching every row in that group.
+// contract_group_id (the id passed in here IS the contract_group_id, since
+// that's what the contract_groups view — and therefore the list's row
+// clicks — now use as the contract's identity).
 export function useContract(id) {
   return useQuery({
     queryKey: ['contract', id],
     queryFn: async () => {
-      const { data: clicked, error: clickedError } = await supabase
-        .from('contracts')
-        .select('contract_group_id')
-        .eq('id', id)
-        .single();
-      if (clickedError) throw clickedError;
-
       const { data: rows, error } = await supabase
         .from('contracts')
         .select('*, actors(traceability_code, contact_name, country)')
-        .eq('contract_group_id', clicked.contract_group_id)
+        .eq('contract_group_id', id)
         .order('created_at', { ascending: true });
       if (error) throw error;
       if (!rows.length) return null;
