@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import PhoneInput from '@/components/common/PhoneInput';
 import { STANDARDS, COMMITMENT_OF_BEEKEEPER, HIVE_SPREAD_CROPS } from '@/data/regions';
 import { useFindOrCreateVillage } from '@/hooks/useVillages';
 import { useCreateBeekeeper } from '@/hooks/useBeekeepers';
+import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
 import { useToast } from '@/hooks/use-toast';
 
 const STEP_BASIC = 1;
@@ -48,10 +49,7 @@ const EMPTY = {
 };
 
 // Persistent side panel shown on every step of the wizard (audit: Figs
-// 3.4/3.5/3.7 all show it). The real Excel download/upload flow behind
-// "Switch to multiple upload" is deliberately deferred to a later pass —
-// this renders the structural shape (panel + toggle) without yet wiring
-// the template download/verify logic.
+// 3.4/3.5/3.7 all show it).
 function MultiUploadPanel({ multiMode, onToggle }) {
   const { t } = useTranslation();
   return (
@@ -72,6 +70,102 @@ function MultiUploadPanel({ multiMode, onToggle }) {
       >
         {multiMode ? t('forms.switchToSingleUpload') : t('forms.switchToMultipleUpload')}
       </Button>
+    </div>
+  );
+}
+
+// 2-step Excel flow behind "Switch to multiple upload" (audit Fig 3.8):
+// Step 1 downloads a template pre-filled with the right headers, Step 2
+// uploads it back and verifies each row. Reuses the same useBulkUpload
+// infrastructure already powering Received/Send stock's multi-transaction
+// uploads, rather than a bespoke parser for this one flow.
+function MultiUploadBody({ onDone }) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const fileInputRef = useRef(null);
+  const [fileLabel, setFileLabel] = useState('');
+  const { rows, validCount, errorCount, uploading, parsing, loadFile, submit } = useBulkUpload('beekeepers');
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileLabel(file.name);
+    try {
+      await loadFile(file);
+    } catch (err) {
+      toast({ title: t('forms.fileParseFailed'), description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleGoToDetails = async () => {
+    const result = await submit();
+    if (result.inserted > 0) {
+      toast({ title: t('forms.bulkUploadComplete'), description: t('forms.bulkUploadCompleteDescription', { inserted: result.inserted, failed: result.failed }) });
+      onDone();
+    } else {
+      toast({ title: t('forms.bulkUploadFailed'), description: t('forms.bulkUploadFailedDescription'), variant: 'destructive' });
+    }
+  };
+
+  const verified = rows.length > 0;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex gap-3 items-start">
+        <div className="w-6 h-6 rounded-full bg-[#0f48aa] text-white text-xs font-bold flex items-center justify-center shrink-0">1</div>
+        <div className="flex flex-col gap-2 flex-1">
+          <p className="font-black text-[#032b71]">{t('forms.downloadExcelTemplate')}</p>
+          <p className="text-xs text-[#7089b4]">{t('forms.downloadTemplateNote')}</p>
+          <Button
+            type="button"
+            variant="outline"
+            data-testid="bk-wizard-download-template"
+            className="border-[#0f48aa] text-[#0f48aa] self-start"
+            onClick={() => downloadTemplate('beekeepers', 'beekeepers-template.xlsx')}
+          >
+            {t('forms.downloadExcelTemplate')}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex gap-3 items-start">
+        <div className="w-6 h-6 rounded-full bg-[#0f48aa] text-white text-xs font-bold flex items-center justify-center shrink-0">2</div>
+        <div className="flex flex-col gap-2 flex-1">
+          <p className="font-black text-[#032b71]">{t('forms.uploadAndVerifyTemplate')}</p>
+          <div className="flex gap-2 items-center">
+            <Button
+              type="button"
+              data-testid="bk-wizard-upload-verify"
+              disabled={parsing}
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+            >
+              {parsing ? t('forms.verifying') : t('forms.uploadAndVerifyData')}
+            </Button>
+            <span className="text-sm text-[#7089b4]">{fileLabel || t('forms.noFileChosen')}</span>
+            <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
+          </div>
+
+          {verified && (
+            <div className="bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-3 text-sm" data-testid="bk-wizard-verify-summary">
+              <p className="text-[#032b71] font-bold">{t('forms.verifySummary', { valid: validCount, error: errorCount })}</p>
+              {errorCount > 0 && (
+                <ul className="mt-2 text-xs text-[#ba550c] list-disc list-inside max-h-32 overflow-y-auto">
+                  {rows.filter((r) => r.errors.length > 0).slice(0, 20).map((r) => (
+                    <li key={r.rowNumber}>{t('forms.rowError', { row: r.rowNumber, errors: r.errors.join('; ') })}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button type="button" data-testid="bk-wizard-multi-go-details" disabled={!verified || uploading} onClick={handleGoToDetails} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
+          {uploading ? t('forms.saving') : t('forms.goToDetailsPage')}
+        </Button>
+      </DialogFooter>
     </div>
   );
 }
@@ -153,9 +247,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
         <div className="flex gap-6 items-start">
           <div className="flex-1 flex flex-col gap-4">
             {multiMode ? (
-              <div className="text-sm text-[#7089b4] py-8 text-center" data-testid="bk-wizard-multi-placeholder">
-                {t('forms.multiUploadComingSoon')}
-              </div>
+              <MultiUploadBody onDone={handleClose} />
             ) : (
               <>
                 {step === STEP_BASIC && (

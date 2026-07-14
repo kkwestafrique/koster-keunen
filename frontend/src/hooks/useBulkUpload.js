@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { STANDARDS, COMMITMENT_OF_BEEKEEPER } from '@/data/regions';
 
 // Column definitions per target table. "required" fields must be present and non-empty on every row.
 export const BULK_UPLOAD_TEMPLATES = {
@@ -11,14 +13,27 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'beekeepers',
     uploadType: 'Connections', // matches bulk_uploads.upload_type CHECK constraint
     columns: [
-      { key: 'traceability_code', label: 'Traceability code', required: true },
       { key: 'full_name', label: 'Full name', required: true },
-      { key: 'gender', label: 'Gender', required: false, allowed: ['Male', 'Female'] },
-      { key: 'village_name', label: 'Village', required: false },
-      { key: 'hives_traditional_single', label: 'Hives traditional single', required: false, type: 'number' },
-      { key: 'hives_traditional_double', label: 'Hives traditional double', required: false, type: 'number' },
-      { key: 'hives_modern', label: 'Hives modern', required: false, type: 'number' },
-      { key: 'hives_other', label: 'Hives other', required: false, type: 'number' },
+      { key: 'gender', label: 'Gender', required: true, allowed: ['Male', 'Female', 'Other'] },
+      { key: 'village_name', label: 'Village', required: true },
+      { key: 'national_id', label: 'National ID', required: false },
+      { key: 'internal_code', label: 'Internal code', required: false },
+      { key: 'year_of_birth', label: 'Year of birth', required: false, type: 'number' },
+      { key: 'linked_producer_organisation', label: 'Linked producer organisation', required: false },
+      { key: 'contact_email', label: 'Contact email', required: false },
+      { key: 'contact_phone', label: 'Contact number', required: false },
+      { key: 'standards', label: 'Standards (comma-separated: Sustainable, Organic, Conventional)', required: false, type: 'array', allowed: STANDARDS },
+      { key: 'charter_signed', label: 'Sustainable Beekeeper charter approved (Yes/No)', required: false, type: 'boolean' },
+      { key: 'commitment', label: 'Commitment of beekeeper (comma-separated: Crude honey, Honey, Beeswax)', required: false, type: 'array', allowed: COMMITMENT_OF_BEEKEEPER },
+      { key: 'hives_traditional_single', label: 'Traditional single entry hives', required: false, type: 'number' },
+      { key: 'hives_traditional_double', label: 'Traditional double entries hives', required: false, type: 'number' },
+      { key: 'hives_modern', label: 'Modern hives', required: false, type: 'number' },
+      { key: 'hives_other', label: 'Other hives', required: false, type: 'number' },
+      { key: 'hive_cashew', label: 'Cashew', required: false, type: 'number' },
+      { key: 'hive_mango', label: 'Mango', required: false, type: 'number' },
+      { key: 'hive_shea', label: 'Shea', required: false, type: 'number' },
+      { key: 'hive_forest', label: 'Forest', required: false, type: 'number' },
+      { key: 'hive_other_forage', label: 'Other forage', required: false, type: 'number' },
       { key: 'active_years', label: 'Active years', required: false, type: 'number' },
     ],
   },
@@ -50,6 +65,8 @@ export function downloadTemplate(templateKey, filename) {
 
   const headers = template.columns.map((c) => c.label);
   const exampleRow = template.columns.map((c) => {
+    if (c.type === 'array' && c.allowed) return c.allowed[0];
+    if (c.type === 'boolean') return 'No';
     if (c.allowed) return c.allowed[0];
     if (c.type === 'number') return 0;
     if (c.key === 'transaction_date') return '2026-01-15';
@@ -133,6 +150,23 @@ function validateRows(rows, template, lookups) {
       if (col.required && (value === '' || value === undefined || value === null)) {
         errors.push(`${col.label} is required`);
       }
+
+      if (col.type === 'array') {
+        const items = value === '' ? [] : String(value).split(',').map((s) => s.trim()).filter(Boolean);
+        if (col.allowed) {
+          const bad = items.filter((i) => !col.allowed.includes(i));
+          if (bad.length) errors.push(`${col.label}: "${bad.join(', ')}" must be one of: ${col.allowed.join(', ')}`);
+        }
+        cleaned[col.key] = items;
+        return;
+      }
+
+      if (col.type === 'boolean') {
+        const normalized = String(value).trim().toLowerCase();
+        cleaned[col.key] = ['yes', 'true', '1'].includes(normalized);
+        return;
+      }
+
       if (col.allowed && value && !col.allowed.includes(value)) {
         errors.push(`${col.label} must be one of: ${col.allowed.join(', ')}`);
       }
@@ -184,6 +218,7 @@ function validateRows(rows, template, lookups) {
 
 export function useBulkUpload(templateKey) {
   const { supplyChainId } = useAuth();
+  const queryClient = useQueryClient();
   const template = BULK_UPLOAD_TEMPLATES[templateKey];
   const [rows, setRows] = useState([]);
   const [fileName, setFileName] = useState('');
@@ -256,10 +291,15 @@ export function useBulkUpload(templateKey) {
       console.error('Failed to log bulk upload history:', logErr);
     }
 
+    if (inserted > 0) {
+      queryClient.invalidateQueries({ queryKey: [template.table] });
+      queryClient.invalidateQueries({ queryKey: ['bulk_uploads'] });
+    }
+
     setUploading(false);
     setResult({ inserted, failed: totalFailed, errors });
     return { inserted, failed: totalFailed, errors };
-  }, [rows, supplyChainId, template, fileName]);
+  }, [rows, supplyChainId, template, fileName, queryClient]);
 
   const reset = useCallback(() => {
     setRows([]);
