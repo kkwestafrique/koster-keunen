@@ -163,7 +163,15 @@
     "standard": "Norme",
     "signatureDate": "Date de signature",
     "totalQuantityExpected": "Quantité totale attendue",
-    "totalAmount": "Montant total"
+    "totalAmount": "Montant total",
+    "percentageYellowWax": "Pourcentage de cire jaune",
+    "yellowWaxExpected": "Cire jaune attendue",
+    "brownWaxExpected": "Cire brune attendue",
+    "yellowWaxMaxPrice": "Prix max cire jaune",
+    "brownWaxMaxPrice": "Prix max cire brune",
+    "advanceAmountReceived": "Montant de l'avance reçue",
+    "percentAdvance": "% avance",
+    "searchPlaceholder": "Rechercher"
   },
   "transactions": {
     "receivedTitle": "Transactions reçues",
@@ -223,6 +231,7 @@
     "itemsPerPage": "Éléments par page",
     "of": "sur",
     "noRecordsFound": "Aucun enregistrement trouvé.",
+    "noContractsFound": "Aucun contrat trouvé",
     "active": "Actif",
     "inactive": "Inactif",
     "disabled": "Désactivé",

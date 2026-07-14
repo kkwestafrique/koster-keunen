@@ -10,19 +10,28 @@ import { useContracts } from '@/hooks/useContracts';
 import { useConstants } from '@/hooks/useConstants';
 import { useNavigate } from 'react-router-dom';
 
+// Matches the live site's "All contracts" filter exactly. Note there is no
+// Standard filter on the live list page — Standard is still shown as a
+// column, but Country and Contract type are the only two dropdown filters.
+const CONTRACT_TYPE_OPTIONS = [
+  { value: 'Send', label: 'Send' },
+  { value: 'Received', label: 'Received' },
+];
+
+const money = (v) => (v != null ? Number(v).toLocaleString() : '—');
+
 export default function ContractsList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [country, setCountry] = useState('');
   const [contractType, setContractType] = useState('');
-  const [standard, setStandard] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   const { data: countries = [] } = useConstants('country');
-  const { data: standards = [] } = useConstants('standard');
 
-  const { data, isLoading } = useContracts({ page, search, country, contractType, standard });
+  const { data, isLoading } = useContracts({ page, pageSize, search, country, contractType });
 
   const columns = [
     { key: 'year', label: t('contracts.year') },
@@ -40,14 +49,49 @@ export default function ContractsList() {
     },
     { key: 'signature_date', label: t('contracts.signatureDate') },
     {
-      key: 'expected_quantity',
+      key: 'total_quantity_expected',
       label: t('contracts.totalQuantityExpected'),
       render: (row) => (row.total_quantity_expected != null ? `${row.total_quantity_expected} Kg` : '—'),
     },
     {
-      key: 'total_amount',
-      label: t('contracts.totalAmount') || 'Total amount',
-      render: (row) => (row.total_contract_amount != null ? Number(row.total_contract_amount).toLocaleString() : '—'),
+      key: 'percentage_yellow_wax',
+      label: t('contracts.percentageYellowWax'),
+      render: (row) => (row.percentage_yellow_wax != null ? `${row.percentage_yellow_wax} %` : '—'),
+    },
+    {
+      key: 'yellow_wax_expected',
+      label: t('contracts.yellowWaxExpected'),
+      render: (row) => (row.yellow_wax_expected != null ? `${row.yellow_wax_expected} Kg` : '—'),
+    },
+    {
+      key: 'brown_wax_expected',
+      label: t('contracts.brownWaxExpected'),
+      render: (row) => (row.brown_wax_expected != null ? `${row.brown_wax_expected} Kg` : '—'),
+    },
+    {
+      key: 'yellow_wax_max_price',
+      label: t('contracts.yellowWaxMaxPrice'),
+      render: (row) => (row.yellow_wax_max_price != null ? `${money(row.yellow_wax_max_price)} ${row.currency || ''}` : '—'),
+    },
+    {
+      key: 'brown_wax_max_price',
+      label: t('contracts.brownWaxMaxPrice'),
+      render: (row) => (row.brown_wax_max_price != null ? `${money(row.brown_wax_max_price)} ${row.currency || ''}` : '—'),
+    },
+    {
+      key: 'total_contract_amount',
+      label: t('contracts.totalAmount'),
+      render: (row) => (row.total_contract_amount != null ? `${money(row.total_contract_amount)} ${row.currency || ''}` : '—'),
+    },
+    {
+      key: 'advance_amount_paid',
+      label: t('contracts.advanceAmountReceived'),
+      render: (row) => (row.advance_amount_paid != null ? `${money(row.advance_amount_paid)} ${row.currency || ''}` : '—'),
+    },
+    {
+      key: 'advance_percent',
+      label: t('contracts.percentAdvance'),
+      render: (row) => (row.advance_percent != null ? `${row.advance_percent} %` : '—'),
     },
   ];
 
@@ -68,7 +112,7 @@ export default function ContractsList() {
         testId="contracts-table"
         search={search}
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
-        searchPlaceholder={t('actorsList.searchPlaceholder')}
+        searchPlaceholder={t('contracts.searchPlaceholder')}
         filters={[
           {
             key: 'country',
@@ -76,23 +120,14 @@ export default function ContractsList() {
             value: country,
             onChange: (v) => { setCountry(v); setPage(1); },
             options: countries.map((c) => ({ value: c.value, label: c.label })),
+            searchable: true,
           },
           {
             key: 'type',
             label: t('contracts.allContracts'),
             value: contractType,
             onChange: (v) => { setContractType(v); setPage(1); },
-            options: [
-              { value: 'Send', label: 'Send' },
-              { value: 'Receive', label: 'Receive' },
-            ],
-          },
-          {
-            key: 'standard',
-            label: t('contracts.standard'),
-            value: standard,
-            onChange: (v) => { setStandard(v); setPage(1); },
-            options: standards.map((s) => ({ value: s.value, label: s.label })),
+            options: CONTRACT_TYPE_OPTIONS,
           },
         ]}
       />
@@ -103,10 +138,12 @@ export default function ContractsList() {
         rows={data?.rows || []}
         total={data?.total || 0}
         page={page}
+        pageSize={pageSize}
+        onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onPageChange={setPage}
         onRowClick={(row) => navigate(`/contracts/${row.contract_group_id}`)}
         loading={isLoading}
-        emptyMessage={t('common.noRecordsFound')}
+        emptyMessage={t('common.noContractsFound')}
       />
     </AppLayout>
   );

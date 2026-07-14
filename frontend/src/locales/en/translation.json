@@ -163,7 +163,15 @@
     "standard": "Standard",
     "signatureDate": "Signature date",
     "totalQuantityExpected": "Total quantity expected",
-    "totalAmount": "Total amount"
+    "totalAmount": "Total amount",
+    "percentageYellowWax": "Percentage of yellow wax",
+    "yellowWaxExpected": "Yellow wax expected",
+    "brownWaxExpected": "Brown wax expected",
+    "yellowWaxMaxPrice": "Yellow wax max price",
+    "brownWaxMaxPrice": "Brown wax max price",
+    "advanceAmountReceived": "Advance amount received",
+    "percentAdvance": "% advance",
+    "searchPlaceholder": "Search"
   },
   "transactions": {
     "receivedTitle": "Received transactions",
@@ -223,6 +231,7 @@
     "itemsPerPage": "Items per page",
     "of": "of",
     "noRecordsFound": "No records found.",
+    "noContractsFound": "No contracts found",
     "active": "Active",
     "inactive": "Inactive",
     "disabled": "Disabled",
