@@ -133,6 +133,30 @@ export function useUpdateBeekeeper() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['beekeepers'] });
       queryClient.invalidateQueries({ queryKey: ['beekeeper', data.id] });
+      // Editing hive/commitment/charter fields re-syncs the current year's
+      // row via the sync_beekeeper_current_year_record DB trigger, so the
+      // Overview tab's history needs to refetch too.
+      queryClient.invalidateQueries({ queryKey: ['beekeeper-yearly-records', data.id] });
     },
+  });
+}
+
+// Overview tab's "Previous year details" — one row per calendar year,
+// newest first, kept in sync automatically by a DB trigger whenever the
+// beekeeper's hive/commitment/charter fields are written (see migration
+// beekeeper_description_and_yearly_records).
+export function useBeekeeperYearlyRecords(beekeeperId) {
+  return useQuery({
+    queryKey: ['beekeeper-yearly-records', beekeeperId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('beekeeper_yearly_records')
+        .select('*')
+        .eq('beekeeper_id', beekeeperId)
+        .order('year', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!beekeeperId,
   });
 }
