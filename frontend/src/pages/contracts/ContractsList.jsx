@@ -141,7 +141,7 @@ export default function ContractsList() {
         pageSize={pageSize}
         onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onPageChange={setPage}
-        onRowClick={(row) => navigate(`/contracts/${row.contract_group_id}`)}
+        onRowClick={(row) => navigate(`/contracts/${row.contract_code}`)}
         loading={isLoading}
         emptyMessage={t('common.noContractsFound')}
       />

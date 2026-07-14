@@ -46,17 +46,18 @@ export function useContracts({ page = 1, pageSize = 5, search = '', year = '', s
 }
 
 // Contract detail: contracts are stored one row per product line sharing a
-// contract_group_id (the id passed in here IS the contract_group_id, since
-// that's what the contract_groups view — and therefore the list's row
-// clicks — now use as the contract's identity).
-export function useContract(id) {
+// contract_group_id, but the human-readable contract_code (e.g.
+// "VY75MK452J") is what the list/URL actually identify a contract by, not
+// the raw UUID — matches the live site's /contracts/contract-details/{ID}
+// route, where ID is this code.
+export function useContract(code) {
   return useQuery({
-    queryKey: ['contract', id],
+    queryKey: ['contract', code],
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from('contracts')
         .select('*, actors(traceability_code, contact_name, country)')
-        .eq('contract_group_id', id)
+        .eq('contract_code', code)
         .order('created_at', { ascending: true });
       if (error) throw error;
       if (!rows.length) return null;
@@ -73,7 +74,7 @@ export function useContract(id) {
         total_quantity_expected: rows.reduce((sum, r) => sum + (Number(r.expected_quantity) || 0), 0),
       };
     },
-    enabled: !!id,
+    enabled: !!code,
   });
 }
 

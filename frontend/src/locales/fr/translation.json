@@ -454,6 +454,7 @@
   "contractDetail": {
     "title": "Détails du contrat",
     "contract": "Contrat",
+    "contractId": "Identifiant du contrat",
     "noSupplier": "Aucun fournisseur"
   },
   "receiveForm": {

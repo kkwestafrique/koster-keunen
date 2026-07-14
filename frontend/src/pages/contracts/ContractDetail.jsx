@@ -12,9 +12,9 @@ import { useContract } from '@/hooks/useContracts';
 // mutating signed contract data.
 export default function ContractDetail() {
   const { t } = useTranslation();
-  const { id } = useParams();
+  const { id: contractCode } = useParams();
   const navigate = useNavigate();
-  const { data: contract, isLoading } = useContract(id);
+  const { data: contract, isLoading } = useContract(contractCode);
 
   if (isLoading || !contract) {
     return (
@@ -45,6 +45,7 @@ export default function ContractDetail() {
           <StandardBadge standard={contract.standard} />
         </div>
         <div className="flex flex-wrap gap-x-12 gap-y-3">
+          <DetailField label={t('contractDetail.contractId')} value={contract.contract_code} />
           <DetailField label={t('contracts.year')} value={contract.year} />
           <DetailField label={t('contracts.type')} value={contract.contract_type} />
           <DetailField label={t('contracts.country')} value={contract.actors?.country} />
