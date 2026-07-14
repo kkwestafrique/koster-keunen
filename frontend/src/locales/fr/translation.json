@@ -462,7 +462,12 @@
     "updateFailed": "Échec de la mise à jour du contrat",
     "expectedQuantityKg": "Quantité attendue (Kg)",
     "maximumPricePerKg": "Prix maximum / Kg",
-    "updatedOn": "Mis à jour le"
+    "updatedOn": "Mis à jour le",
+    "productDetails": "Détails du produit",
+    "deliveryNotification": "Notification de livraison",
+    "noDeliveryNotificationsFound": "Aucune notification de livraison trouvée",
+    "deliveringQuantity": "Quantité livrée",
+    "expectedDeliveryDate": "Date de livraison prévue"
   },
   "receiveForm": {
     "singleTransaction": "Transaction unique",

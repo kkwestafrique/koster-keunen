@@ -462,7 +462,12 @@
     "updateFailed": "Failed to update contract",
     "expectedQuantityKg": "Expected quantity(Kg)",
     "maximumPricePerKg": "Maximum price / Kg",
-    "updatedOn": "Updated on"
+    "updatedOn": "Updated on",
+    "productDetails": "Product details",
+    "deliveryNotification": "Delivery notification",
+    "noDeliveryNotificationsFound": "No delivery notifications found",
+    "deliveringQuantity": "Delivering quantity",
+    "expectedDeliveryDate": "Expected delivery date"
   },
   "receiveForm": {
     "singleTransaction": "Single transaction",

@@ -6,10 +6,11 @@ import DetailField from '@/components/common/DetailField';
 import RequiredLabel from '@/components/common/RequiredLabel';
 import StandardBadge from '@/components/common/StandardBadge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Pencil } from 'lucide-react';
-import { useContract, useUpdateContractGroup } from '@/hooks/useContracts';
+import { useContract, useUpdateContractGroup, useContractDeliveries } from '@/hooks/useContracts';
 import { uploadMediaFile } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -145,6 +146,43 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
   );
 }
 
+// Read-only for now — the audit explicitly could not observe how a
+// delivery gets added (no add-action was visible on a contract with none
+// recorded yet), so that part is deliberately not guessed at here.
+function DeliveryNotificationTab({ contractGroupId }) {
+  const { t } = useTranslation();
+  const { data: deliveries = [] } = useContractDeliveries(contractGroupId);
+
+  return (
+    <div className="bg-white border border-[#cfd8e6] rounded-b-[5px] border-t-0 p-6" data-testid="contract-detail-deliveries">
+      {deliveries.length === 0 ? (
+        <p className="text-sm text-[#7089b4]" data-testid="contract-deliveries-empty">{t('contractDetail.noDeliveryNotificationsFound')}</p>
+      ) : (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+              <th className="py-2">{t('contractWizard.product')}</th>
+              <th className="py-2">{t('contractDetail.deliveringQuantity')}</th>
+              <th className="py-2">{t('contractDetail.expectedDeliveryDate')}</th>
+              <th className="py-2">{t('contractWizard.comments')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {deliveries.map((d) => (
+              <tr key={d.id} className="border-b border-[#f0f0f0] text-[#032b71]">
+                <td className="py-2">{d.product}</td>
+                <td className="py-2">{d.delivering_quantity}</td>
+                <td className="py-2">{d.expected_delivery_date}</td>
+                <td className="py-2">{d.comment || '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 export default function ContractDetail() {
   const { t } = useTranslation();
   const { id: contractCode } = useParams();
@@ -216,55 +254,71 @@ export default function ContractDetail() {
         </div>
       </div>
 
-      <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6" data-testid="contract-detail-products">
-        <h3 className="text-sm font-black text-[#032b71] mb-3">{t('contractWizard.products')}</h3>
-        {products.length === 0 ? (
-          <p className="text-sm text-[#7089b4]">{t('common.noRecordsFound')}</p>
-        ) : (
-          <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
-                  <th className="py-2">{t('contractWizard.product')}</th>
-                  <th className="py-2">{t('contractWizard.expectedQuantity')}</th>
-                  <th className="py-2">{t('contractDetail.maximumPricePerKg')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((row, idx) => (
-                  <tr key={row.id || idx} className="border-b border-[#f0f0f0] text-[#032b71]">
-                    <td className="py-2">{row.product}</td>
-                    <td className="py-2">{row.expected_quantity} {row.unit}</td>
-                    <td className="py-2">{row.price != null ? `${row.price} ${contract.currency || ''}` : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <Tabs defaultValue="products">
+        <TabsList className="bg-transparent border-b border-[#cfd8e6] p-0 rounded-none h-auto gap-6 justify-start mb-0">
+          <TabsTrigger value="products" data-testid="contract-tab-products" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold">
+            {t('contractDetail.productDetails')}
+          </TabsTrigger>
+          <TabsTrigger value="deliveries" data-testid="contract-tab-deliveries" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold">
+            {t('contractDetail.deliveryNotification')}
+          </TabsTrigger>
+        </TabsList>
 
-            <div className="grid grid-cols-3 gap-4 bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4 mt-4" data-testid="contract-detail-totals">
-              <DetailField label={t('contractWizard.totalQuantityExpected')} value={contract.total_quantity_expected} />
-              <DetailField label={t('contractWizard.totalContractAmount')} value={products.reduce((s, p) => s + (Number(p.expected_quantity) || 0) * (Number(p.price) || 0), 0).toLocaleString()} />
-              <DetailField
-                label={t('contractWizard.percentageYellowWax')}
-                value={(() => {
-                  const total = contract.total_quantity_expected || 0;
-                  const yellow = products.filter((p) => p.product === 'Beeswax-Yellow').reduce((s, p) => s + (Number(p.expected_quantity) || 0), 0);
-                  return total > 0 ? Math.round((yellow / total) * 100) : '—';
-                })()}
-              />
+        <TabsContent value="products">
+          <div className="bg-white border border-[#cfd8e6] rounded-b-[5px] border-t-0 p-6" data-testid="contract-detail-products">
+            {products.length === 0 ? (
+              <p className="text-sm text-[#7089b4]">{t('common.noRecordsFound')}</p>
+            ) : (
+              <>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                      <th className="py-2">{t('contractWizard.product')}</th>
+                      <th className="py-2">{t('contractWizard.expectedQuantity')}</th>
+                      <th className="py-2">{t('contractDetail.maximumPricePerKg')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((row, idx) => (
+                      <tr key={row.id || idx} className="border-b border-[#f0f0f0] text-[#032b71]">
+                        <td className="py-2">{row.product}</td>
+                        <td className="py-2">{row.expected_quantity} {row.unit}</td>
+                        <td className="py-2">{row.price != null ? `${row.price} ${contract.currency || ''}` : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="grid grid-cols-3 gap-4 bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4 mt-4" data-testid="contract-detail-totals">
+                  <DetailField label={t('contractWizard.totalQuantityExpected')} value={contract.total_quantity_expected} />
+                  <DetailField label={t('contractWizard.totalContractAmount')} value={products.reduce((s, p) => s + (Number(p.expected_quantity) || 0) * (Number(p.price) || 0), 0).toLocaleString()} />
+                  <DetailField
+                    label={t('contractWizard.percentageYellowWax')}
+                    value={(() => {
+                      const total = contract.total_quantity_expected || 0;
+                      const yellow = products.filter((p) => p.product === 'Beeswax-Yellow').reduce((s, p) => s + (Number(p.expected_quantity) || 0), 0);
+                      return total > 0 ? Math.round((yellow / total) * 100) : '—';
+                    })()}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="mt-4">
+              <span className="text-xs text-[#7089b4]">{t('contractWizard.attachedFile')}</span>
+              <p className="text-sm text-[#032b71]">
+                {contract.attachment_url
+                  ? <a href={contract.attachment_url} target="_blank" rel="noreferrer" className="text-[#0f48aa] underline">{t('contractWizard.attachedFile')}</a>
+                  : t('contractWizard.noAttachedFiles')}
+              </p>
             </div>
-          </>
-        )}
+          </div>
+        </TabsContent>
 
-        <div className="mt-4">
-          <span className="text-xs text-[#7089b4]">{t('contractWizard.attachedFile')}</span>
-          <p className="text-sm text-[#032b71]">
-            {contract.attachment_url
-              ? <a href={contract.attachment_url} target="_blank" rel="noreferrer" className="text-[#0f48aa] underline">{t('contractWizard.attachedFile')}</a>
-              : t('contractWizard.noAttachedFiles')}
-          </p>
-        </div>
-      </div>
+        <TabsContent value="deliveries">
+          <DeliveryNotificationTab contractGroupId={contract.contract_group_id} />
+        </TabsContent>
+      </Tabs>
 
       <UpdateContractModal open={updateOpen} onOpenChange={setUpdateOpen} contract={contract} />
     </AppLayout>

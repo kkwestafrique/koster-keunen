@@ -87,6 +87,26 @@ export function useContract(code) {
 // actor_id, currency, contract_type, country, advance_amount_paid,
 // advance_percent, comments, signature_date) and each entry in `products` is
 // { product, expected_quantity, unit, price }.
+// "Delivery notification" tab on the Contract detail page. Read-only for
+// now — the audit couldn't observe how a delivery gets added (no add-
+// action was visible on a contract with none recorded yet), so only the
+// read side is built; adding one is deliberately not guessed at.
+export function useContractDeliveries(contractGroupId) {
+  return useQuery({
+    queryKey: ['contract-deliveries', contractGroupId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contract_delivery_notifications')
+        .select('*')
+        .eq('contract_group_id', contractGroupId)
+        .order('expected_delivery_date', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!contractGroupId,
+  });
+}
+
 export function useCreateContract() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();
