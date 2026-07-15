@@ -189,6 +189,53 @@ export function useTransaction(groupId) {
 // `products` is either { product, quantity, unit, price } (Received) or
 // { source_product, source_quantity, converted_product, quantity, unit }
 // (Processing, mapped to product = converted_product below).
+// Batch-picker: available batches for a given product/standard/stock type,
+// oldest first (FIFO-friendly default ordering — selection itself is
+// manual, not auto-picked, per the audit's "Add batch details" modal).
+export function useAvailableBatches({ product, standard, stockType }) {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['available-batches', { product, standard, stockType, supplyChainId }],
+    queryFn: async () => {
+      let query = supabase
+        .from('stocks')
+        .select('id, batch_reference, quantity_available, unit, created_at')
+        .eq('supply_chain_id', supplyChainId)
+        .eq('stock_type', stockType)
+        .eq('product', product)
+        .gt('quantity_available', 0)
+        .order('created_at', { ascending: true });
+      if (standard) query = query.eq('standard', standard);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!supplyChainId && !!product && !!stockType,
+  });
+}
+
+// Atomically consumes one selected batch via the consume_stock_batch()
+// Postgres function (row-locked, validates availability, decrements, and
+// records the selection) — called once per selected batch after the
+// transaction row(s) exist.
+export function useConsumeStockBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ stockId, quantity, transactionGroupId }) => {
+      const { error } = await supabase.rpc('consume_stock_batch', {
+        p_stock_id: stockId,
+        p_quantity: quantity,
+        p_transaction_group_id: transactionGroupId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      queryClient.invalidateQueries({ queryKey: ['available-batches'] });
+    },
+  });
+}
+
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();

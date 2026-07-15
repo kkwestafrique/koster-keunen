@@ -499,6 +499,20 @@
     "bulkImportFailed": "Import failed — please check the file and try again",
     "importValidRows": "Import {{count}} valid row(s)"
   },
+  "batchPicker": {
+    "title": "Add batch details",
+    "id": "Id",
+    "batch": "Batch",
+    "quantityAvailable": "Quantity available",
+    "select": "Select",
+    "selectionSummary": "Selection summary",
+    "overSelectionWarning": "Total quantity selected exceeds the required quantity.",
+    "noBatchesFound": "No batches found",
+    "confirmSelection": "Add batch details",
+    "pleaseSelectAtLeastOneBatch": "Please select atleast one batch",
+    "editSelection": "Edit batch selection",
+    "batchesSelected": "{{count}} batch(es) selected, {{total}} Kg total"
+  },
   "processForm": {
     "title": "Process stock",
     "processStock": "Process stock",

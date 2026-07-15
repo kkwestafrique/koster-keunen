@@ -499,6 +499,20 @@
     "bulkImportFailed": "Échec de l'importation — veuillez vérifier le fichier et réessayer",
     "importValidRows": "{{count}} ligne(s) valide(s) à importer"
   },
+  "batchPicker": {
+    "title": "Ajouter les détails du lot",
+    "id": "Id",
+    "batch": "Lot",
+    "quantityAvailable": "Quantité disponible",
+    "select": "Sélectionner",
+    "selectionSummary": "Résumé de la sélection",
+    "overSelectionWarning": "La quantité totale sélectionnée dépasse la quantité requise.",
+    "noBatchesFound": "Aucun lot trouvé",
+    "confirmSelection": "Ajouter les détails du lot",
+    "pleaseSelectAtLeastOneBatch": "Veuillez sélectionner au moins un lot",
+    "editSelection": "Modifier la sélection de lots",
+    "batchesSelected": "{{count}} lot(s) sélectionné(s), {{total}} Kg au total"
+  },
   "processForm": {
     "title": "Traiter le stock",
     "processStock": "Traiter le stock",

@@ -10,14 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Download, Upload } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useAllActorsLite } from '@/hooks/useActors';
-import { useCreateTransaction } from '@/hooks/useTransactions';
+import { useCreateTransaction, useConsumeStockBatch } from '@/hooks/useTransactions';
 import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
 import { useToast } from '@/hooks/use-toast';
+import BatchPickerModal from '@/components/common/BatchPickerModal';
 
 // Send stock form (Transactions > Send). Per the live-site audit:
 // Single: Standard -> Destination actor -> Product -> Quantity required to
-// deliver -> Price -> Currency (auto-populates to NGN once an actor is
-// chosen) -> Invoice number -> BL number -> Transaction date.
+// deliver (triggers the "Add batch details" batch-picker, drawing from
+// Final Product stock) -> Price -> Currency (auto-populates to NGN once an
+// actor is chosen) -> Invoice number -> BL number -> Transaction date.
 // Multiple: same Excel template download + upload-and-verify flow as
 // Received (confirmed present under Send per the audit's Key Findings,
 // though the live modal wasn't screenshotted in detail — this mirrors the
@@ -28,10 +30,13 @@ export default function SendStockForm() {
   const { toast } = useToast();
   const { data: actors = [] } = useAllActorsLite();
   const createTransaction = useCreateTransaction();
+  const consumeBatch = useConsumeStockBatch();
   const bulkUpload = useBulkUpload('transactions');
 
   const [mode, setMode] = useState('single');
   const [saving, setSaving] = useState(false);
+  const [batchPickerOpen, setBatchPickerOpen] = useState(false);
+  const [selectedBatches, setSelectedBatches] = useState([]);
   const [form, setForm] = useState({
     standard: '',
     destination_actor_id: '',
@@ -46,24 +51,37 @@ export default function SendStockForm() {
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
+  // Selecting a different product/standard invalidates any batches already
+  // picked against the old combination.
+  const handleProductChange = (v) => { setForm((f) => ({ ...f, product: v })); setSelectedBatches([]); };
+  const handleStandardChange = (v) => { setForm((f) => ({ ...f, standard: v })); setSelectedBatches([]); };
+
   const valid = form.standard && form.destination_actor_id && form.product
-    && form.quantity && form.transaction_date;
+    && form.quantity && form.transaction_date && selectedBatches.length > 0;
 
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      await createTransaction.mutateAsync({
+      const [createdRow] = await createTransaction.mutateAsync({
+        products: [{ product: form.product, quantity: form.quantity, price: form.price, unit: 'Kg' }],
         direction: 'Send',
         standard: form.standard,
         actor_id: form.destination_actor_id,
-        product: form.product,
-        quantity: Number(form.quantity) || 0,
-        total_amount: (Number(form.quantity) || 0) * (Number(form.price) || 0),
         currency: form.currency,
         invoice_number: form.invoice_number,
         bl_number: form.bl_number,
         transaction_date: form.transaction_date,
       });
+      // Consume each selected batch against the newly created transaction
+      // group — one call per batch, matching consume_stock_batch's atomic,
+      // row-locked design.
+      for (const b of selectedBatches) {
+        await consumeBatch.mutateAsync({
+          stockId: b.stockId,
+          quantity: b.quantity,
+          transactionGroupId: createdRow.transaction_group_id,
+        });
+      }
       toast({ title: t('sendForm.created') });
       navigate('/send');
     } catch (err) {
@@ -92,7 +110,7 @@ export default function SendStockForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.standard')}</Label>
-                <Select value={form.standard} onValueChange={set('standard')}>
+                <Select value={form.standard} onValueChange={handleStandardChange}>
                   <SelectTrigger data-testid="send-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
                   <SelectContent>
                     {STANDARDS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -113,7 +131,7 @@ export default function SendStockForm() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.product')}</Label>
-                <Select value={form.product} onValueChange={set('product')}>
+                <Select value={form.product} onValueChange={handleProductChange}>
                   <SelectTrigger data-testid="send-product"><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
                   <SelectContent>
                     {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
@@ -122,7 +140,23 @@ export default function SendStockForm() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('sendForm.quantityRequired')}</Label>
-                <Input type="number" min="0" data-testid="send-quantity" value={form.quantity} onChange={(e) => set('quantity')(e.target.value)} />
+                <Input type="number" min="0" data-testid="send-quantity" value={form.quantity} onChange={(e) => { set('quantity')(e.target.value); setSelectedBatches([]); }} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-testid="send-add-batch-details"
+                  disabled={!form.product || !form.quantity}
+                  className="w-fit border-[#0f48aa] text-[#0f48aa] mt-1"
+                  onClick={() => setBatchPickerOpen(true)}
+                >
+                  {selectedBatches.length > 0 ? t('batchPicker.editSelection') : t('batchPicker.title')}
+                </Button>
+                {selectedBatches.length > 0 && (
+                  <p className="text-xs text-[#7089b4]" data-testid="send-batch-summary">
+                    {t('batchPicker.batchesSelected', { count: selectedBatches.length, total: selectedBatches.reduce((s, b) => s + Number(b.quantity), 0) })}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.price')}</Label>
@@ -159,6 +193,17 @@ export default function SendStockForm() {
                 {saving ? t('forms.saving') : t('sendForm.submit')}
               </Button>
             </div>
+
+            <BatchPickerModal
+              open={batchPickerOpen}
+              onOpenChange={setBatchPickerOpen}
+              product={form.product}
+              standard={form.standard}
+              stockType="Final Product"
+              requiredQuantity={form.quantity}
+              testIdPrefix="send-batch-picker"
+              onConfirm={(selections) => setSelectedBatches(selections)}
+            />
           </>
         )}
 
