@@ -153,7 +153,7 @@ export function useTransaction(transactionCode) {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from('transactions')
-        .select('*, actors(traceability_code, contact_name, country), beekeepers(traceability_code, full_name, villages(name))')
+        .select('*, actors(traceability_code, contact_name, country), beekeepers(traceability_code, full_name, villages(name)), stocks!destination_stock_id(batch_reference, unit)')
         .eq('transaction_code', transactionCode)
         .order('created_at', { ascending: true });
       if (error) throw error;
@@ -169,6 +169,7 @@ export function useTransaction(transactionCode) {
           unit: r.unit,
           price: r.price,
           total_amount: r.total_amount,
+          destination_batch: r.stocks?.batch_reference,
         })),
         total_quantity: rows.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0),
         total_amount: rows.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0),
@@ -268,6 +269,23 @@ export function useRejectTransaction() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['transaction', groupId] });
     },
+  });
+}
+
+// "Source batches" chips on Send/Processing detail pages — the batches
+// actually consumed via consume_stock_batch for this transaction group.
+export function useTransactionBatchSelections(transactionGroupId) {
+  return useQuery({
+    queryKey: ['transaction-batch-selections', transactionGroupId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transaction_batch_selections')
+        .select('id, quantity_selected, stocks(batch_reference, unit)')
+        .eq('transaction_group_id', transactionGroupId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!transactionGroupId,
   });
 }
 

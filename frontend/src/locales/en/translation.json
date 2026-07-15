@@ -523,6 +523,9 @@
     "destinationProduct": "Destination product",
     "destinationQuantity": "Destination quantity",
     "convertedProduct": "Converted product",
+    "product": "Product",
+    "merging": "Merging",
+    "mergedQuantity": "Merged quantity",
     "created": "Processing recorded",
     "createFailed": "Failed to record processing",
     "submit": "Process stock"
@@ -611,6 +614,26 @@
     "allStatus": "All status"
   },
   "transactionDetail": {
-    "title": "Transaction Detail"
+    "title": "Transaction Detail",
+    "actor": "Actor",
+    "beekeeper": "Beekeeper",
+    "loggedDate": "Logged date",
+    "notYetApproved": "Transaction is not yet approved!",
+    "rejectTransaction": "Reject transaction",
+    "approveTransaction": "Approve transaction",
+    "approved": "Transaction approved",
+    "approveFailed": "Failed to approve transaction",
+    "rejected": "Transaction rejected",
+    "rejectFailed": "Failed to reject transaction",
+    "products": "Products",
+    "destinationDetails": "Destination details",
+    "destinationBatches": "Destination batches",
+    "sourceDetails": "Source details",
+    "sourceBatches": "Source batches",
+    "sourceQuantity": "Source quantity",
+    "quantityLost": "Quantity lost while doing transaction: {{quantity}} Kg",
+    "attachFile": "Attach file",
+    "fileAttached": "File attached",
+    "attachFailed": "Failed to attach file"
   }
 }

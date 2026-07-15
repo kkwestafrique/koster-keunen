@@ -523,6 +523,9 @@
     "destinationProduct": "Produit de destination",
     "destinationQuantity": "Quantité de destination",
     "convertedProduct": "Produit converti",
+    "product": "Produit",
+    "merging": "Fusion",
+    "mergedQuantity": "Quantité fusionnée",
     "created": "Traitement enregistré",
     "createFailed": "Échec de l'enregistrement du traitement",
     "submit": "Traiter le stock"
@@ -611,6 +614,26 @@
     "allStatus": "Tous les statuts"
   },
   "transactionDetail": {
-    "title": "Détail de la transaction"
+    "title": "Détail de la transaction",
+    "actor": "Acteur",
+    "beekeeper": "Apiculteur",
+    "loggedDate": "Date d'enregistrement",
+    "notYetApproved": "La transaction n'est pas encore approuvée !",
+    "rejectTransaction": "Rejeter la transaction",
+    "approveTransaction": "Approuver la transaction",
+    "approved": "Transaction approuvée",
+    "approveFailed": "Échec de l'approbation de la transaction",
+    "rejected": "Transaction rejetée",
+    "rejectFailed": "Échec du rejet de la transaction",
+    "products": "Produits",
+    "destinationDetails": "Détails de destination",
+    "destinationBatches": "Lots de destination",
+    "sourceDetails": "Détails de la source",
+    "sourceBatches": "Lots source",
+    "sourceQuantity": "Quantité source",
+    "quantityLost": "Quantité perdue lors de la transaction : {{quantity}} Kg",
+    "attachFile": "Joindre un fichier",
+    "fileAttached": "Fichier joint",
+    "attachFailed": "Échec de la jonction du fichier"
   }
 }
