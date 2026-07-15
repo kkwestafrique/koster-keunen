@@ -106,7 +106,7 @@ export default function TransactionsList({ direction, title, actionLabel, testId
         onPageChange={setPage}
         loading={isLoading}
         emptyMessage={t('common.noRecordsFound')}
-        onRowClick={(row) => navigate(`/transactions/${direction.toLowerCase()}/${row.transaction_group_id}`)}
+        onRowClick={(row) => navigate(`/transactions/${direction.toLowerCase()}/${row.transaction_code}`)}
       />
     </AppLayout>
   );

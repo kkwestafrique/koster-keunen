@@ -97,7 +97,7 @@ export default function ProcessingTransactionsList() {
         onPageChange={setPage}
         loading={isLoading}
         emptyMessage={t('common.noRecordsFound')}
-        onRowClick={(row) => navigate(`/transactions/processing/${row.transaction_group_id}`)}
+        onRowClick={(row) => navigate(`/transactions/processing/${row.transaction_code}`)}
       />
     </AppLayout>
   );

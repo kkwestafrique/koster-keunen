@@ -141,19 +141,20 @@ export function useDashboardTransactionSummary({ year = '' } = {}) {
   });
 }
 
-// Minimal fix to keep row-clicks working now that lists navigate using
-// transaction_group_id (the aggregated view has no per-row id). Returns
-// the group's shared fields plus every product line — the full 5-variant
+// Minimal fix to keep row-clicks working, and now uses transaction_code
+// (the human-readable ID) rather than the internal group UUID — matches
+// the routing identity pattern already used for Contracts. Returns the
+// group's shared fields plus every product line — the full 5-variant
 // detail page rebuild (status badges, approval workflow, batch chips) is
 // a separate, later step; this only prevents click-through from breaking.
-export function useTransaction(groupId) {
+export function useTransaction(transactionCode) {
   return useQuery({
-    queryKey: ['transaction', groupId],
+    queryKey: ['transaction', transactionCode],
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from('transactions')
         .select('*, actors(traceability_code, contact_name, country), beekeepers(traceability_code, full_name, villages(name))')
-        .eq('transaction_group_id', groupId)
+        .eq('transaction_code', transactionCode)
         .order('created_at', { ascending: true });
       if (error) throw error;
       if (!rows.length) return null;
@@ -173,7 +174,7 @@ export function useTransaction(groupId) {
         total_amount: rows.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0),
       };
     },
-    enabled: !!groupId,
+    enabled: !!transactionCode,
   });
 }
 
