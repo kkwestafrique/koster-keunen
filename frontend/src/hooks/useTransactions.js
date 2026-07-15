@@ -236,6 +236,40 @@ export function useConsumeStockBatch() {
   });
 }
 
+// Approval workflow (Received only, per the audit — Send appears to be
+// immediately Approved at creation, Processing has no status badge at
+// all). The actual Approve/Reject BUTTON UI lives on the detail page,
+// which is a later step — this is just the mutation layer.
+export function useApproveTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (transactionGroupId) => {
+      const { error } = await supabase.from('transactions').update({ status: 'Approved' }).eq('transaction_group_id', transactionGroupId);
+      if (error) throw error;
+      return transactionGroupId;
+    },
+    onSuccess: (groupId) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transaction', groupId] });
+    },
+  });
+}
+
+export function useRejectTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (transactionGroupId) => {
+      const { error } = await supabase.from('transactions').update({ status: 'Rejected' }).eq('transaction_group_id', transactionGroupId);
+      if (error) throw error;
+      return transactionGroupId;
+    },
+    onSuccess: (groupId) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transaction', groupId] });
+    },
+  });
+}
+
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();

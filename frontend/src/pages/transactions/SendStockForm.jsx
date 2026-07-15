@@ -65,6 +65,7 @@ export default function SendStockForm() {
       const [createdRow] = await createTransaction.mutateAsync({
         products: [{ product: form.product, quantity: form.quantity, price: form.price, unit: 'Kg' }],
         direction: 'Send',
+        status: 'Approved',
         standard: form.standard,
         actor_id: form.destination_actor_id,
         currency: form.currency,
