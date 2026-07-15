@@ -18,7 +18,7 @@ import { ACTOR_TYPES } from '@/data/regions';
 // two can never silently drift apart.
 const ACTOR_TYPE_FILTER_OPTIONS = ACTOR_TYPES;
 
-// fixedStatus: 'Inactive' -> Potential actors, 'Active' -> Actual (confirmed) actors, null -> all
+// fixedStatus: 'Inactive' -> Potential actors, 'Active' -> Achieved (confirmed) actors, null -> all
 export default function ActorsList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);

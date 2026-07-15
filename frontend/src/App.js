@@ -60,7 +60,7 @@ function AppRoutes() {
       />
       <Route
         path="/actors/actual"
-        element={<ProtectedRoute><ActorsList fixedStatus="Active" title="Actors — Actual" testId="actors-actual-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><ActorsList fixedStatus="Active" title="Actors — Achieved" testId="actors-achieved-table" /></ProtectedRoute>}
       />
       <Route path="/actors/:id" element={<ProtectedRoute><ActorDetail /></ProtectedRoute>} />
 
@@ -75,7 +75,7 @@ function AppRoutes() {
       />
       <Route
         path="/beekeepers/actual"
-        element={<ProtectedRoute><BeekeepersList fixedStatus="Actual" title="Beekeepers — Actual" testId="beekeepers-actual-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><BeekeepersList fixedStatus="Achieved" title="Beekeepers — Achieved" testId="beekeepers-achieved-table" /></ProtectedRoute>}
       />
       <Route path="/beekeepers/:id" element={<ProtectedRoute><BeekeeperDetail /></ProtectedRoute>} />
 

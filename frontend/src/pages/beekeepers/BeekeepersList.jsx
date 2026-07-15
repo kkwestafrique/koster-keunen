@@ -10,7 +10,7 @@ import { useBeekeepers } from '@/hooks/useBeekeepers';
 import { useAllVillagesLite } from '@/hooks/useVillages';
 import AddBeekeeperDialog from '@/pages/beekeepers/AddBeekeeperDialog';
 
-// fixedStatus: 'Potential' | 'Actual' | null (full list)
+// fixedStatus: 'Potential' | 'Achieved' | null (full list)
 export default function BeekeepersList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
