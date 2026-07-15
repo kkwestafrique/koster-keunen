@@ -47,7 +47,7 @@ export default function ProcessStockForm() {
         transaction_date: form.transaction_date,
       });
       toast({ title: t('processForm.created') });
-      navigate('/transactions/processing');
+      navigate('/process');
     } catch (err) {
       toast({ title: t('processForm.createFailed'), description: err.message, variant: 'destructive' });
     } finally {
@@ -132,7 +132,7 @@ export default function ProcessStockForm() {
             </div>
 
             <div className="flex justify-between mt-2">
-              <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/transactions/processing')}>
+              <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/process')}>
                 {t('contractWizard.back')}
               </Button>
               <Button type="button" data-testid="process-submit" disabled={!valid || saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={handleSubmit}>

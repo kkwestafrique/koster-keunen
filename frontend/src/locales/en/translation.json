@@ -502,8 +502,12 @@
   "processForm": {
     "title": "Process stock",
     "processStock": "Process stock",
+    "listTitle": "Processing transactions",
+    "transactionType": "Transaction type",
     "sourceProduct": "Source product",
     "sourceQuantity": "Source product quantity",
+    "destinationProduct": "Destination product",
+    "destinationQuantity": "Destination quantity",
     "convertedProduct": "Converted product",
     "created": "Processing recorded",
     "createFailed": "Failed to record processing",

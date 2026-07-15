@@ -9,18 +9,14 @@ import { Plus } from 'lucide-react';
 import { useTransactions, useTransactionLoggers } from '@/hooks/useTransactions';
 import { useConstants } from '@/hooks/useConstants';
 
-// Shared list for Transactions > Received / Send — confirmed by the audit
-// to genuinely share one 6-column shape (unlike Processing, which has its
-// own distinct column set — see ProcessingTransactionsList.jsx). No
-// Standard column/filter on either list per the audit; filters are
-// Product and a "logged by" person filter instead.
-export default function TransactionsList({ direction, title, actionLabel, testId }) {
+// Processing has a genuinely different list shape than Send/Received per
+// the audit (7 columns: Date, Transaction ID, Transaction type, Source
+// product, Source quantity, Destination product, Destination quantity) —
+// deliberately a separate component rather than forcing it into
+// TransactionsList's shared shape, which was the bug this replaces.
+export default function ProcessingTransactionsList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const NEW_ROUTES = {
-    Received: '/transactions/received/new',
-    Send: '/transactions/send/new',
-  };
   const [search, setSearch] = useState('');
   const [product, setProduct] = useState('');
   const [loggedBy, setLoggedBy] = useState('');
@@ -30,50 +26,45 @@ export default function TransactionsList({ direction, title, actionLabel, testId
   const { data: products = [] } = useConstants('product_type');
   const { data: loggers = [] } = useTransactionLoggers();
 
-  const { data, isLoading } = useTransactions({ direction, page, pageSize, search, product, loggedBy });
+  const { data, isLoading } = useTransactions({ direction: 'Processing', page, pageSize, search, product, loggedBy });
 
   const columns = [
     { key: 'transaction_date', label: t('transactions.date') },
     {
       key: 'transaction_code',
       label: t('transactions.transactionId'),
-      // Human-readable code system is a later step — shows a placeholder
-      // derived from the group id until then rather than nothing at all.
       render: (row) => row.transaction_code || String(row.transaction_group_id || '').slice(0, 8).toUpperCase(),
     },
+    { key: 'transaction_type', label: t('processForm.transactionType') },
+    { key: 'source_product', label: t('processForm.sourceProduct') },
     {
-      key: 'actor_beekeeper',
-      label: t('transactions.actorBeekeeper'),
-      render: (row) => row.beekeepers?.full_name || row.actors?.contact_name || '—',
+      key: 'source_quantity',
+      label: t('processForm.sourceQuantity'),
+      render: (row) => (row.source_quantity != null ? `${row.source_quantity} Kg` : '—'),
     },
-    { key: 'product', label: t('transactions.product') },
+    { key: 'product', label: t('processForm.destinationProduct') },
     {
-      key: 'quantity',
-      label: t('transactions.quantityDelivered'),
+      key: 'total_quantity',
+      label: t('processForm.destinationQuantity'),
       render: (row) => (row.total_quantity != null ? `${row.total_quantity} Kg` : '—'),
-    },
-    {
-      key: 'total_amount',
-      label: t('transactions.totalAmount'),
-      render: (row) => (row.total_amount != null ? `${Number(row.total_amount).toLocaleString()} ${row.currency || ''}` : '—'),
     },
   ];
 
   return (
     <AppLayout hideDefaultHeader>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-black text-[#0f48aa]">{title}</h1>
+        <h1 className="text-lg font-black text-[#0f48aa]">{t('processForm.listTitle')}</h1>
         <Button
-          data-testid={`${testId}-action-button`}
+          data-testid="transactions-processing-table-action-button"
           className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
-          onClick={() => navigate(NEW_ROUTES[direction])}
+          onClick={() => navigate('/transactions/processing/new')}
         >
-          <Plus className="h-4 w-4 mr-1" /> {actionLabel}
+          <Plus className="h-4 w-4 mr-1" /> {t('processForm.processStock')}
         </Button>
       </div>
 
       <FilterBar
-        testId={testId}
+        testId="transactions-processing-table"
         search={search}
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
         searchPlaceholder={t('actorsList.searchPlaceholder')}
@@ -96,7 +87,7 @@ export default function TransactionsList({ direction, title, actionLabel, testId
       />
 
       <DataTable
-        testId={testId}
+        testId="transactions-processing-table"
         columns={columns}
         rows={data?.rows || []}
         total={data?.total || 0}
@@ -106,7 +97,7 @@ export default function TransactionsList({ direction, title, actionLabel, testId
         onPageChange={setPage}
         loading={isLoading}
         emptyMessage={t('common.noRecordsFound')}
-        onRowClick={(row) => navigate(`/transactions/${direction.toLowerCase()}/${row.transaction_group_id}`)}
+        onRowClick={(row) => navigate(`/transactions/processing/${row.transaction_group_id}`)}
       />
     </AppLayout>
   );

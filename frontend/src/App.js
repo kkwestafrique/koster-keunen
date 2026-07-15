@@ -19,6 +19,7 @@ import ContractsList from '@/pages/contracts/ContractsList';
 import ContractWizard from '@/pages/contracts/ContractWizard';
 import ContractDetail from '@/pages/contracts/ContractDetail';
 import TransactionsList from '@/pages/transactions/TransactionsList';
+import ProcessingTransactionsList from '@/pages/transactions/ProcessingTransactionsList';
 import ReceiveStockForm from '@/pages/transactions/ReceiveStockForm';
 import ProcessStockForm from '@/pages/transactions/ProcessStockForm';
 import SendStockForm from '@/pages/transactions/SendStockForm';
@@ -91,16 +92,20 @@ function AppRoutes() {
       <Route path="/transactions/processing/new" element={<ProtectedRoute><ProcessStockForm /></ProtectedRoute>} />
       <Route path="/transactions/send/new" element={<ProtectedRoute><SendStockForm /></ProtectedRoute>} />
       <Route path="/transactions/:direction/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
+      {/* List page routes match the audit's actual top-level paths — Received
+          lives at /transactions itself (not /transactions/received), Processing
+          at /process, Send at /send. Create/detail sub-routes above are
+          untouched for now — that's later-step scope. */}
       <Route
-        path="/transactions/received"
+        path="/transactions"
         element={<ProtectedRoute><TransactionsList direction="Received" title="Received transactions" actionLabel="Receive stock" testId="transactions-received-table" /></ProtectedRoute>}
       />
       <Route
-        path="/transactions/processing"
-        element={<ProtectedRoute><TransactionsList direction="Processing" title="Processing transactions" actionLabel="Process stock" testId="transactions-processing-table" /></ProtectedRoute>}
+        path="/process"
+        element={<ProtectedRoute><ProcessingTransactionsList /></ProtectedRoute>}
       />
       <Route
-        path="/transactions/send"
+        path="/send"
         element={<ProtectedRoute><TransactionsList direction="Send" title="Send transactions" actionLabel="Send stock" testId="transactions-send-table" /></ProtectedRoute>}
       />
 

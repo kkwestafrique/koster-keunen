@@ -62,7 +62,7 @@ export default function ReceiveStockForm() {
         transaction_date: form.transaction_date,
       });
       toast({ title: t('receiveForm.created') });
-      navigate('/transactions/received');
+      navigate('/transactions');
     } catch (err) {
       toast({ title: t('receiveForm.createFailed'), description: err.message, variant: 'destructive' });
     } finally {
@@ -180,7 +180,7 @@ export default function ReceiveStockForm() {
               </Button>
 
               <div className="flex justify-between mt-4">
-                <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/transactions/received')}>
+                <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/transactions')}>
                   {t('contractWizard.back')}
                 </Button>
                 <Button type="button" data-testid="receive-submit" disabled={!singleValid || saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={handleSubmit}>
@@ -288,7 +288,7 @@ export default function ReceiveStockForm() {
                           const res = await bulkUpload.submit();
                           if (res.inserted > 0) {
                             toast({ title: t('receiveForm.bulkImportComplete', { count: res.inserted }) });
-                            navigate('/transactions/received');
+                            navigate('/transactions');
                           } else {
                             toast({ title: t('receiveForm.bulkImportFailed'), variant: 'destructive' });
                           }

@@ -2,26 +2,28 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
-
-export function useTransactions({ direction, page = 1, search = '', product = '', standard = '', year = '' } = {}) {
+export function useTransactions({ direction, page = 1, pageSize = 5, search = '', product = '', loggedBy = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['transactions', { direction, page, search, product, standard, year, supplyChainId }],
+    queryKey: ['transactions', { direction, page, pageSize, search, product, loggedBy, supplyChainId }],
     queryFn: async () => {
+      // Query the transaction_groups view (one row per real transaction,
+      // multi-product lines aggregated) rather than the raw transactions
+      // table, which is one row per product line for Received/Processing
+      // and would otherwise show a multi-product transaction as several
+      // separate rows — same class of bug fixed for Contracts.
       let query = supabase
-        .from('transactions')
-        .select('*, actors(traceability_code, contact_name), beekeepers(traceability_code, full_name)', { count: 'exact' })
+        .from('transaction_groups')
+        .select('*, actors(traceability_code, contact_name), beekeepers(traceability_code, full_name), user_accounts(username)', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
         .eq('direction', direction)
         .order('transaction_date', { ascending: false });
 
       if (product) query = query.eq('product', product);
-      if (standard) query = query.eq('standard', standard);
-      if (year) query = query.gte('transaction_date', `${year}-01-01`).lte('transaction_date', `${year}-12-31`);
+      if (loggedBy) query = query.eq('logged_by', loggedBy);
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       const { data, error, count } = await query;
@@ -40,6 +42,32 @@ export function useTransactions({ direction, page = 1, search = '', product = ''
     },
     enabled: !!supplyChainId && !!direction,
     staleTime: 30_000,
+  });
+}
+
+// "Person" filter on all three lists (audit: "All transactions, Abimbola,
+// Oluwafemi Awoyemi") — only lists staff who've actually logged a
+// transaction, not every team member, matching what the live site showed.
+export function useTransactionLoggers() {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['transaction-loggers', supplyChainId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('logged_by, user_accounts(id, username)')
+        .eq('supply_chain_id', supplyChainId)
+        .not('logged_by', 'is', null);
+      if (error) throw error;
+      const seen = new Map();
+      data.forEach((r) => {
+        if (r.user_accounts && !seen.has(r.user_accounts.id)) {
+          seen.set(r.user_accounts.id, r.user_accounts.username);
+        }
+      });
+      return Array.from(seen, ([value, label]) => ({ value, label }));
+    },
+    enabled: !!supplyChainId,
   });
 }
 
@@ -113,19 +141,39 @@ export function useDashboardTransactionSummary({ year = '' } = {}) {
   });
 }
 
-export function useTransaction(id) {
+// Minimal fix to keep row-clicks working now that lists navigate using
+// transaction_group_id (the aggregated view has no per-row id). Returns
+// the group's shared fields plus every product line — the full 5-variant
+// detail page rebuild (status badges, approval workflow, batch chips) is
+// a separate, later step; this only prevents click-through from breaking.
+export function useTransaction(groupId) {
   return useQuery({
-    queryKey: ['transaction', id],
+    queryKey: ['transaction', groupId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: rows, error } = await supabase
         .from('transactions')
         .select('*, actors(traceability_code, contact_name, country), beekeepers(traceability_code, full_name, villages(name))')
-        .eq('id', id)
-        .single();
+        .eq('transaction_group_id', groupId)
+        .order('created_at', { ascending: true });
       if (error) throw error;
-      return data;
+      if (!rows.length) return null;
+
+      const [first] = rows;
+      return {
+        ...first,
+        products: rows.map((r) => ({
+          id: r.id,
+          product: r.product,
+          quantity: r.quantity,
+          unit: r.unit,
+          price: r.price,
+          total_amount: r.total_amount,
+        })),
+        total_quantity: rows.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0),
+        total_amount: rows.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0),
+      };
     },
-    enabled: !!id,
+    enabled: !!groupId,
   });
 }
 

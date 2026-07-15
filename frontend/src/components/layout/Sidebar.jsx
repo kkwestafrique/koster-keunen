@@ -40,9 +40,9 @@ const NAV_ITEMS = [
     labelKey: 'nav.transactions',
     icon: Copy,
     children: [
-      { labelKey: 'nav.received', to: '/transactions/received' },
-      { labelKey: 'nav.processing', to: '/transactions/processing' },
-      { labelKey: 'nav.send', to: '/transactions/send' },
+      { labelKey: 'nav.received', to: '/transactions' },
+      { labelKey: 'nav.processing', to: '/process' },
+      { labelKey: 'nav.send', to: '/send' },
     ],
   },
   {

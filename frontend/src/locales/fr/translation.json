@@ -502,8 +502,12 @@
   "processForm": {
     "title": "Traiter le stock",
     "processStock": "Traiter le stock",
+    "listTitle": "Transactions de traitement",
+    "transactionType": "Type de transaction",
     "sourceProduct": "Produit source",
     "sourceQuantity": "Quantité du produit source",
+    "destinationProduct": "Produit de destination",
+    "destinationQuantity": "Quantité de destination",
     "convertedProduct": "Produit converti",
     "created": "Traitement enregistré",
     "createFailed": "Échec de l'enregistrement du traitement",

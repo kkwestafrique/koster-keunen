@@ -65,7 +65,7 @@ export default function SendStockForm() {
         transaction_date: form.transaction_date,
       });
       toast({ title: t('sendForm.created') });
-      navigate('/transactions/send');
+      navigate('/send');
     } catch (err) {
       toast({ title: t('sendForm.createFailed'), description: err.message, variant: 'destructive' });
     } finally {
@@ -152,7 +152,7 @@ export default function SendStockForm() {
             </div>
 
             <div className="flex justify-between mt-6">
-              <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/transactions/send')}>
+              <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/send')}>
                 {t('contractWizard.back')}
               </Button>
               <Button type="button" data-testid="send-submit" disabled={!valid || saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={handleSubmit}>
@@ -254,7 +254,7 @@ export default function SendStockForm() {
                         const res = await bulkUpload.submit();
                         if (res.inserted > 0) {
                           toast({ title: t('receiveForm.bulkImportComplete', { count: res.inserted }) });
-                          navigate('/transactions/send');
+                          navigate('/send');
                         } else {
                           toast({ title: t('receiveForm.bulkImportFailed'), variant: 'destructive' });
                         }
