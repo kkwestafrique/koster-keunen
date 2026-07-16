@@ -25,6 +25,7 @@ import {
 } from '@/hooks/useTeamMembers';
 import { uploadMediaFile } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
+import SharingPermissionsTab from '@/pages/company/SharingPermissionsTab';
 
 // Actor (company) profile. Edit mode is deliberately limited, matching the
 // live site: only Actor name, Actor type (radio), and logo are editable —
@@ -303,6 +304,13 @@ export default function CompanyProfile() {
                   {teamMembers.length}
                 </span>
               </TabsTrigger>
+              <TabsTrigger
+                value="sharing"
+                data-testid="company-tab-sharing"
+                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+              >
+                {t('sharing.tabLabel')}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="pt-5">
@@ -383,6 +391,10 @@ export default function CompanyProfile() {
               >
                 <Plus className="h-4 w-4 mr-1" /> {t('companyProfile.addNewTeamMembers')}
               </Button>
+            </TabsContent>
+
+            <TabsContent value="sharing" className="pt-5">
+              <SharingPermissionsTab />
             </TabsContent>
           </Tabs>
         </div>
