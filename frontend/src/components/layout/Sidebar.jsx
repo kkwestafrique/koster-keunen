@@ -14,7 +14,8 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAllActorsLite } from '@/hooks/useActors';
+import { useMyActors } from '@/hooks/useActors';
+import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -109,8 +110,18 @@ function NavGroup({ item, currentPath, t }) {
 export default function Sidebar() {
   const { t } = useTranslation();
   const { profile, switchActor } = useAuth();
-  const { data: actors = [] } = useAllActorsLite();
-  const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
+  const { toast } = useToast();
+  const { data: myActors = [] } = useMyActors();
+  const currentActor = myActors.find((a) => a.actor_id === profile?.current_actor_id);
+  const isReadOnly = currentActor?.status === 'Disabled';
+
+  const handleSwitch = async (actorId) => {
+    try {
+      await switchActor(actorId);
+    } catch (err) {
+      toast({ title: t('topbar.switchFailed'), description: err.message, variant: 'destructive' });
+    }
+  };
 
   return (
     <aside
@@ -121,6 +132,12 @@ export default function Sidebar() {
       <div className="h-16 flex items-center px-5 shrink-0 bg-white">
         <span className="text-lg font-black text-[#0f48aa]">Koster Keunen</span>
       </div>
+
+      {isReadOnly && (
+        <div className="mx-3 mt-3 px-3 py-2 rounded-[4px] bg-[#fdecea] border border-[#f3b8b3]" data-testid="disabled-actor-banner">
+          <p className="text-xs text-[#ba550c] font-bold">{t('topbar.actorDisabledReadOnly')}</p>
+        </div>
+      )}
 
       <nav className="flex-1 overflow-y-auto pt-3 flex flex-col gap-1">
         {NAV_ITEMS.map((item) =>
@@ -162,28 +179,30 @@ export default function Sidebar() {
                 {currentActor?.logo_url ? (
                   <img src={currentActor.logo_url} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  (currentActor?.contact_name || 'A')[0]
+                  (currentActor?.actor_name || 'A')[0]
                 )}
               </div>
               <div className="flex-1 text-left overflow-hidden">
                 <p className="text-sm text-[#032b71] font-medium truncate">
-                  {currentActor?.contact_name || t('topbar.selectActor')}
+                  {currentActor?.actor_name || t('topbar.selectActor')}
                 </p>
               </div>
-              <ChevronDown className="h-4 w-4 text-[#7089b4] shrink-0" />
+              {myActors.length > 1 && <ChevronDown className="h-4 w-4 text-[#7089b4] shrink-0" />}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            {actors.map((a) => (
-              <DropdownMenuItem
-                key={a.id}
-                data-testid={`my-actor-option-${a.id}`}
-                onClick={() => switchActor(a.id)}
-              >
-                {a.contact_name} — {a.traceability_code}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
+          {myActors.length > 1 && (
+            <DropdownMenuContent align="start" className="w-56">
+              {myActors.map((a) => (
+                <DropdownMenuItem
+                  key={a.actor_id}
+                  data-testid={`my-actor-option-${a.actor_id}`}
+                  onClick={() => handleSwitch(a.actor_id)}
+                >
+                  {a.actor_name} — {a.traceability_code}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          )}
         </DropdownMenu>
       </div>
     </aside>

@@ -22,6 +22,8 @@
   "topbar": {
     "myActor": "Mon acteur",
     "selectActor": "Sélectionner un acteur",
+    "switchFailed": "Impossible de changer d'acteur",
+    "actorDisabledReadOnly": "Cet acteur est désactivé. Vous pouvez consulter l'historique mais ne pouvez rien créer, modifier ou supprimer.",
     "languages": "Langues",
     "english": "Anglais",
     "french": "Français",
