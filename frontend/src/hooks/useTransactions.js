@@ -261,13 +261,25 @@ export function useRejectTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (transactionGroupId) => {
-      const { error } = await supabase.from('transactions').update({ status: 'Rejected' }).eq('transaction_group_id', transactionGroupId);
+      // reject_transaction_with_reversal handles the full reversal in one
+      // atomic call: marks this Received transaction Rejected, restores
+      // the quantity to the original sender's stock as a new, clearly-
+      // labeled "Returned" batch, and creates a real, visible "Returned"
+      // record in the sender's own transaction history -- not just a
+      // status flip. It has its own explicit authorization check (only
+      // Admin, or a Member who actually owns this transaction, may call
+      // it), since it's SECURITY DEFINER and writes data belonging to the
+      // original sender's actor, not the caller's own.
+      const { error } = await supabase.rpc('reject_transaction_with_reversal', {
+        p_transaction_group_id: transactionGroupId,
+      });
       if (error) throw error;
       return transactionGroupId;
     },
     onSuccess: (groupId) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['transaction', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
     },
   });
 }
