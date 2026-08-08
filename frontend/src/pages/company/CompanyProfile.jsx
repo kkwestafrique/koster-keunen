@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import SharingPanel from './SharingPanel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -303,6 +304,13 @@ export default function CompanyProfile() {
                   {teamMembers.length}
                 </span>
               </TabsTrigger>
+              <TabsTrigger
+                value="sharing"
+                data-testid="company-tab-sharing"
+                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+              >
+                {t('sharing.tabLabel')}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="pt-5">
@@ -383,6 +391,10 @@ export default function CompanyProfile() {
               >
                 <Plus className="h-4 w-4 mr-1" /> {t('companyProfile.addNewTeamMembers')}
               </Button>
+            </TabsContent>
+
+            <TabsContent value="sharing" className="pt-5">
+              <SharingPanel />
             </TabsContent>
           </Tabs>
         </div>
