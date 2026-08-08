@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Pencil } from 'lucide-react';
 import { useContract, useUpdateContractGroup, useContractDeliveries } from '@/hooks/useContracts';
+import FormattedNumberInput from '@/components/common/FormattedNumberInput';
 import { uploadMediaFile } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -30,11 +31,16 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
   const [saving, setSaving] = useState(false);
   const [newFile, setNewFile] = useState(null);
   const [products, setProducts] = useState(() => contract.products.map((p) => ({ ...p })));
-  const [advanceAmountPaid, setAdvanceAmountPaid] = useState(contract.advance_amount_paid ?? 0);
+  const [advanceAmountPaid, setAdvanceAmountPaid] = useState(Number(contract.advance_amount_paid ?? 0).toFixed(2));
   const [updatedOn, setUpdatedOn] = useState(today());
 
   const setProductField = (idx, key, val) =>
     setProducts((rows) => rows.map((r, i) => (i === idx ? { ...r, [key]: val } : r)));
+
+  const hasInvalidFields = products.some(
+    (r) => r.expected_quantity === '' || Number(r.expected_quantity) <= 0 || isNaN(Number(r.expected_quantity))
+      || r.price === '' || Number(r.price) <= 0 || isNaN(Number(r.price))
+  );
 
   const handleSave = async () => {
     setSaving(true);
@@ -81,20 +87,20 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <RequiredLabel required>{t('contractDetail.expectedQuantityKg')}</RequiredLabel>
-                <Input
-                  type="number" min="0"
-                  data-testid={`update-contract-qty-${idx}`}
+                <FormattedNumberInput
+                  testId={`update-contract-qty-${idx}`}
                   value={row.expected_quantity}
-                  onChange={(e) => setProductField(idx, 'expected_quantity', e.target.value)}
+                  onChange={(v) => setProductField(idx, 'expected_quantity', v)}
+                  errorMessage={t('contractDetail.invalidQuantity')}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
                 <RequiredLabel required>{t('contractDetail.maximumPricePerKg')}</RequiredLabel>
-                <Input
-                  type="number" min="0"
-                  data-testid={`update-contract-price-${idx}`}
+                <FormattedNumberInput
+                  testId={`update-contract-price-${idx}`}
                   value={row.price}
-                  onChange={(e) => setProductField(idx, 'price', e.target.value)}
+                  onChange={(v) => setProductField(idx, 'price', v)}
+                  errorMessage={t('contractDetail.invalidPrice')}
                 />
               </div>
             </div>
@@ -120,6 +126,10 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
               data-testid="update-contract-advance"
               value={advanceAmountPaid}
               onChange={(e) => setAdvanceAmountPaid(e.target.value)}
+              onBlur={(e) => {
+                const n = Number(e.target.value);
+                if (!isNaN(n)) setAdvanceAmountPaid(n.toFixed(2));
+              }}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -137,7 +147,7 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
           <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => onOpenChange(false)}>
             {t('common.cancel')}
           </Button>
-          <Button type="button" data-testid="update-contract-submit" disabled={saving} onClick={handleSave} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
+          <Button type="button" data-testid="update-contract-submit" disabled={saving || hasInvalidFields} onClick={handleSave} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
             {saving ? t('forms.saving') : t('contractDetail.updateContract')}
           </Button>
         </DialogFooter>

@@ -468,6 +468,8 @@
     "updateFailed": "Échec de la mise à jour du contrat",
     "expectedQuantityKg": "Quantité attendue (Kg)",
     "maximumPricePerKg": "Prix maximum / Kg",
+    "invalidQuantity": "quantité invalide",
+    "invalidPrice": "prix invalide",
     "updatedOn": "Mis à jour le",
     "productDetails": "Détails du produit",
     "deliveryNotification": "Notification de livraison",
