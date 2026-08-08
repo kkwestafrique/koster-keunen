@@ -2,10 +2,56 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-export function useTransactions({ direction, page = 1, pageSize = 5, search = '', product = '', loggedBy = '' } = {}) {
+// Loss list page. Loss is a NUMBER on Processing transactions
+// (quantity_lost = source consumed - destination produced), not a
+// separate stock entry — 'Loss' is technically a legal stocks.stock_type
+// value in the schema, but nothing has ever created a row with it, and
+// this app's actual loss-tracking (built earlier this session) uses a
+// completely different model. The /stocks/loss page previously pointed
+// at that empty dead end; this queries the real data instead.
+export function useLossRecords({ page = 1, pageSize = 15, product = '', search = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['transactions', { direction, page, pageSize, search, product, loggedBy, supplyChainId }],
+    queryKey: ['loss-records', { page, pageSize, product, search, supplyChainId }],
+    queryFn: async () => {
+      let query = supabase
+        .from('transaction_groups')
+        .select('*', { count: 'exact' })
+        .eq('supply_chain_id', supplyChainId)
+        .eq('direction', 'Processing')
+        .gt('quantity_lost', 0)
+        .order('transaction_date', { ascending: false });
+
+      if (product) query = query.eq('product', product);
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+
+      let rows = data;
+      if (search) {
+        const s = search.toLowerCase();
+        rows = rows.filter(
+          (r) =>
+            r.transaction_code?.toLowerCase().includes(s) ||
+            r.product?.toLowerCase().includes(s) ||
+            r.source_product?.toLowerCase().includes(s)
+        );
+      }
+      return { rows, total: count };
+    },
+    enabled: !!supplyChainId,
+    staleTime: 30_000,
+  });
+}
+
+export function useTransactions({ direction, page = 1, pageSize = 5, search = '', product = '', loggedBy = '', source = '' } = {}) {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['transactions', { direction, page, pageSize, search, product, loggedBy, source, supplyChainId }],
     queryFn: async () => {
       // Query the transaction_groups view (one row per real transaction,
       // multi-product lines aggregated) rather than the raw transactions
@@ -21,6 +67,8 @@ export function useTransactions({ direction, page = 1, pageSize = 5, search = ''
 
       if (product) query = query.eq('product', product);
       if (loggedBy) query = query.eq('logged_by', loggedBy);
+      if (source === 'actor') query = query.not('actor_id', 'is', null);
+      if (source === 'beekeeper') query = query.not('beekeeper_id', 'is', null);
 
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;

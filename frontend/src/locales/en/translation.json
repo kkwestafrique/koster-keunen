@@ -180,6 +180,9 @@
     "receiveStock": "Receive stock",
     "allProducts": "All products",
     "allTransactions": "All transactions",
+    "allSources": "All sources",
+    "fromActorsOnly": "From Actors only",
+    "fromBeekeepersOnly": "From Beekeepers only",
     "date": "Date",
     "transactionId": "Transaction ID",
     "actorBeekeeper": "Actor / Beekeeper",
@@ -527,6 +530,7 @@
     "destinationQuantity": "Destination quantity",
     "convertedProduct": "Converted product",
     "product": "Product",
+    "mode": "Type",
     "merging": "Merging",
     "mergedQuantity": "Merged quantity",
     "created": "Processing recorded",
@@ -638,6 +642,12 @@
     "attachFile": "Attach file",
     "fileAttached": "File attached",
     "attachFailed": "Failed to attach file"
+  },
+  "lossList": {
+    "title": "Loss",
+    "quantityLost": "Quantity lost",
+    "searchPlaceholder": "Search by Transaction ID or product",
+    "noLossRecorded": "No loss has been recorded yet."
   },
   "sharing": {
     "tabLabel": "Sharing & Permissions",

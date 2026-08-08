@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus, Trash2 } from 'lucide-react';
 import { PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
 import { useCreateTransaction, useConsumeStockBatch } from '@/hooks/useTransactions';
@@ -21,9 +22,17 @@ const EMPTY_DESTINATION_ROW = { converted_product: '', quantity: '', unit: 'Kg' 
 // DESTINATION rows only, not additional source rows — confirmed by the
 // audit's exact wording) -> Transaction date.
 //
-// quantity_lost (surfaced on the detail page in a later step) is the
-// difference between total source batch quantity consumed and total
-// destination quantity produced — a real domain concept, not a form bug.
+// Merging is a distinct mode of this same form, not a separate flow: per
+// the audit it's "pure consolidation" of multiple batches of the EXACT
+// SAME product (no transformation) — so when Merging is selected, the
+// destination product is locked to match the source product rather than
+// letting a different one be picked.
+//
+// quantity_lost is the difference between total source batch quantity
+// consumed and total destination quantity produced — a real domain
+// concept, not a form bug. Correctly ends up at (or near) 0 for a clean
+// merge, which is why the detail page only shows the loss warning for
+// Processing, not Merging.
 export default function ProcessStockForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -31,6 +40,7 @@ export default function ProcessStockForm() {
   const createTransaction = useCreateTransaction();
   const consumeBatch = useConsumeStockBatch();
 
+  const [mode, setMode] = useState('Processing'); // 'Processing' | 'Merging'
   const [saving, setSaving] = useState(false);
   const [batchPickerOpen, setBatchPickerOpen] = useState(false);
   const [selectedBatches, setSelectedBatches] = useState([]);
@@ -42,11 +52,30 @@ export default function ProcessStockForm() {
     transaction_date: '',
   });
 
+  const handleModeChange = (v) => {
+    setMode(v);
+    // Merging locks destination product to the source product -- clear any
+    // previously picked (different) converted product so nothing stale
+    // gets submitted if someone switches modes mid-form.
+    setForm((f) => ({
+      ...f,
+      destinations: f.destinations.map((r) => ({ ...r, converted_product: v === 'Merging' ? f.source_product : '' })),
+    }));
+  };
+
   const setDestination = (idx, patch) =>
     setForm((f) => ({ ...f, destinations: f.destinations.map((r, i) => (i === idx ? { ...r, ...patch } : r)) }));
 
   const handleStandardChange = (v) => { setForm((f) => ({ ...f, standard: v })); setSelectedBatches([]); };
-  const handleSourceProductChange = (v) => { setForm((f) => ({ ...f, source_product: v })); setSelectedBatches([]); };
+  const handleSourceProductChange = (v) => {
+    setForm((f) => ({
+      ...f,
+      source_product: v,
+      // Merging: destination always mirrors the source, kept in sync here too.
+      destinations: mode === 'Merging' ? f.destinations.map((r) => ({ ...r, converted_product: v })) : f.destinations,
+    }));
+    setSelectedBatches([]);
+  };
   const handleSourceQuantityChange = (v) => { setForm((f) => ({ ...f, source_quantity: v })); setSelectedBatches([]); };
 
   const valid = form.standard && form.source_product && form.source_quantity
@@ -69,6 +98,7 @@ export default function ProcessStockForm() {
           source_quantity: form.source_quantity,
         })),
         direction: 'Processing',
+        transaction_type: mode,
         standard: form.standard,
         transaction_date: form.transaction_date,
         quantity_lost,
@@ -91,6 +121,18 @@ export default function ProcessStockForm() {
       <h1 className="text-lg font-black text-[#0f48aa] mb-6">{t('processForm.title')}</h1>
 
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-[#7089b4]">{t('processForm.mode')}</Label>
+          <RadioGroup value={mode} onValueChange={handleModeChange} className="flex gap-6" data-testid="process-mode">
+            <label className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
+              <RadioGroupItem value="Processing" data-testid="process-mode-processing" /> {t('processForm.title')}
+            </label>
+            <label className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
+              <RadioGroupItem value="Merging" data-testid="process-mode-merging" /> {t('processForm.merging')}
+            </label>
+          </RadioGroup>
+        </div>
+
         <div className="flex flex-col gap-1.5 max-w-sm">
           <Label className="text-[#7089b4]">{t('contractWizard.standard')}</Label>
           <Select value={form.standard} onValueChange={handleStandardChange}>
@@ -138,13 +180,19 @@ export default function ProcessStockForm() {
             {form.destinations.map((row, idx) => (
               <div key={idx} className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 items-end" data-testid={`process-destination-row-${idx}`}>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4] text-xs">{t('processForm.convertedProduct')}</Label>
-                  <Select value={row.converted_product} onValueChange={(v) => setDestination(idx, { converted_product: v })}>
-                    <SelectTrigger><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
-                    <SelectContent>
-                      {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-[#7089b4] text-xs">{mode === 'Merging' ? t('processForm.product') : t('processForm.convertedProduct')}</Label>
+                  {mode === 'Merging' ? (
+                    <div className="h-10 flex items-center px-3 text-sm text-[#032b71] bg-[#f4f6fa] rounded-md border border-input" data-testid={`process-destination-product-${idx}`}>
+                      {form.source_product || '—'}
+                    </div>
+                  ) : (
+                    <Select value={row.converted_product} onValueChange={(v) => setDestination(idx, { converted_product: v })}>
+                      <SelectTrigger><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
+                      <SelectContent>
+                        {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[#7089b4] text-xs">{t('receiveForm.quantity')}</Label>

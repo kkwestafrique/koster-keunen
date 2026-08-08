@@ -25,6 +25,7 @@ import ProcessStockForm from '@/pages/transactions/ProcessStockForm';
 import SendStockForm from '@/pages/transactions/SendStockForm';
 import TransactionDetail from '@/pages/transactions/TransactionDetail';
 import StocksList from '@/pages/stocks/StocksList';
+import LossList from '@/pages/stocks/LossList';
 import BulkUploads from '@/pages/bulkUploads/BulkUploads';
 import Report from '@/pages/report/Report';
 
@@ -120,7 +121,7 @@ function AppRoutes() {
       />
       <Route
         path="/stocks/loss"
-        element={<ProtectedRoute><StocksList stockType="Loss" title="Loss" actionLabel="Record loss" testId="stocks-loss-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><LossList /></ProtectedRoute>}
       />
 
       <Route path="/bulk-uploads" element={<ProtectedRoute><BulkUploads /></ProtectedRoute>} />

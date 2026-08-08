@@ -180,6 +180,9 @@
     "receiveStock": "Recevoir le stock",
     "allProducts": "Tous les produits",
     "allTransactions": "Toutes les transactions",
+    "allSources": "Toutes les sources",
+    "fromActorsOnly": "Depuis les acteurs uniquement",
+    "fromBeekeepersOnly": "Depuis les apiculteurs uniquement",
     "date": "Date",
     "transactionId": "ID de transaction",
     "actorBeekeeper": "Acteur / Apiculteur",
@@ -527,6 +530,7 @@
     "destinationQuantity": "Quantité de destination",
     "convertedProduct": "Produit converti",
     "product": "Produit",
+    "mode": "Type",
     "merging": "Fusion",
     "mergedQuantity": "Quantité fusionnée",
     "created": "Traitement enregistré",
@@ -638,6 +642,12 @@
     "attachFile": "Joindre un fichier",
     "fileAttached": "Fichier joint",
     "attachFailed": "Échec de la jonction du fichier"
+  },
+  "lossList": {
+    "title": "Perte",
+    "quantityLost": "Quantité perdue",
+    "searchPlaceholder": "Rechercher par ID de transaction ou produit",
+    "noLossRecorded": "Aucune perte n'a encore été enregistrée."
   },
   "sharing": {
     "tabLabel": "Partage et permissions",

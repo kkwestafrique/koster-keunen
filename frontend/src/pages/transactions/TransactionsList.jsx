@@ -24,13 +24,14 @@ export default function TransactionsList({ direction, title, actionLabel, testId
   const [search, setSearch] = useState('');
   const [product, setProduct] = useState('');
   const [loggedBy, setLoggedBy] = useState('');
+  const [source, setSource] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
   const { data: products = [] } = useConstants('product_type');
   const { data: loggers = [] } = useTransactionLoggers();
 
-  const { data, isLoading } = useTransactions({ direction, page, pageSize, search, product, loggedBy });
+  const { data, isLoading } = useTransactions({ direction, page, pageSize, search, product, loggedBy, source });
 
   const columns = [
     { key: 'transaction_date', label: t('transactions.date') },
@@ -92,6 +93,18 @@ export default function TransactionsList({ direction, title, actionLabel, testId
             onChange: (v) => { setLoggedBy(v); setPage(1); },
             options: loggers,
           },
+          ...(direction === 'Received'
+            ? [{
+                key: 'source',
+                label: t('transactions.allSources'),
+                value: source,
+                onChange: (v) => { setSource(v); setPage(1); },
+                options: [
+                  { value: 'actor', label: t('transactions.fromActorsOnly') },
+                  { value: 'beekeeper', label: t('transactions.fromBeekeepersOnly') },
+                ],
+              }]
+            : []),
         ]}
       />
 
