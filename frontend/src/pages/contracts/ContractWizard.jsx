@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StandardBadge from '@/components/common/StandardBadge';
 import { Plus, Trash2 } from 'lucide-react';
-import { CURRENCIES, PRODUCTS, UNITS, STANDARDS, COUNTRY_CURRENCY } from '@/data/regions';
+import { CURRENCIES, PRODUCTS, STANDARDS, COUNTRY_CURRENCY } from '@/data/regions';
 import { useAllActorsLite } from '@/hooks/useActors';
 import { useCreateContract } from '@/hooks/useContracts';
 import { useToast } from '@/hooks/use-toast';
@@ -45,6 +45,23 @@ export default function ContractWizard() {
   });
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+
+  // Supplier dropdown should only ever offer actors certified for the
+  // contract's selected Standard -- previously showed every actor
+  // regardless of match, letting a Sustainable contract get signed with
+  // a supplier who was never actually Sustainable-certified.
+  const suppliersMatchingStandard = form.standard
+    ? actors.filter((a) => (a.standards || []).includes(form.standard))
+    : actors;
+
+  const handleStandardChange = (val) => {
+    setForm((f) => {
+      const stillValid = actors
+        .find((a) => a.id === f.supplier_actor_id)
+        ?.standards?.includes(val);
+      return { ...f, standard: val, supplier_actor_id: stillValid ? f.supplier_actor_id : '' };
+    });
+  };
 
   // Auto-fills Currency from the selected supplier's country (audit:
   // "selecting a supplier auto-filled Currency"). Still just a normal
@@ -138,7 +155,7 @@ export default function ContractWizard() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.standard')}</Label>
-                <Select value={form.standard} onValueChange={set('standard')}>
+                <Select value={form.standard} onValueChange={handleStandardChange}>
                   <SelectTrigger data-testid="contract-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
                   <SelectContent>
                     {STANDARDS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -150,10 +167,12 @@ export default function ContractWizard() {
                 <Select value={form.supplier_actor_id} onValueChange={handleSupplierChange}>
                   <SelectTrigger data-testid="contract-supplier"><SelectValue placeholder={t('contractWizard.selectSupplier')} /></SelectTrigger>
                   <SelectContent>
-                    {actors.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-[#7089b4]">{t('contractWizard.noSupplierFound')}</div>
+                    {suppliersMatchingStandard.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-[#7089b4]">
+                        {form.standard ? t('contractWizard.noSupplierMatchesStandard') : t('contractWizard.noSupplierFound')}
+                      </div>
                     ) : (
-                      actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name}</SelectItem>)
+                      suppliersMatchingStandard.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name}</SelectItem>)
                     )}
                   </SelectContent>
                 </Select>
@@ -187,12 +206,9 @@ export default function ContractWizard() {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label className="text-[#7089b4] text-xs">{t('contractWizard.unit')}</Label>
-                      <Select value={row.unit} onValueChange={(v) => setProductRow(idx, { unit: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <div className="h-10 flex items-center px-3 text-sm text-[#032b71] bg-[#f4f6fa] rounded-md border border-input" data-testid={`contract-product-unit-${idx}`}>
+                        {row.unit}
+                      </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label className="text-[#7089b4] text-xs">{t('contractWizard.price')}</Label>

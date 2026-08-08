@@ -451,6 +451,7 @@
     "back": "Back",
     "advanceAmountPaid": "Advance amount paid",
     "noSupplierFound": "No Name of Supplier found",
+    "noSupplierMatchesStandard": "No suppliers are certified for this standard yet",
     "totalQuantityExpected": "Total quantity expected"
   },
   "contractDetail": {
