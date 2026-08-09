@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
+import TransactionStatusBadge from '@/components/common/TransactionStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useTransactions, useTransactionLoggers } from '@/hooks/useTransactions';
@@ -25,13 +26,14 @@ export default function TransactionsList({ direction, title, actionLabel, testId
   const [product, setProduct] = useState('');
   const [loggedBy, setLoggedBy] = useState('');
   const [source, setSource] = useState('');
+  const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
   const { data: products = [] } = useConstants('product_type');
   const { data: loggers = [] } = useTransactionLoggers();
 
-  const { data, isLoading } = useTransactions({ direction, page, pageSize, search, product, loggedBy, source });
+  const { data, isLoading } = useTransactions({ direction, page, pageSize, search, product, loggedBy, source, status });
 
   const columns = [
     { key: 'transaction_date', label: t('transactions.date') },
@@ -58,6 +60,13 @@ export default function TransactionsList({ direction, title, actionLabel, testId
       label: t('transactions.totalAmount'),
       render: (row) => (row.total_amount != null ? `${Number(row.total_amount).toLocaleString()} ${row.currency || ''}` : '—'),
     },
+    ...(direction === 'Received'
+      ? [{
+          key: 'status',
+          label: t('transactions.status'),
+          render: (row) => <TransactionStatusBadge status={row.status} testId={`transaction-row-status-${row.transaction_group_id}`} />,
+        }]
+      : []),
   ];
 
   return (
@@ -94,16 +103,30 @@ export default function TransactionsList({ direction, title, actionLabel, testId
             options: loggers,
           },
           ...(direction === 'Received'
-            ? [{
-                key: 'source',
-                label: t('transactions.allSources'),
-                value: source,
-                onChange: (v) => { setSource(v); setPage(1); },
-                options: [
-                  { value: 'actor', label: t('transactions.fromActorsOnly') },
-                  { value: 'beekeeper', label: t('transactions.fromBeekeepersOnly') },
-                ],
-              }]
+            ? [
+                {
+                  key: 'source',
+                  label: t('transactions.allSources'),
+                  value: source,
+                  onChange: (v) => { setSource(v); setPage(1); },
+                  options: [
+                    { value: 'actor', label: t('transactions.fromActorsOnly') },
+                    { value: 'beekeeper', label: t('transactions.fromBeekeepersOnly') },
+                  ],
+                },
+                {
+                  key: 'status',
+                  label: t('transactions.allStatuses'),
+                  value: status,
+                  onChange: (v) => { setStatus(v); setPage(1); },
+                  options: [
+                    { value: 'Pending', label: t('transactions.statusPending') },
+                    { value: 'Approved', label: t('transactions.statusApproved') },
+                    { value: 'Rejected', label: t('transactions.statusRejected') },
+                    { value: 'Returned', label: t('transactions.statusReturned') },
+                  ],
+                },
+              ]
             : []),
         ]}
       />

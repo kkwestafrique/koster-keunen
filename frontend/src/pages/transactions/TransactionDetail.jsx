@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import DetailField from '@/components/common/DetailField';
 import StandardBadge from '@/components/common/StandardBadge';
+import StatusBadge from '@/components/common/TransactionStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,26 +23,6 @@ import { useToast } from '@/hooks/use-toast';
 // warning-banner styling) rather than a screenshot-verified layout.
 // Worth a direct check against the live site before treating this as
 // pixel-final the way Contracts was.
-
-const STATUS_COLORS = {
-  Pending: { bg: '#fffaec', border: '#f2e4b3', text: '#79730a' },
-  Approved: { bg: '#eafaf0', border: '#b8e6c9', text: '#219653' },
-  Rejected: { bg: '#fdecea', border: '#f3b8b3', text: '#ba550c' },
-  Returned: { bg: '#ebf6ff', border: '#cfd8e6', text: '#0f48aa' },
-};
-
-function StatusBadge({ status }) {
-  const c = STATUS_COLORS[status] || STATUS_COLORS.Pending;
-  return (
-    <span
-      className="text-xs font-bold px-2.5 py-1 rounded-full border"
-      style={{ backgroundColor: c.bg, borderColor: c.border, color: c.text }}
-      data-testid="transaction-status-badge"
-    >
-      {status}
-    </span>
-  );
-}
 
 function BatchChips({ batches, testId }) {
   const { t } = useTranslation();

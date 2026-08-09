@@ -48,10 +48,10 @@ export function useLossRecords({ page = 1, pageSize = 15, product = '', search =
   });
 }
 
-export function useTransactions({ direction, page = 1, pageSize = 5, search = '', product = '', loggedBy = '', source = '' } = {}) {
+export function useTransactions({ direction, page = 1, pageSize = 5, search = '', product = '', loggedBy = '', source = '', status = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['transactions', { direction, page, pageSize, search, product, loggedBy, source, supplyChainId }],
+    queryKey: ['transactions', { direction, page, pageSize, search, product, loggedBy, source, status, supplyChainId }],
     queryFn: async () => {
       // Query the transaction_groups view (one row per real transaction,
       // multi-product lines aggregated) rather than the raw transactions
@@ -69,6 +69,7 @@ export function useTransactions({ direction, page = 1, pageSize = 5, search = ''
       if (loggedBy) query = query.eq('logged_by', loggedBy);
       if (source === 'actor') query = query.not('actor_id', 'is', null);
       if (source === 'beekeeper') query = query.not('beekeeper_id', 'is', null);
+      if (status) query = query.eq('status', status);
 
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
