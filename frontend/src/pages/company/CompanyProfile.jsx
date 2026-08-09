@@ -103,6 +103,7 @@ export default function CompanyProfile() {
   };
 
   const submitInvite = async () => {
+    if (inviteMember.isPending) return;
     try {
       await inviteMember.mutateAsync({ actorId, ...inviteForm });
       toast({ title: t('companyProfile.memberInvited') });
@@ -435,11 +436,11 @@ export default function CompanyProfile() {
             <Button variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => setInviteOpen(false)}>{t('common.cancel')}</Button>
             <Button
               data-testid="invite-submit"
-              disabled={!inviteForm.name || !inviteForm.email || !inviteForm.role}
+              disabled={!inviteForm.name || !inviteForm.email || !inviteForm.role || inviteMember.isPending}
               className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
               onClick={submitInvite}
             >
-              {t('companyProfile.sendInvite')}
+              {inviteMember.isPending ? t('forms.saving') : t('companyProfile.sendInvite')}
             </Button>
           </DialogFooter>
         </DialogContent>
