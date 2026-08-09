@@ -210,6 +210,14 @@ function validateRows(rows, template, lookups) {
       if (typeof cleaned.quantity === 'number' && typeof cleaned.price === 'number') {
         cleaned.total_amount = cleaned.quantity * cleaned.price;
       }
+      // Same explicit status as the single-transaction forms: Send is
+      // auto-Approved at creation, Received (and Processing, which has no
+      // status badge either way) start Pending so the Approve/Reject
+      // workflow on the detail page actually has something to act on —
+      // never rely on the table's own default here (confirmed bug:
+      // defaults to 'Approved' for everything, which silently skips the
+      // whole approval step for bulk-uploaded Received rows too).
+      cleaned.status = cleaned.direction === 'Send' ? 'Approved' : 'Pending';
     }
 
     return { rowNumber: index + 2, data: cleaned, errors };

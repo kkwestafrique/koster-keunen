@@ -57,6 +57,11 @@ export default function ReceiveStockForm() {
     try {
       await createTransaction.mutateAsync({
         direction: 'Received',
+        // Explicit, not left to the transactions table's own default —
+        // confirmed bug: that default is 'Approved' for every row
+        // regardless of direction, which silently skipped the entire
+        // Approve/Reject workflow for every new Received transaction.
+        status: 'Pending',
         standard: form.standard,
         beekeeper_id: form.beekeeper_id,
         currency: form.currency,
