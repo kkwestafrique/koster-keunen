@@ -19,6 +19,12 @@ export function useBeekeepers({
         .from('beekeepers')
         .select('*, villages(name), actors(contact_name, traceability_code)', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
+        // Orphan beekeepers (actor_id IS NULL, e.g. imported before an actor
+        // link was assigned) must never surface in a per-actor scoped list —
+        // confirmed leaking into every Admin actor context (bug found in
+        // iteration_4.json testing pass). They're not this actor's data, so
+        // exclude them explicitly rather than relying on RLS alone.
+        .not('actor_id', 'is', null)
         .order('created_at', { ascending: false });
 
       if (search) {
