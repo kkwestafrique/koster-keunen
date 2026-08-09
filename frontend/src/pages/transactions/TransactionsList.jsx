@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useTransactions, useTransactionLoggers } from '@/hooks/useTransactions';
 import { useConstants } from '@/hooks/useConstants';
+import { useActingActor } from '@/hooks/useActors';
 
 // Shared list for Transactions > Received / Send — confirmed by the audit
 // to genuinely share one 6-column shape (unlike Processing, which has its
@@ -29,6 +30,7 @@ export default function TransactionsList({ direction, title, actionLabel, testId
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const { isReadOnly } = useActingActor();
 
   const { data: products = [] } = useConstants('product_type');
   const { data: loggers = [] } = useTransactionLoggers();
@@ -75,7 +77,9 @@ export default function TransactionsList({ direction, title, actionLabel, testId
         <h1 className="text-lg font-black text-[#0f48aa]">{title}</h1>
         <Button
           data-testid={`${testId}-action-button`}
-          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isReadOnly}
+          title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
           onClick={() => navigate(NEW_ROUTES[direction])}
         >
           <Plus className="h-4 w-4 mr-1" /> {actionLabel}

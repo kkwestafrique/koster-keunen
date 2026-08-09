@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import StandardBadge from '@/components/common/StandardBadge';
 import { Plus, Trash2 } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, STANDARDS, COUNTRY_CURRENCY } from '@/data/regions';
-import { useAllActorsLite } from '@/hooks/useActors';
+import { useAllActorsLite, useActingActor } from '@/hooks/useActors';
 import { useCreateContract } from '@/hooks/useContracts';
 import { useToast } from '@/hooks/use-toast';
 import { uploadMediaFile } from '@/lib/supabaseClient';
@@ -28,6 +28,7 @@ export default function ContractWizard() {
   const { supplyChainId, profile } = useAuth();
   const { data: actors = [] } = useAllActorsLite();
   const createContract = useCreateContract();
+  const { isReadOnly } = useActingActor();
 
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -49,7 +50,9 @@ export default function ContractWizard() {
   // Supplier dropdown should only ever offer actors certified for the
   // contract's selected Standard -- previously showed every actor
   // regardless of match, letting a Sustainable contract get signed with
-  // a supplier who was never actually Sustainable-certified.
+  // a supplier who was never actually Sustainable-certified. Also gated
+  // entirely (disabled + empty) until a Standard is picked at all, per
+  // spec — there is no sensible supplier list before a Standard exists.
   //
   // Also excludes the actor currently creating this contract -- flagged
   // as a known bug all the way back in the original Contracts audit
@@ -57,9 +60,11 @@ export default function ContractWizard() {
   // checked directly against the code and git history just now: this was
   // never actually implemented in any commit, despite being marked fixed
   // in earlier session notes.
-  const suppliersMatchingStandard = actors
-    .filter((a) => a.id !== profile?.current_actor_id)
-    .filter((a) => (form.standard ? (a.standards || []).includes(form.standard) : true));
+  const suppliersMatchingStandard = form.standard
+    ? actors
+        .filter((a) => a.id !== profile?.current_actor_id)
+        .filter((a) => (a.standards || []).includes(form.standard))
+    : [];
 
   const handleStandardChange = (val) => {
     setForm((f) => {
@@ -145,6 +150,15 @@ export default function ContractWizard() {
 
   return (
     <AppLayout hideDefaultHeader>
+      {isReadOnly ? (
+        <div className="bg-[#fdecea] border border-[#f3b8b3] rounded-[5px] p-6 max-w-lg" data-testid="contract-wizard-readonly-block">
+          <p className="text-sm text-[#ba550c] font-bold mb-3">{t('common.readOnlyActorTooltip')}</p>
+          <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/contracts')}>
+            {t('contractWizard.back')}
+          </Button>
+        </div>
+      ) : (
+      <>
       <h1 className="text-lg font-black text-[#0f48aa] mb-6">{t('contractWizard.title')}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-6 items-start">
@@ -171,12 +185,12 @@ export default function ContractWizard() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.supplier')}</Label>
-                <Select value={form.supplier_actor_id} onValueChange={handleSupplierChange}>
-                  <SelectTrigger data-testid="contract-supplier"><SelectValue placeholder={t('contractWizard.selectSupplier')} /></SelectTrigger>
+                <Select value={form.supplier_actor_id} onValueChange={handleSupplierChange} disabled={!form.standard}>
+                  <SelectTrigger data-testid="contract-supplier"><SelectValue placeholder={form.standard ? t('contractWizard.selectSupplier') : t('contractWizard.selectStandardFirst')} /></SelectTrigger>
                   <SelectContent>
                     {suppliersMatchingStandard.length === 0 ? (
                       <div className="px-3 py-2 text-sm text-[#7089b4]">
-                        {form.standard ? t('contractWizard.noSupplierMatchesStandard') : t('contractWizard.noSupplierFound')}
+                        {form.standard ? t('contractWizard.noSupplierMatchesStandard') : t('contractWizard.selectStandardFirst')}
                       </div>
                     ) : (
                       suppliersMatchingStandard.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name}</SelectItem>)
@@ -369,6 +383,8 @@ export default function ContractWizard() {
           <StepMarker n={2} active={step === 2} done={false} label={t('contractWizard.stepSummary')} />
         </div>
       </div>
+      </>
+      )}
     </AppLayout>
   );
 }

@@ -66,6 +66,22 @@ export function useMyActors() {
   });
 }
 
+// Shared "is the actor I'm currently acting as Disabled" state — used by
+// Sidebar (banner + switcher visibility) and every Create/Edit/Delete
+// entry point across the app so the read-only lockout is enforced
+// consistently at the UI level, not just relied on via RLS at submit time.
+export function useActingActor() {
+  const { profile } = useAuth();
+  const { data: myActors = [], isLoading } = useMyActors();
+  const currentActor = myActors.find((a) => a.actor_id === profile?.current_actor_id);
+  return {
+    myActors,
+    currentActor,
+    isReadOnly: currentActor?.status === 'Disabled',
+    isLoading,
+  };
+}
+
 export function useAllActorsLite() {
   const { supplyChainId } = useAuth();
   return useQuery({

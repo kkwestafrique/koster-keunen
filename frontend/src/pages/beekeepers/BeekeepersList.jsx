@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useBeekeepers } from '@/hooks/useBeekeepers';
 import { useAllVillagesLite } from '@/hooks/useVillages';
+import { useActingActor } from '@/hooks/useActors';
 import AddBeekeeperDialog from '@/pages/beekeepers/AddBeekeeperDialog';
 
 // fixedStatus: 'Potential' | 'Achieved' | null (full list)
@@ -21,6 +22,7 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
   const [year, setYear] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const navigate = useNavigate();
+  const { isReadOnly } = useActingActor();
 
   const { data: villages = [] } = useAllVillagesLite();
 
@@ -56,7 +58,9 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
         <Button
           data-testid="add-beekeeper-button"
           onClick={() => setFormOpen(true)}
-          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+          disabled={isReadOnly}
+          title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
+          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="h-4 w-4 mr-1" /> {t('beekeepersList.addBeekeeper')}
         </Button>

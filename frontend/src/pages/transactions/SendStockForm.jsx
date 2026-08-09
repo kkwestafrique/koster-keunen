@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
-import { useAllActorsLite } from '@/hooks/useActors';
+import { useAllActorsLite, useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction, useConsumeStockBatch } from '@/hooks/useTransactions';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
@@ -30,6 +30,7 @@ export default function SendStockForm() {
   const { data: actors = [] } = useAllActorsLite();
   const createTransaction = useCreateTransaction();
   const consumeBatch = useConsumeStockBatch();
+  const { isReadOnly } = useActingActor();
 
   const [saving, setSaving] = useState(false);
   const [batchPickerOpen, setBatchPickerOpen] = useState(false);
@@ -93,6 +94,14 @@ export default function SendStockForm() {
     <AppLayout hideDefaultHeader>
       <h1 className="text-lg font-black text-[#0f48aa] mb-6">{t('sendForm.title')}</h1>
 
+      {isReadOnly ? (
+        <div className="bg-[#fdecea] border border-[#f3b8b3] rounded-[5px] p-6 max-w-lg" data-testid="send-form-readonly-block">
+          <p className="text-sm text-[#ba550c] font-bold mb-3">{t('common.readOnlyActorTooltip')}</p>
+          <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/send')}>
+            {t('contractWizard.back')}
+          </Button>
+        </div>
+      ) : (
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
@@ -192,6 +201,7 @@ export default function SendStockForm() {
           onConfirm={(selections) => setSelectedBatches(selections)}
         />
       </div>
+      )}
     </AppLayout>
   );
 }

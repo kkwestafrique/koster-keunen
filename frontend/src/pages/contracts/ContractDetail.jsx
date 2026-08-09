@@ -14,6 +14,7 @@ import { useContract, useUpdateContractGroup, useContractDeliveries } from '@/ho
 import FormattedNumberInput from '@/components/common/FormattedNumberInput';
 import { uploadMediaFile } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -199,11 +200,26 @@ export default function ContractDetail() {
   const navigate = useNavigate();
   const { data: contract, isLoading } = useContract(contractCode);
   const [updateOpen, setUpdateOpen] = useState(false);
+  const { isReadOnly } = useActingActor();
 
-  if (isLoading || !contract) {
+  if (isLoading) {
     return (
       <AppLayout hideDefaultHeader>
         <p className="text-[#7089b4]">{t('common.loading')}</p>
+      </AppLayout>
+    );
+  }
+  if (!contract) {
+    return (
+      <AppLayout hideDefaultHeader>
+        <button
+          data-testid="back-button"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 text-sm font-bold text-[#0f48aa] mb-3 hover:underline"
+        >
+          <ChevronLeft className="h-4 w-4" /> {t('actorProfile.back')}
+        </button>
+        <p className="text-[#7089b4]" data-testid="contract-not-found">{t('common.noContractsFound')}</p>
       </AppLayout>
     );
   }
@@ -230,7 +246,9 @@ export default function ContractDetail() {
           )}
           <Button
             data-testid="update-contract-button"
-            className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+            className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isReadOnly}
+            title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
             onClick={() => setUpdateOpen(true)}
           >
             <Pencil className="h-4 w-4 mr-1" /> {t('contractDetail.updateContract')}

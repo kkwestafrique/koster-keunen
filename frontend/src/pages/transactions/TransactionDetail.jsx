@@ -14,6 +14,7 @@ import { ChevronLeft, Paperclip } from 'lucide-react';
 import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction } from '@/hooks/useTransactions';
 import { uploadMediaFile, supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 
 // NOTE: this audit was text-only (no screenshots, unlike Contracts), so
@@ -48,6 +49,7 @@ export default function TransactionDetail() {
   const { data: sourceBatches = [] } = useTransactionBatchSelections(tx?.transaction_group_id);
   const approveTransaction = useApproveTransaction();
   const rejectTransaction = useRejectTransaction();
+  const { isReadOnly } = useActingActor();
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -55,10 +57,17 @@ export default function TransactionDetail() {
   const [rejectComment, setRejectComment] = useState('');
   const [rejecting, setRejecting] = useState(false);
 
-  if (isLoading || !tx) {
+  if (isLoading) {
     return (
       <AppLayout hideDefaultHeader>
         <p className="text-[#7089b4]">{t('common.loading')}</p>
+      </AppLayout>
+    );
+  }
+  if (!tx) {
+    return (
+      <AppLayout hideDefaultHeader>
+        <p className="text-[#7089b4]" data-testid="transaction-not-found">{t('common.noRecordsFound')}</p>
       </AppLayout>
     );
   }
@@ -137,10 +146,10 @@ export default function TransactionDetail() {
         <div className="bg-[#fffaec] border border-[#f2e4b3] rounded-[5px] p-4 mb-6 flex items-center justify-between" data-testid="transaction-pending-banner">
           <p className="text-sm text-[#79730a] font-bold">{t('transactionDetail.notYetApproved')}</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="border-[#ba550c] text-[#ba550c]" data-testid="transaction-reject" onClick={() => setRejectDialogOpen(true)}>
+            <Button variant="outline" size="sm" className="border-[#ba550c] text-[#ba550c] disabled:opacity-50 disabled:cursor-not-allowed" data-testid="transaction-reject" disabled={isReadOnly} title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined} onClick={() => setRejectDialogOpen(true)}>
               {t('transactionDetail.rejectTransaction')}
             </Button>
-            <Button size="sm" className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" data-testid="transaction-approve" onClick={handleApprove}>
+            <Button size="sm" className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed" data-testid="transaction-approve" disabled={isReadOnly} title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined} onClick={handleApprove}>
               {t('transactionDetail.approveTransaction')}
             </Button>
           </div>
@@ -161,9 +170,10 @@ export default function TransactionDetail() {
               <>
                 <Button
                   type="button" variant="outline" size="sm"
-                  className="border-[#0f48aa] text-[#0f48aa]"
+                  className="border-[#0f48aa] text-[#0f48aa] disabled:opacity-50 disabled:cursor-not-allowed"
                   data-testid="transaction-attach-file"
-                  disabled={uploading}
+                  disabled={uploading || isReadOnly}
+                  title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Paperclip className="h-3 w-3 mr-1" /> {uploading ? t('forms.saving') : t('transactionDetail.attachFile')}

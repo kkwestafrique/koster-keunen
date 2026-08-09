@@ -20,7 +20,7 @@ import {
 import { Pencil, MoreVertical, Plus } from 'lucide-react';
 import { ACTOR_TYPES, STANDARDS, TEAM_ROLES } from '@/data/regions';
 import { useAuth } from '@/contexts/AuthContext';
-import { useActor, useUpdateActor } from '@/hooks/useActors';
+import { useActor, useUpdateActor, useActingActor } from '@/hooks/useActors';
 import {
   useTeamMembers, useInviteTeamMember, useUpdateTeamMemberRole, useRemoveTeamMember,
 } from '@/hooks/useTeamMembers';
@@ -39,6 +39,7 @@ export default function CompanyProfile() {
   const { data: currentActor } = useActor(actorId);
   const actor = currentActor || {};
   const updateActor = useUpdateActor();
+  const { isReadOnly } = useActingActor();
 
   const { data: teamMembers = [] } = useTeamMembers(actorId);
   const inviteMember = useInviteTeamMember();
@@ -173,7 +174,9 @@ export default function CompanyProfile() {
                   data-testid="company-profile-edit-button"
                   variant="outline"
                   onClick={startEdit}
-                  className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#f5f5f5]"
+                  disabled={isReadOnly}
+                  title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
+                  className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#f5f5f5] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Pencil className="h-4 w-4 mr-1" /> {t('actorProfile.edit')}
                 </Button>
@@ -364,7 +367,12 @@ export default function CompanyProfile() {
                         <td className="py-2.5 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="p-1 rounded hover:bg-[#f5f5f5]" data-testid={`team-member-menu-${m.id}`}>
+                              <button
+                                className="p-1 rounded hover:bg-[#f5f5f5] disabled:opacity-40 disabled:cursor-not-allowed"
+                                data-testid={`team-member-menu-${m.id}`}
+                                disabled={isReadOnly}
+                                title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
+                              >
                                 <MoreVertical className="h-4 w-4 text-[#7089b4]" />
                               </button>
                             </DropdownMenuTrigger>
@@ -387,7 +395,9 @@ export default function CompanyProfile() {
               <Button
                 variant="outline"
                 data-testid="add-team-member-button"
-                className="border-[#0f48aa] text-[#0f48aa]"
+                className="border-[#0f48aa] text-[#0f48aa] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isReadOnly}
+                title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
                 onClick={() => setInviteOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-1" /> {t('companyProfile.addNewTeamMembers')}

@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus, Trash2 } from 'lucide-react';
 import { PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
 import { useCreateTransaction, useConsumeStockBatch } from '@/hooks/useTransactions';
+import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
 
@@ -39,6 +40,7 @@ export default function ProcessStockForm() {
   const { toast } = useToast();
   const createTransaction = useCreateTransaction();
   const consumeBatch = useConsumeStockBatch();
+  const { isReadOnly } = useActingActor();
 
   const [mode, setMode] = useState('Processing'); // 'Processing' | 'Merging'
   const [saving, setSaving] = useState(false);
@@ -120,6 +122,14 @@ export default function ProcessStockForm() {
     <AppLayout hideDefaultHeader>
       <h1 className="text-lg font-black text-[#0f48aa] mb-6">{t('processForm.title')}</h1>
 
+      {isReadOnly ? (
+        <div className="bg-[#fdecea] border border-[#f3b8b3] rounded-[5px] p-6 max-w-lg" data-testid="process-form-readonly-block">
+          <p className="text-sm text-[#ba550c] font-bold mb-3">{t('common.readOnlyActorTooltip')}</p>
+          <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/process')}>
+            {t('contractWizard.back')}
+          </Button>
+        </div>
+      ) : (
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label className="text-[#7089b4]">{t('processForm.mode')}</Label>
@@ -251,6 +261,7 @@ export default function ProcessStockForm() {
           </>
         )}
       </div>
+      )}
     </AppLayout>
   );
 }

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useContracts } from '@/hooks/useContracts';
 import { useConstants } from '@/hooks/useConstants';
+import { useActingActor } from '@/hooks/useActors';
 import { useNavigate } from 'react-router-dom';
 
 // Matches the live site's "All contracts" filter exactly. Note there is no
@@ -28,6 +29,7 @@ export default function ContractsList() {
   const [contractType, setContractType] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const { isReadOnly } = useActingActor();
 
   const { data: countries = [] } = useConstants('country');
 
@@ -101,7 +103,9 @@ export default function ContractsList() {
         <h1 className="text-lg font-black text-[#0f48aa]">{t('contracts.title')}</h1>
         <Button
           data-testid="create-contract-button"
-          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isReadOnly}
+          title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
           onClick={() => navigate('/contracts/new')}
         >
           <Plus className="h-4 w-4 mr-1" /> {t('contracts.create')}

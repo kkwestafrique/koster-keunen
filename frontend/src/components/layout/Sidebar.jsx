@@ -14,7 +14,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMyActors } from '@/hooks/useActors';
+import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -111,9 +111,7 @@ export default function Sidebar() {
   const { t } = useTranslation();
   const { profile, switchActor } = useAuth();
   const { toast } = useToast();
-  const { data: myActors = [] } = useMyActors();
-  const currentActor = myActors.find((a) => a.actor_id === profile?.current_actor_id);
-  const isReadOnly = currentActor?.status === 'Disabled';
+  const { myActors, currentActor, isReadOnly } = useActingActor();
 
   const handleSwitch = async (actorId) => {
     try {
@@ -169,28 +167,28 @@ export default function Sidebar() {
 
       <div className="p-3">
         <p className="text-xs text-[#7089b4] px-1 mb-1.5">{t('topbar.myActor')}</p>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              data-testid="my-actor-switcher"
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-[4px] bg-white border border-[#cfd8e6] hover:bg-[#f5f5f5] transition-colors"
-            >
-              <div className="h-8 w-8 rounded-full bg-[#0f48aa] flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
-                {currentActor?.logo_url ? (
-                  <img src={currentActor.logo_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  (currentActor?.actor_name || 'A')[0]
-                )}
-              </div>
-              <div className="flex-1 text-left overflow-hidden">
-                <p className="text-sm text-[#032b71] font-medium truncate">
-                  {currentActor?.actor_name || t('topbar.selectActor')}
-                </p>
-              </div>
-              {myActors.length > 1 && <ChevronDown className="h-4 w-4 text-[#7089b4] shrink-0" />}
-            </button>
-          </DropdownMenuTrigger>
-          {myActors.length > 1 && (
+        {myActors.length > 1 ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                data-testid="my-actor-switcher"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-[4px] bg-white border border-[#cfd8e6] hover:bg-[#f5f5f5] transition-colors"
+              >
+                <div className="h-8 w-8 rounded-full bg-[#0f48aa] flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
+                  {currentActor?.logo_url ? (
+                    <img src={currentActor.logo_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    (currentActor?.actor_name || 'A')[0]
+                  )}
+                </div>
+                <div className="flex-1 text-left overflow-hidden">
+                  <p className="text-sm text-[#032b71] font-medium truncate">
+                    {currentActor?.actor_name || t('topbar.selectActor')}
+                  </p>
+                </div>
+                <ChevronDown className="h-4 w-4 text-[#7089b4] shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
               {myActors.map((a) => (
                 <DropdownMenuItem
@@ -202,8 +200,24 @@ export default function Sidebar() {
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
-          )}
-        </DropdownMenu>
+          </DropdownMenu>
+        ) : (
+          // Single-actor users (Member / Field Officer) have nothing to
+          // switch between — no button chrome, no chevron, no dropdown,
+          // just a plain label naming their one actor.
+          <div className="w-full flex items-center gap-3 px-3 py-2" data-testid="my-actor-static-label">
+            <div className="h-8 w-8 rounded-full bg-[#0f48aa] flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
+              {currentActor?.logo_url ? (
+                <img src={currentActor.logo_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                (currentActor?.actor_name || 'A')[0]
+              )}
+            </div>
+            <p className="text-sm text-[#032b71] font-medium truncate">
+              {currentActor?.actor_name || t('topbar.selectActor')}
+            </p>
+          </div>
+        )}
       </div>
     </aside>
   );

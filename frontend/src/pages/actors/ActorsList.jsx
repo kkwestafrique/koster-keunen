@@ -7,7 +7,7 @@ import DataTable from '@/components/common/DataTable';
 import StatusBadge from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useActors } from '@/hooks/useActors';
+import { useActors, useActingActor } from '@/hooks/useActors';
 import ActorFormDialog from '@/pages/actors/ActorFormDialog';
 import { ACTOR_TYPES } from '@/data/regions';
 
@@ -28,6 +28,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
   const [status, setStatus] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const navigate = useNavigate();
+  const { isReadOnly } = useActingActor();
 
   const { data, isLoading } = useActors({
     page,
@@ -52,7 +53,9 @@ export default function ActorsList({ fixedStatus, title, testId }) {
         <Button
           data-testid="add-actor-button"
           onClick={() => setFormOpen(true)}
-          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+          disabled={isReadOnly}
+          title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
+          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="h-4 w-4 mr-1" /> {t('actorsList.addActor')}
         </Button>

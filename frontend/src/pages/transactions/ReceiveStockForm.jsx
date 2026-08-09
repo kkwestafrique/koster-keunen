@@ -11,6 +11,7 @@ import { Plus, Trash2, Download, Upload } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
 import { useAllVillagesLite } from '@/hooks/useVillages';
 import { useBeekeepers } from '@/hooks/useBeekeepers';
+import { useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction } from '@/hooks/useTransactions';
 import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +27,7 @@ export default function ReceiveStockForm() {
   const { toast } = useToast();
   const createTransaction = useCreateTransaction();
   const bulkUpload = useBulkUpload('transactions');
+  const { isReadOnly } = useActingActor();
 
   const [mode, setMode] = useState('single');
   const [saving, setSaving] = useState(false);
@@ -74,6 +76,14 @@ export default function ReceiveStockForm() {
     <AppLayout hideDefaultHeader>
       <h1 className="text-lg font-black text-[#0f48aa] mb-6">{t('receiveForm.title')}</h1>
 
+      {isReadOnly ? (
+        <div className="bg-[#fdecea] border border-[#f3b8b3] rounded-[5px] p-6 max-w-lg" data-testid="receive-form-readonly-block">
+          <p className="text-sm text-[#ba550c] font-bold mb-3">{t('common.readOnlyActorTooltip')}</p>
+          <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/transactions')}>
+            {t('contractWizard.back')}
+          </Button>
+        </div>
+      ) : (
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl">
         <RadioGroup value={mode} onValueChange={setMode} className="flex gap-8 mb-6" data-testid="receive-mode">
           <label className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
@@ -306,6 +316,7 @@ export default function ReceiveStockForm() {
           )}
         </div>
       </div>
+      )}
     </AppLayout>
   );
 }
