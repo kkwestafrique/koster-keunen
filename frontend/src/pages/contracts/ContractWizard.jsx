@@ -25,7 +25,7 @@ export default function ContractWizard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { supplyChainId } = useAuth();
+  const { supplyChainId, profile } = useAuth();
   const { data: actors = [] } = useAllActorsLite();
   const createContract = useCreateContract();
 
@@ -50,9 +50,16 @@ export default function ContractWizard() {
   // contract's selected Standard -- previously showed every actor
   // regardless of match, letting a Sustainable contract get signed with
   // a supplier who was never actually Sustainable-certified.
-  const suppliersMatchingStandard = form.standard
-    ? actors.filter((a) => (a.standards || []).includes(form.standard))
-    : actors;
+  //
+  // Also excludes the actor currently creating this contract -- flagged
+  // as a known bug all the way back in the original Contracts audit
+  // ("current mock allows selecting yourself as your own supplier"), but
+  // checked directly against the code and git history just now: this was
+  // never actually implemented in any commit, despite being marked fixed
+  // in earlier session notes.
+  const suppliersMatchingStandard = actors
+    .filter((a) => a.id !== profile?.current_actor_id)
+    .filter((a) => (form.standard ? (a.standards || []).includes(form.standard) : true));
 
   const handleStandardChange = (val) => {
     setForm((f) => {
