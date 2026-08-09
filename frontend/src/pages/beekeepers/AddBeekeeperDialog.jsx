@@ -170,7 +170,7 @@ function MultiUploadBody({ onDone }) {
               {processing ? t('forms.verifyingTemplate') : t('forms.uploadAndVerifyData')}
             </Button>
             <span className="text-sm text-[#7089b4]">{fileLabel || t('forms.noFileChosen')}</span>
-            <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
+            <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleFileChange} />
           </div>
 
           {(processing || done) && (

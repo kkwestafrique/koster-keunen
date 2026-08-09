@@ -5,6 +5,10 @@ import AppLayout from '@/components/layout/AppLayout';
 import DetailField from '@/components/common/DetailField';
 import StandardBadge from '@/components/common/StandardBadge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, Paperclip } from 'lucide-react';
 import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction } from '@/hooks/useTransactions';
 import { uploadMediaFile, supabase } from '@/lib/supabaseClient';
@@ -95,12 +99,28 @@ export default function TransactionDetail() {
       toast({ title: t('transactionDetail.approveFailed'), description: err.message, variant: 'destructive' });
     }
   };
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectComment, setRejectComment] = useState('');
+  const [rejecting, setRejecting] = useState(false);
+
   const handleReject = async () => {
+    if (!rejectReason) return;
+    setRejecting(true);
     try {
-      await rejectTransaction.mutateAsync(tx.transaction_group_id);
+      await rejectTransaction.mutateAsync({
+        transactionGroupId: tx.transaction_group_id,
+        reason: rejectReason,
+        comment: rejectComment,
+      });
       toast({ title: t('transactionDetail.rejected') });
+      setRejectDialogOpen(false);
+      setRejectReason('');
+      setRejectComment('');
     } catch (err) {
       toast({ title: t('transactionDetail.rejectFailed'), description: err.message, variant: 'destructive' });
+    } finally {
+      setRejecting(false);
     }
   };
   const handleAttachFile = async (e) => {
@@ -137,7 +157,7 @@ export default function TransactionDetail() {
         <div className="bg-[#fffaec] border border-[#f2e4b3] rounded-[5px] p-4 mb-6 flex items-center justify-between" data-testid="transaction-pending-banner">
           <p className="text-sm text-[#79730a] font-bold">{t('transactionDetail.notYetApproved')}</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="border-[#ba550c] text-[#ba550c]" data-testid="transaction-reject" onClick={handleReject}>
+            <Button variant="outline" size="sm" className="border-[#ba550c] text-[#ba550c]" data-testid="transaction-reject" onClick={() => setRejectDialogOpen(true)}>
               {t('transactionDetail.rejectTransaction')}
             </Button>
             <Button size="sm" className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" data-testid="transaction-approve" onClick={handleApprove}>
@@ -239,6 +259,52 @@ export default function TransactionDetail() {
           </>
         )}
       </div>
+
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-[#032b71] font-black">{t('transactionDetail.rejectTransaction')}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[#7089b4]">{t('transactionDetail.rejectReason')}</Label>
+              <Select value={rejectReason} onValueChange={setRejectReason}>
+                <SelectTrigger data-testid="reject-reason"><SelectValue placeholder={t('transactionDetail.selectRejectReason')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Wrong quantity">{t('transactionDetail.reasonWrongQuantity')}</SelectItem>
+                  <SelectItem value="Wrong product">{t('transactionDetail.reasonWrongProduct')}</SelectItem>
+                  <SelectItem value="Quality issue">{t('transactionDetail.reasonQualityIssue')}</SelectItem>
+                  <SelectItem value="Not expected">{t('transactionDetail.reasonNotExpected')}</SelectItem>
+                  <SelectItem value="Other">{t('transactionDetail.reasonOther')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[#7089b4]">{t('transactionDetail.rejectComment')}</Label>
+              <Textarea
+                data-testid="reject-comment"
+                value={rejectComment}
+                onChange={(e) => setRejectComment(e.target.value)}
+                placeholder={t('transactionDetail.rejectCommentPlaceholder')}
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-2">
+            <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => setRejectDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="button"
+              data-testid="reject-confirm"
+              disabled={!rejectReason || rejecting}
+              onClick={handleReject}
+              className="bg-[#ba550c] text-white hover:bg-[#a34a0a]"
+            >
+              {rejecting ? t('forms.saving') : t('transactionDetail.rejectTransaction')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

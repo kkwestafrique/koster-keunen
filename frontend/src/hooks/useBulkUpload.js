@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,7 +48,7 @@ export const BULK_UPLOAD_TEMPLATES = {
       { key: 'standard', label: 'Standard', required: true, allowed: ['Sustainable', 'Organic', 'Conventional'] },
       { key: 'quantity', label: 'Quantity', required: true, type: 'number' },
       { key: 'unit', label: 'Unit', required: false },
-      { key: 'total_amount', label: 'Total amount', required: false, type: 'number' },
+      { key: 'price', label: 'Price', required: true, type: 'number' },
       { key: 'direction', label: 'Direction', required: true, allowed: ['Received', 'Processing', 'Send'] },
     ],
   },
@@ -82,14 +81,7 @@ export function downloadTemplate(templateKey, filename) {
 function parseFile(file) {
   return new Promise((resolve, reject) => {
     const ext = file.name.split('.').pop().toLowerCase();
-    if (ext === 'csv') {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => resolve(results.data),
-        error: (err) => reject(err),
-      });
-    } else if (ext === 'xlsx' || ext === 'xls') {
+    if (ext === 'xlsx' || ext === 'xls') {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
@@ -104,7 +96,7 @@ function parseFile(file) {
       reader.onerror = reject;
       reader.readAsBinaryString(file);
     } else {
-      reject(new Error('Unsupported file type. Please upload a .csv or .xlsx file.'));
+      reject(new Error('Unsupported file type. Please upload an .xlsx file.'));
     }
   });
 }
@@ -209,6 +201,14 @@ function validateRows(rows, template, lookups) {
       }
       if (cleaned.direction === 'Send' && !cleaned.actor_id) {
         errors.push('Actor traceability code is required for Send transactions');
+      }
+      // total_amount is never trusted from the file itself (a formula
+      // cell, or a value someone typed by hand, could easily be wrong or
+      // stale) — always recomputed here from the row's own quantity and
+      // price, matching the spec's explicit requirement to never treat
+      // Excel formulas as the source of truth.
+      if (typeof cleaned.quantity === 'number' && typeof cleaned.price === 'number') {
+        cleaned.total_amount = cleaned.quantity * cleaned.price;
       }
     }
 

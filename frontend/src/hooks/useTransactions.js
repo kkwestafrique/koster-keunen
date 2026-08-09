@@ -308,18 +308,22 @@ export function useApproveTransaction() {
 export function useRejectTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (transactionGroupId) => {
+    mutationFn: async ({ transactionGroupId, reason, comment }) => {
       // reject_transaction_with_reversal handles the full reversal in one
-      // atomic call: marks this Received transaction Rejected, restores
-      // the quantity to the original sender's stock as a new, clearly-
-      // labeled "Returned" batch, and creates a real, visible "Returned"
-      // record in the sender's own transaction history -- not just a
-      // status flip. It has its own explicit authorization check (only
-      // Admin, or a Member who actually owns this transaction, may call
-      // it), since it's SECURITY DEFINER and writes data belonging to the
-      // original sender's actor, not the caller's own.
+      // atomic call: marks this Received transaction Rejected (with the
+      // reason/comment captured, matching the spec's fixed-reason-list +
+      // free-text-comment requirement), restores the quantity to the
+      // original sender's stock as a new, clearly-labeled "Returned"
+      // batch, and creates a real, visible "Returned" record in the
+      // sender's own transaction history -- not just a status flip. It
+      // has its own explicit authorization check (only Admin, or a Member
+      // who actually owns this transaction, may call it), since it's
+      // SECURITY DEFINER and writes data belonging to the original
+      // sender's actor, not the caller's own.
       const { error } = await supabase.rpc('reject_transaction_with_reversal', {
         p_transaction_group_id: transactionGroupId,
+        p_reject_reason: reason || null,
+        p_reject_comment: comment || null,
       });
       if (error) throw error;
       return transactionGroupId;

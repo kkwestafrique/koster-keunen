@@ -218,7 +218,7 @@ export default function ReceiveStockForm() {
                 <label className="inline-block">
                   <input
                     type="file"
-                    accept=".csv,.xlsx,.xls"
+                    accept=".xlsx,.xls"
                     className="hidden"
                     data-testid="receive-file-input"
                     onChange={(e) => {
