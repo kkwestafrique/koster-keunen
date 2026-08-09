@@ -2,15 +2,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
-
-export function useContracts({ page = 1, search = '', year = '', standard = '', contractType = '', country = '' } = {}) {
+export function useContracts({ page = 1, pageSize = 5, search = '', year = '', standard = '', contractType = '', country = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['contracts', { page, search, year, standard, contractType, country, supplyChainId }],
+    queryKey: ['contracts', { page, pageSize, search, year, standard, contractType, country, supplyChainId }],
     queryFn: async () => {
+      // Query the contract_groups view (one row per real contract, line
+      // items aggregated) rather than the raw contracts table, which is
+      // one row per product line and would otherwise show a multi-product
+      // contract as several separate rows.
       let query = supabase
-        .from('contracts')
+        .from('contract_groups')
         .select('*, actors(traceability_code, contact_name)', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
         .order('created_at', { ascending: false });
@@ -20,8 +22,8 @@ export function useContracts({ page = 1, search = '', year = '', standard = '', 
       if (contractType) query = query.eq('contract_type', contractType);
       if (country) query = query.eq('country', country);
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       const { data, error, count } = await query;
@@ -44,23 +46,18 @@ export function useContracts({ page = 1, search = '', year = '', standard = '', 
 }
 
 // Contract detail: contracts are stored one row per product line sharing a
-// contract_group_id, so viewing "a contract" means first resolving which
-// group the clicked row belongs to, then fetching every row in that group.
-export function useContract(id) {
+// contract_group_id, but the human-readable contract_code (e.g.
+// "VY75MK452J") is what the list/URL actually identify a contract by, not
+// the raw UUID — matches the live site's /contracts/contract-details/{ID}
+// route, where ID is this code.
+export function useContract(code) {
   return useQuery({
-    queryKey: ['contract', id],
+    queryKey: ['contract', code],
     queryFn: async () => {
-      const { data: clicked, error: clickedError } = await supabase
-        .from('contracts')
-        .select('contract_group_id')
-        .eq('id', id)
-        .single();
-      if (clickedError) throw clickedError;
-
       const { data: rows, error } = await supabase
         .from('contracts')
         .select('*, actors(traceability_code, contact_name, country)')
-        .eq('contract_group_id', clicked.contract_group_id)
+        .eq('contract_code', code)
         .order('created_at', { ascending: true });
       if (error) throw error;
       if (!rows.length) return null;
@@ -69,6 +66,7 @@ export function useContract(id) {
       return {
         ...first,
         products: rows.map((r) => ({
+          id: r.id,
           product: r.product,
           expected_quantity: r.expected_quantity,
           unit: r.unit,
@@ -77,7 +75,7 @@ export function useContract(id) {
         total_quantity_expected: rows.reduce((sum, r) => sum + (Number(r.expected_quantity) || 0), 0),
       };
     },
-    enabled: !!id,
+    enabled: !!code,
   });
 }
 
@@ -89,6 +87,26 @@ export function useContract(id) {
 // actor_id, currency, contract_type, country, advance_amount_paid,
 // advance_percent, comments, signature_date) and each entry in `products` is
 // { product, expected_quantity, unit, price }.
+// "Delivery notification" tab on the Contract detail page. Read-only for
+// now — the audit couldn't observe how a delivery gets added (no add-
+// action was visible on a contract with none recorded yet), so only the
+// read side is built; adding one is deliberately not guessed at.
+export function useContractDeliveries(contractGroupId) {
+  return useQuery({
+    queryKey: ['contract-deliveries', contractGroupId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contract_delivery_notifications')
+        .select('*')
+        .eq('contract_group_id', contractGroupId)
+        .order('expected_delivery_date', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!contractGroupId,
+  });
+}
+
 export function useCreateContract() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();
@@ -122,22 +140,47 @@ export function useCreateContract() {
   });
 }
 
-export function useUpdateContract() {
+// Update-contract modal: Year/Actor/Standard are read-only per the audit,
+// so the only things that can change are per-line-item Expected
+// quantity/Maximum price, plus the shared fields (Advance amount paid,
+// attachment, Updated on) applied identically to every row in the group.
+// Each product row's own `id` (added to useContract's products mapping
+// above) targets which physical row gets which quantity/price -- Supabase
+// has no single-call "update N rows with N different values" operation,
+// so this issues one update per row.
+export function useUpdateContractGroup() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...payload }) => {
-      const { data, error } = await supabase
-        .from('contracts')
-        .update(payload)
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+    mutationFn: async ({ contractCode, products, advance_amount_paid, attachment_url, updated_at }) => {
+      const totalContractAmount = products.reduce(
+        (sum, p) => sum + (Number(p.expected_quantity) || 0) * (Number(p.price) || 0), 0
+      );
+      const advance_percent = totalContractAmount > 0
+        ? Math.round(((Number(advance_amount_paid) || 0) / totalContractAmount) * 100)
+        : 0;
+
+      const results = await Promise.all(products.map((p) => {
+        const expected_quantity = Number(p.expected_quantity) || 0;
+        const price = Number(p.price) || 0;
+        const payload = {
+          expected_quantity,
+          price,
+          total_amount: expected_quantity * price,
+          advance_amount_paid: Number(advance_amount_paid) || 0,
+          advance_percent,
+          updated_at,
+        };
+        if (attachment_url !== undefined) payload.attachment_url = attachment_url;
+        return supabase.from('contracts').update(payload).eq('id', p.id).select().single();
+      }));
+
+      const failed = results.find((r) => r.error);
+      if (failed) throw failed.error;
+      return results.map((r) => r.data);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
-      queryClient.invalidateQueries({ queryKey: ['contract', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['contract', variables.contractCode] });
     },
   });
 }

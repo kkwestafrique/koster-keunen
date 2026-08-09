@@ -47,6 +47,25 @@ export function useActor(id) {
   });
 }
 
+// For the actor SWITCHER specifically -- only the actors this person is
+// actually an approved team member of (list_my_actors() RPC), not every
+// actor in the company. Different from useAllActorsLite, which is used
+// for things like "pick a destination actor to send stock to" and
+// deliberately shows everyone.
+export function useMyActors() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['my-actors', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('list_my_actors');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 30_000,
+  });
+}
+
 export function useAllActorsLite() {
   const { supplyChainId } = useAuth();
   return useQuery({
@@ -54,7 +73,7 @@ export function useAllActorsLite() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('actors')
-        .select('id, traceability_code, contact_name, actor_type, logo_url, country')
+        .select('id, traceability_code, contact_name, actor_type, logo_url, country, standards')
         .eq('supply_chain_id', supplyChainId)
         .order('created_at', { ascending: false });
       if (error) throw error;

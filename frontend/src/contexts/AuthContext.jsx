@@ -50,11 +50,13 @@ export function AuthProvider({ children }) {
 
   const switchActor = async (actorId) => {
     if (!profile) return;
-    const { error } = await supabase
-      .from('user_accounts')
-      .update({ current_actor_id: actorId })
-      .eq('id', profile.id);
-    if (!error) setProfile((prev) => ({ ...prev, current_actor_id: actorId }));
+    // Uses the switch_current_actor RPC (not a raw update) -- it validates
+    // server-side that this person actually has an active team_members
+    // row on the target actor before allowing the switch, rather than
+    // trusting the client to only ever pass a valid id.
+    const { error } = await supabase.rpc('switch_current_actor', { p_actor_id: actorId });
+    if (error) throw error;
+    setProfile((prev) => ({ ...prev, current_actor_id: actorId }));
   };
 
   return (
@@ -67,7 +69,7 @@ export function AuthProvider({ children }) {
         signIn,
         signOut,
         switchActor,
-        role: profile?.role || 'Viewer',
+        role: profile?.role || 'Field Officer',
         supplyChainId: profile?.supply_chain_id || null,
       }}
     >

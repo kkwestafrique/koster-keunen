@@ -19,11 +19,13 @@ import ContractsList from '@/pages/contracts/ContractsList';
 import ContractWizard from '@/pages/contracts/ContractWizard';
 import ContractDetail from '@/pages/contracts/ContractDetail';
 import TransactionsList from '@/pages/transactions/TransactionsList';
+import ProcessingTransactionsList from '@/pages/transactions/ProcessingTransactionsList';
 import ReceiveStockForm from '@/pages/transactions/ReceiveStockForm';
 import ProcessStockForm from '@/pages/transactions/ProcessStockForm';
 import SendStockForm from '@/pages/transactions/SendStockForm';
 import TransactionDetail from '@/pages/transactions/TransactionDetail';
 import StocksList from '@/pages/stocks/StocksList';
+import LossList from '@/pages/stocks/LossList';
 import BulkUploads from '@/pages/bulkUploads/BulkUploads';
 import Report from '@/pages/report/Report';
 
@@ -59,7 +61,7 @@ function AppRoutes() {
       />
       <Route
         path="/actors/actual"
-        element={<ProtectedRoute><ActorsList fixedStatus="Active" title="Actors — Actual" testId="actors-actual-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><ActorsList fixedStatus="Active" title="Actors — Achieved" testId="actors-achieved-table" /></ProtectedRoute>}
       />
       <Route path="/actors/:id" element={<ProtectedRoute><ActorDetail /></ProtectedRoute>} />
 
@@ -74,7 +76,7 @@ function AppRoutes() {
       />
       <Route
         path="/beekeepers/actual"
-        element={<ProtectedRoute><BeekeepersList fixedStatus="Actual" title="Beekeepers — Actual" testId="beekeepers-actual-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><BeekeepersList fixedStatus="Achieved" title="Beekeepers — Achieved" testId="beekeepers-achieved-table" /></ProtectedRoute>}
       />
       <Route path="/beekeepers/:id" element={<ProtectedRoute><BeekeeperDetail /></ProtectedRoute>} />
 
@@ -91,16 +93,20 @@ function AppRoutes() {
       <Route path="/transactions/processing/new" element={<ProtectedRoute><ProcessStockForm /></ProtectedRoute>} />
       <Route path="/transactions/send/new" element={<ProtectedRoute><SendStockForm /></ProtectedRoute>} />
       <Route path="/transactions/:direction/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
+      {/* List page routes match the audit's actual top-level paths — Received
+          lives at /transactions itself (not /transactions/received), Processing
+          at /process, Send at /send. Create/detail sub-routes above are
+          untouched for now — that's later-step scope. */}
       <Route
-        path="/transactions/received"
+        path="/transactions"
         element={<ProtectedRoute><TransactionsList direction="Received" title="Received transactions" actionLabel="Receive stock" testId="transactions-received-table" /></ProtectedRoute>}
       />
       <Route
-        path="/transactions/processing"
-        element={<ProtectedRoute><TransactionsList direction="Processing" title="Processing transactions" actionLabel="Process stock" testId="transactions-processing-table" /></ProtectedRoute>}
+        path="/process"
+        element={<ProtectedRoute><ProcessingTransactionsList /></ProtectedRoute>}
       />
       <Route
-        path="/transactions/send"
+        path="/send"
         element={<ProtectedRoute><TransactionsList direction="Send" title="Send transactions" actionLabel="Send stock" testId="transactions-send-table" /></ProtectedRoute>}
       />
 
@@ -115,7 +121,7 @@ function AppRoutes() {
       />
       <Route
         path="/stocks/loss"
-        element={<ProtectedRoute><StocksList stockType="Loss" title="Loss" actionLabel="Record loss" testId="stocks-loss-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><LossList /></ProtectedRoute>}
       />
 
       <Route path="/bulk-uploads" element={<ProtectedRoute><BulkUploads /></ProtectedRoute>} />

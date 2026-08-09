@@ -49,6 +49,12 @@ export default function DataTable({
   const { t } = useTranslation();
   const resolvedEmptyMessage = emptyMessage ?? t('common.noRecordsFound');
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize));
+  // "X - Y of Z" range format, matching the live site exactly (confirmed
+  // against both the Commercial Partners audit's "1 - 5 of 13" and the
+  // Contracts audit's "1 - 5 of 37" / empty-state "0 of 0") — not the
+  // "Page X of Y" format this used to render.
+  const rangeFrom = total > 0 ? (page - 1) * pageSize + 1 : 0;
+  const rangeTo = Math.min(page * pageSize, total || 0);
 
   return (
     <div className="bg-white border border-[#cfd8e6] rounded-[5px] overflow-hidden" data-testid={testId}>
@@ -112,62 +118,60 @@ export default function DataTable({
           </Select>
         </div>
 
-        {totalPages > 1 && (
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-[#7089b4]" data-testid={`${testId}-summary`}>
-              {t('common.page')} {page} {t('common.of')} {totalPages} &middot; {total} {t('common.records')}
-            </span>
-            <Pagination className="justify-end w-auto mx-0">
-              <PaginationContent>
-                {showFirstLast && (
-                  <PaginationItem>
-                    <button
-                      type="button"
-                      data-testid={`${testId}-first`}
-                      onClick={() => page > 1 && onPageChange(1)}
-                      disabled={page <= 1}
-                      className={`h-9 w-9 flex items-center justify-center rounded-[3px] ${page <= 1 ? 'opacity-40 pointer-events-none' : 'cursor-pointer hover:bg-[#f5f5f5]'}`}
-                    >
-                      <ChevronsLeft className="h-4 w-4 text-[#0f48aa]" />
-                    </button>
-                  </PaginationItem>
-                )}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-[#7089b4]" data-testid={`${testId}-summary`}>
+            {rangeFrom} - {rangeTo} {t('common.of')} {total || 0}
+          </span>
+          <Pagination className="justify-end w-auto mx-0">
+            <PaginationContent>
+              {showFirstLast && (
                 <PaginationItem>
-                  <PaginationPrevious
-                    data-testid={`${testId}-prev`}
-                    onClick={() => page > 1 && onPageChange(page - 1)}
-                    className={page <= 1 ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
-                  />
+                  <button
+                    type="button"
+                    data-testid={`${testId}-first`}
+                    onClick={() => page > 1 && onPageChange(1)}
+                    disabled={page <= 1}
+                    className={`h-9 w-9 flex items-center justify-center rounded-[3px] ${page <= 1 ? 'opacity-40 pointer-events-none' : 'cursor-pointer hover:bg-[#f5f5f5]'}`}
+                  >
+                    <ChevronsLeft className="h-4 w-4 text-[#0f48aa]" />
+                  </button>
                 </PaginationItem>
+              )}
+              <PaginationItem>
+                <PaginationPrevious
+                  data-testid={`${testId}-prev`}
+                  onClick={() => page > 1 && onPageChange(page - 1)}
+                  className={page <= 1 ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink isActive className="border-[#0f48aa] text-[#0f48aa] rounded-[3px]">
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext
+                  data-testid={`${testId}-next`}
+                  onClick={() => page < totalPages && onPageChange(page + 1)}
+                  className={page >= totalPages ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              {showFirstLast && (
                 <PaginationItem>
-                  <PaginationLink isActive className="border-[#0f48aa] text-[#0f48aa] rounded-[3px]">
-                    {page}
-                  </PaginationLink>
+                  <button
+                    type="button"
+                    data-testid={`${testId}-last`}
+                    onClick={() => page < totalPages && onPageChange(totalPages)}
+                    disabled={page >= totalPages}
+                    className={`h-9 w-9 flex items-center justify-center rounded-[3px] ${page >= totalPages ? 'opacity-40 pointer-events-none' : 'cursor-pointer hover:bg-[#f5f5f5]'}`}
+                  >
+                    <ChevronsRight className="h-4 w-4 text-[#0f48aa]" />
+                  </button>
                 </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext
-                    data-testid={`${testId}-next`}
-                    onClick={() => page < totalPages && onPageChange(page + 1)}
-                    className={page >= totalPages ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
-                  />
-                </PaginationItem>
-                {showFirstLast && (
-                  <PaginationItem>
-                    <button
-                      type="button"
-                      data-testid={`${testId}-last`}
-                      onClick={() => page < totalPages && onPageChange(totalPages)}
-                      disabled={page >= totalPages}
-                      className={`h-9 w-9 flex items-center justify-center rounded-[3px] ${page >= totalPages ? 'opacity-40 pointer-events-none' : 'cursor-pointer hover:bg-[#f5f5f5]'}`}
-                    >
-                      <ChevronsRight className="h-4 w-4 text-[#0f48aa]" />
-                    </button>
-                  </PaginationItem>
-                )}
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
+              )}
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
     </div>
   );

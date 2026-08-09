@@ -27,7 +27,7 @@ const YEARS = ['2027', '2026', '2025', '2024', '2023', '2022'];
 const PARTNER_REPORTS = [
   { key: 'beekeeperList', modal: 'yearOnly', table: 'beekeepers' },
   { key: 'beekeepersPotential', modal: 'yearRange', table: 'beekeepers', status: 'Potential' },
-  { key: 'beekeepersAchieved', modal: 'yearRange', table: 'beekeepers', status: 'Actual' },
+  { key: 'beekeepersAchieved', modal: 'yearRange', table: 'beekeepers', status: 'Achieved' },
   { key: 'actorsPotential', modal: 'yearRange', table: 'actors', status: 'Inactive' },
   { key: 'actorsAchieved', modal: 'yearRange', table: 'actors', status: 'Active' },
 ];

@@ -4,34 +4,46 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
-import StandardBadge from '@/components/common/StandardBadge';
+import TransactionStatusBadge from '@/components/common/TransactionStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useTransactions } from '@/hooks/useTransactions';
+import { useTransactions, useTransactionLoggers } from '@/hooks/useTransactions';
 import { useConstants } from '@/hooks/useConstants';
 
-// Shared list for Transactions > Received / Processing / Send.
-// The live MIS uses the same table shape for all three, only the title, action and direction filter differ.
+// Shared list for Transactions > Received / Send — confirmed by the audit
+// to genuinely share one 6-column shape (unlike Processing, which has its
+// own distinct column set — see ProcessingTransactionsList.jsx). No
+// Standard column/filter on either list per the audit; filters are
+// Product and a "logged by" person filter instead.
 export default function TransactionsList({ direction, title, actionLabel, testId }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const NEW_ROUTES = {
     Received: '/transactions/received/new',
-    Processing: '/transactions/processing/new',
     Send: '/transactions/send/new',
   };
   const [search, setSearch] = useState('');
   const [product, setProduct] = useState('');
-  const [standard, setStandard] = useState('');
+  const [loggedBy, setLoggedBy] = useState('');
+  const [source, setSource] = useState('');
+  const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   const { data: products = [] } = useConstants('product_type');
-  const { data: standards = [] } = useConstants('standard');
+  const { data: loggers = [] } = useTransactionLoggers();
 
-  const { data, isLoading } = useTransactions({ direction, page, search, product, standard });
+  const { data, isLoading } = useTransactions({ direction, page, pageSize, search, product, loggedBy, source, status });
 
   const columns = [
     { key: 'transaction_date', label: t('transactions.date') },
+    {
+      key: 'transaction_code',
+      label: t('transactions.transactionId'),
+      // Human-readable code system is a later step — shows a placeholder
+      // derived from the group id until then rather than nothing at all.
+      render: (row) => row.transaction_code || String(row.transaction_group_id || '').slice(0, 8).toUpperCase(),
+    },
     {
       key: 'actor_beekeeper',
       label: t('transactions.actorBeekeeper'),
@@ -39,20 +51,22 @@ export default function TransactionsList({ direction, title, actionLabel, testId
     },
     { key: 'product', label: t('transactions.product') },
     {
-      key: 'standard',
-      label: t('contracts.standard'),
-      render: (row) => <StandardBadge standard={row.standard} />,
-    },
-    {
       key: 'quantity',
       label: t('transactions.quantityDelivered'),
-      render: (row) => (row.quantity != null ? `${row.quantity} ${row.unit || ''}` : '—'),
+      render: (row) => (row.total_quantity != null ? `${row.total_quantity} Kg` : '—'),
     },
     {
       key: 'total_amount',
       label: t('transactions.totalAmount'),
-      render: (row) => (row.total_amount != null ? row.total_amount.toLocaleString() : '—'),
+      render: (row) => (row.total_amount != null ? `${Number(row.total_amount).toLocaleString()} ${row.currency || ''}` : '—'),
     },
+    ...(direction === 'Received'
+      ? [{
+          key: 'status',
+          label: t('transactions.status'),
+          render: (row) => <TransactionStatusBadge status={row.status} testId={`transaction-row-status-${row.transaction_group_id}`} />,
+        }]
+      : []),
   ];
 
   return (
@@ -82,12 +96,38 @@ export default function TransactionsList({ direction, title, actionLabel, testId
             options: products.map((p) => ({ value: p.value, label: p.label })),
           },
           {
-            key: 'standard',
-            label: t('contracts.standard'),
-            value: standard,
-            onChange: (v) => { setStandard(v); setPage(1); },
-            options: standards.map((s) => ({ value: s.value, label: s.label })),
+            key: 'loggedBy',
+            label: t('transactions.allTransactions'),
+            value: loggedBy,
+            onChange: (v) => { setLoggedBy(v); setPage(1); },
+            options: loggers,
           },
+          ...(direction === 'Received'
+            ? [
+                {
+                  key: 'source',
+                  label: t('transactions.allSources'),
+                  value: source,
+                  onChange: (v) => { setSource(v); setPage(1); },
+                  options: [
+                    { value: 'actor', label: t('transactions.fromActorsOnly') },
+                    { value: 'beekeeper', label: t('transactions.fromBeekeepersOnly') },
+                  ],
+                },
+                {
+                  key: 'status',
+                  label: t('transactions.allStatuses'),
+                  value: status,
+                  onChange: (v) => { setStatus(v); setPage(1); },
+                  options: [
+                    { value: 'Pending', label: t('transactions.statusPending') },
+                    { value: 'Approved', label: t('transactions.statusApproved') },
+                    { value: 'Rejected', label: t('transactions.statusRejected') },
+                    { value: 'Returned', label: t('transactions.statusReturned') },
+                  ],
+                },
+              ]
+            : []),
         ]}
       />
 
@@ -97,10 +137,12 @@ export default function TransactionsList({ direction, title, actionLabel, testId
         rows={data?.rows || []}
         total={data?.total || 0}
         page={page}
+        pageSize={pageSize}
+        onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onPageChange={setPage}
         loading={isLoading}
         emptyMessage={t('common.noRecordsFound')}
-        onRowClick={(row) => navigate(`/transactions/${direction.toLowerCase()}/${row.id}`)}
+        onRowClick={(row) => navigate(`/transactions/${direction.toLowerCase()}/${row.transaction_code}`)}
       />
     </AppLayout>
   );

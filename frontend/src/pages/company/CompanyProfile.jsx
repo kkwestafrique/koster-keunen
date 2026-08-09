@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import SharingPanel from './SharingPanel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -25,7 +26,6 @@ import {
 } from '@/hooks/useTeamMembers';
 import { uploadMediaFile } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
-import SharingPermissionsTab from '@/pages/company/SharingPermissionsTab';
 
 // Actor (company) profile. Edit mode is deliberately limited, matching the
 // live site: only Actor name, Actor type (radio), and logo are editable —
@@ -103,6 +103,7 @@ export default function CompanyProfile() {
   };
 
   const submitInvite = async () => {
+    if (inviteMember.isPending) return;
     try {
       await inviteMember.mutateAsync({ actorId, ...inviteForm });
       toast({ title: t('companyProfile.memberInvited') });
@@ -394,7 +395,7 @@ export default function CompanyProfile() {
             </TabsContent>
 
             <TabsContent value="sharing" className="pt-5">
-              <SharingPermissionsTab />
+              <SharingPanel />
             </TabsContent>
           </Tabs>
         </div>
@@ -435,11 +436,11 @@ export default function CompanyProfile() {
             <Button variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => setInviteOpen(false)}>{t('common.cancel')}</Button>
             <Button
               data-testid="invite-submit"
-              disabled={!inviteForm.name || !inviteForm.email || !inviteForm.role}
+              disabled={!inviteForm.name || !inviteForm.email || !inviteForm.role || inviteMember.isPending}
               className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
               onClick={submitInvite}
             >
-              {t('companyProfile.sendInvite')}
+              {inviteMember.isPending ? t('forms.saving') : t('companyProfile.sendInvite')}
             </Button>
           </DialogFooter>
         </DialogContent>

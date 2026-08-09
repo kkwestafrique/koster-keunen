@@ -2,26 +2,77 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
-
-export function useTransactions({ direction, page = 1, search = '', product = '', standard = '', year = '' } = {}) {
+// Loss list page. Loss is a NUMBER on Processing transactions
+// (quantity_lost = source consumed - destination produced), not a
+// separate stock entry — 'Loss' is technically a legal stocks.stock_type
+// value in the schema, but nothing has ever created a row with it, and
+// this app's actual loss-tracking (built earlier this session) uses a
+// completely different model. The /stocks/loss page previously pointed
+// at that empty dead end; this queries the real data instead.
+export function useLossRecords({ page = 1, pageSize = 15, product = '', search = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['transactions', { direction, page, search, product, standard, year, supplyChainId }],
+    queryKey: ['loss-records', { page, pageSize, product, search, supplyChainId }],
     queryFn: async () => {
       let query = supabase
-        .from('transactions')
-        .select('*, actors(traceability_code, contact_name), beekeepers(traceability_code, full_name)', { count: 'exact' })
+        .from('transaction_groups')
+        .select('*', { count: 'exact' })
+        .eq('supply_chain_id', supplyChainId)
+        .eq('direction', 'Processing')
+        .gt('quantity_lost', 0)
+        .order('transaction_date', { ascending: false });
+
+      if (product) query = query.eq('product', product);
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+
+      let rows = data;
+      if (search) {
+        const s = search.toLowerCase();
+        rows = rows.filter(
+          (r) =>
+            r.transaction_code?.toLowerCase().includes(s) ||
+            r.product?.toLowerCase().includes(s) ||
+            r.source_product?.toLowerCase().includes(s)
+        );
+      }
+      return { rows, total: count };
+    },
+    enabled: !!supplyChainId,
+    staleTime: 30_000,
+  });
+}
+
+export function useTransactions({ direction, page = 1, pageSize = 5, search = '', product = '', loggedBy = '', source = '', status = '' } = {}) {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['transactions', { direction, page, pageSize, search, product, loggedBy, source, status, supplyChainId }],
+    queryFn: async () => {
+      // Query the transaction_groups view (one row per real transaction,
+      // multi-product lines aggregated) rather than the raw transactions
+      // table, which is one row per product line for Received/Processing
+      // and would otherwise show a multi-product transaction as several
+      // separate rows — same class of bug fixed for Contracts.
+      let query = supabase
+        .from('transaction_groups')
+        .select('*, actors(traceability_code, contact_name), beekeepers(traceability_code, full_name), user_accounts(username)', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
         .eq('direction', direction)
         .order('transaction_date', { ascending: false });
 
       if (product) query = query.eq('product', product);
-      if (standard) query = query.eq('standard', standard);
-      if (year) query = query.gte('transaction_date', `${year}-01-01`).lte('transaction_date', `${year}-12-31`);
+      if (loggedBy) query = query.eq('logged_by', loggedBy);
+      if (source === 'actor') query = query.not('actor_id', 'is', null);
+      if (source === 'beekeeper') query = query.not('beekeeper_id', 'is', null);
+      if (status) query = query.eq('status', status);
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       const { data, error, count } = await query;
@@ -40,6 +91,32 @@ export function useTransactions({ direction, page = 1, search = '', product = ''
     },
     enabled: !!supplyChainId && !!direction,
     staleTime: 30_000,
+  });
+}
+
+// "Person" filter on all three lists (audit: "All transactions, Abimbola,
+// Oluwafemi Awoyemi") — only lists staff who've actually logged a
+// transaction, not every team member, matching what the live site showed.
+export function useTransactionLoggers() {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['transaction-loggers', supplyChainId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('logged_by, user_accounts(id, username)')
+        .eq('supply_chain_id', supplyChainId)
+        .not('logged_by', 'is', null);
+      if (error) throw error;
+      const seen = new Map();
+      data.forEach((r) => {
+        if (r.user_accounts && !seen.has(r.user_accounts.id)) {
+          seen.set(r.user_accounts.id, r.user_accounts.username);
+        }
+      });
+      return Array.from(seen, ([value, label]) => ({ value, label }));
+    },
+    enabled: !!supplyChainId,
   });
 }
 
@@ -113,19 +190,41 @@ export function useDashboardTransactionSummary({ year = '' } = {}) {
   });
 }
 
-export function useTransaction(id) {
+// Minimal fix to keep row-clicks working, and now uses transaction_code
+// (the human-readable ID) rather than the internal group UUID — matches
+// the routing identity pattern already used for Contracts. Returns the
+// group's shared fields plus every product line — the full 5-variant
+// detail page rebuild (status badges, approval workflow, batch chips) is
+// a separate, later step; this only prevents click-through from breaking.
+export function useTransaction(transactionCode) {
   return useQuery({
-    queryKey: ['transaction', id],
+    queryKey: ['transaction', transactionCode],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: rows, error } = await supabase
         .from('transactions')
-        .select('*, actors(traceability_code, contact_name, country), beekeepers(traceability_code, full_name, villages(name))')
-        .eq('id', id)
-        .single();
+        .select('*, actors(traceability_code, contact_name, country), beekeepers(traceability_code, full_name, villages(name)), stocks!destination_stock_id(batch_reference, unit)')
+        .eq('transaction_code', transactionCode)
+        .order('created_at', { ascending: true });
       if (error) throw error;
-      return data;
+      if (!rows.length) return null;
+
+      const [first] = rows;
+      return {
+        ...first,
+        products: rows.map((r) => ({
+          id: r.id,
+          product: r.product,
+          quantity: r.quantity,
+          unit: r.unit,
+          price: r.price,
+          total_amount: r.total_amount,
+          destination_batch: r.stocks?.batch_reference,
+        })),
+        total_quantity: rows.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0),
+        total_amount: rows.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0),
+      };
     },
-    enabled: !!id,
+    enabled: !!transactionCode,
   });
 }
 
@@ -141,6 +240,120 @@ export function useTransaction(id) {
 // `products` is either { product, quantity, unit, price } (Received) or
 // { source_product, source_quantity, converted_product, quantity, unit }
 // (Processing, mapped to product = converted_product below).
+// Batch-picker: available batches for a given product/standard/stock type,
+// oldest first (FIFO-friendly default ordering — selection itself is
+// manual, not auto-picked, per the audit's "Add batch details" modal).
+export function useAvailableBatches({ product, standard, stockType }) {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['available-batches', { product, standard, stockType, supplyChainId }],
+    queryFn: async () => {
+      let query = supabase
+        .from('stocks')
+        .select('id, batch_reference, quantity_available, unit, created_at')
+        .eq('supply_chain_id', supplyChainId)
+        .eq('stock_type', stockType)
+        .eq('product', product)
+        .gt('quantity_available', 0)
+        .order('created_at', { ascending: true });
+      if (standard) query = query.eq('standard', standard);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!supplyChainId && !!product && !!stockType,
+  });
+}
+
+// Atomically consumes one selected batch via the consume_stock_batch()
+// Postgres function (row-locked, validates availability, decrements, and
+// records the selection) — called once per selected batch after the
+// transaction row(s) exist.
+export function useConsumeStockBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ stockId, quantity, transactionGroupId }) => {
+      const { error } = await supabase.rpc('consume_stock_batch', {
+        p_stock_id: stockId,
+        p_quantity: quantity,
+        p_transaction_group_id: transactionGroupId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      queryClient.invalidateQueries({ queryKey: ['available-batches'] });
+    },
+  });
+}
+
+// Approval workflow (Received only, per the audit — Send appears to be
+// immediately Approved at creation, Processing has no status badge at
+// all). The actual Approve/Reject BUTTON UI lives on the detail page,
+// which is a later step — this is just the mutation layer.
+export function useApproveTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (transactionGroupId) => {
+      const { error } = await supabase.from('transactions').update({ status: 'Approved' }).eq('transaction_group_id', transactionGroupId);
+      if (error) throw error;
+      return transactionGroupId;
+    },
+    onSuccess: (groupId) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transaction', groupId] });
+    },
+  });
+}
+
+export function useRejectTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ transactionGroupId, reason, comment }) => {
+      // reject_transaction_with_reversal handles the full reversal in one
+      // atomic call: marks this Received transaction Rejected (with the
+      // reason/comment captured, matching the spec's fixed-reason-list +
+      // free-text-comment requirement), restores the quantity to the
+      // original sender's stock as a new, clearly-labeled "Returned"
+      // batch, and creates a real, visible "Returned" record in the
+      // sender's own transaction history -- not just a status flip. It
+      // has its own explicit authorization check (only Admin, or a Member
+      // who actually owns this transaction, may call it), since it's
+      // SECURITY DEFINER and writes data belonging to the original
+      // sender's actor, not the caller's own.
+      const { error } = await supabase.rpc('reject_transaction_with_reversal', {
+        p_transaction_group_id: transactionGroupId,
+        p_reject_reason: reason || null,
+        p_reject_comment: comment || null,
+      });
+      if (error) throw error;
+      return transactionGroupId;
+    },
+    onSuccess: (groupId) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transaction', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+    },
+  });
+}
+
+// "Source batches" chips on Send/Processing detail pages — the batches
+// actually consumed via consume_stock_batch for this transaction group.
+export function useTransactionBatchSelections(transactionGroupId) {
+  return useQuery({
+    queryKey: ['transaction-batch-selections', transactionGroupId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transaction_batch_selections')
+        .select('id, quantity_selected, stocks(batch_reference, unit)')
+        .eq('transaction_group_id', transactionGroupId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!transactionGroupId,
+  });
+}
+
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();
