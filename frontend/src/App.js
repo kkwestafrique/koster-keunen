@@ -92,6 +92,10 @@ function AppRoutes() {
       <Route path="/transactions/received/new" element={<ProtectedRoute><ReceiveStockForm /></ProtectedRoute>} />
       <Route path="/transactions/processing/new" element={<ProtectedRoute><ProcessStockForm /></ProtectedRoute>} />
       <Route path="/transactions/send/new" element={<ProtectedRoute><SendStockForm /></ProtectedRoute>} />
+      {/* /send/new is not a real page (canonical route is /transactions/send/new,
+          matching /send's own action button) — alias it instead of silently
+          falling through to the dashboard via the catch-all route below. */}
+      <Route path="/send/new" element={<Navigate to="/transactions/send/new" replace />} />
       <Route path="/transactions/:direction/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
       {/* List page routes match the audit's actual top-level paths — Received
           lives at /transactions itself (not /transactions/received), Processing

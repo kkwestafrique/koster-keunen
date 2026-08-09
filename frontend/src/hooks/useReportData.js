@@ -9,7 +9,13 @@ export function useReportData({ year = '', standard = '' } = {}) {
     queryFn: async () => {
       let txQuery = supabase
         .from('transactions')
-        .select('transaction_date, product, standard, quantity, unit, total_amount, direction, actors(contact_name, traceability_code)')
+        // `actors!actor_id(...)` disambiguates the embed — `transactions`
+        // has more than one FK relationship to `actors`, and an
+        // unqualified `actors(...)` embed throws a PostgREST "more than
+        // one relationship" error (same class of bug fixed on Contract/
+        // Transaction detail), which was silently swallowed here into an
+        // always-empty Report page.
+        .select('transaction_date, product, standard, quantity, unit, total_amount, direction, actors!actor_id(contact_name, traceability_code)')
         .eq('supply_chain_id', supplyChainId);
 
       if (year) txQuery = txQuery.gte('transaction_date', `${year}-01-01`).lte('transaction_date', `${year}-12-31`);
@@ -20,7 +26,7 @@ export function useReportData({ year = '', standard = '' } = {}) {
 
       let contractQuery = supabase
         .from('contracts')
-        .select('year, standard, contract_type, expected_quantity, total_amount, actors(contact_name)')
+        .select('year, standard, contract_type, expected_quantity, total_amount, actors!actor_id(contact_name)')
         .eq('supply_chain_id', supplyChainId);
       if (year) contractQuery = contractQuery.eq('year', year);
       if (standard) contractQuery = contractQuery.eq('standard', standard);

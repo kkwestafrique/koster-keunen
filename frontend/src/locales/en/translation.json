@@ -151,7 +151,9 @@
     "traditionalSingle": "Traditional single entry hives",
     "traditionalDouble": "Traditional double entries hives",
     "modernHives": "Modern hives",
-    "other": "Other"
+    "other": "Other",
+    "totalHives": "Total hives",
+    "activeYears": "Active years"
   },
   "contracts": {
     "title": "Contracts",

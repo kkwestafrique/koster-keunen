@@ -224,11 +224,13 @@ export function useBulkUpload(templateKey) {
   const [fileName, setFileName] = useState('');
   const [uploading, setUploading] = useState(false);
   const [parsing, setParsing] = useState(false);
+  const [parseError, setParseError] = useState(null);
   const [result, setResult] = useState(null);
 
   const loadFile = useCallback(async (file) => {
     setFileName(file.name);
     setResult(null);
+    setParseError(null);
     setParsing(true);
     try {
       const [rawRows, lookups] = await Promise.all([
@@ -236,6 +238,15 @@ export function useBulkUpload(templateKey) {
         fetchLookups(supplyChainId, templateKey),
       ]);
       setRows(validateRows(rawRows, template, lookups));
+    } catch (err) {
+      // parseFile rejects (e.g. non-.xlsx file) with a real Error. Store it
+      // for callers that just read `parseError` state (ReceiveStockForm's
+      // fire-and-forget onChange), but also re-throw so callers that
+      // already `await` + catch this themselves (AddBeekeeperDialog) keep
+      // their existing, more specific error handling.
+      setRows([]);
+      setParseError(err.message);
+      throw err;
     } finally {
       setParsing(false);
     }
@@ -305,6 +316,7 @@ export function useBulkUpload(templateKey) {
     setRows([]);
     setFileName('');
     setResult(null);
+    setParseError(null);
     setParsing(false);
   }, []);
 
@@ -316,6 +328,7 @@ export function useBulkUpload(templateKey) {
     errorCount,
     uploading,
     parsing,
+    parseError,
     result,
     loadFile,
     submit,

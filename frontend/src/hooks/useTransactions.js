@@ -202,7 +202,12 @@ export function useTransaction(transactionCode) {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from('transactions')
-        .select('*, actors(traceability_code, contact_name, country), beekeepers(traceability_code, full_name, villages(name)), stocks!destination_stock_id(batch_reference, unit)')
+        // `actors!actor_id(...)` disambiguates the embed the same way as
+        // the Contract detail fix — `transactions` also has more than one
+        // FK relationship to `actors`, and an unqualified `actors(...)`
+        // embed throws a PostgREST "more than one relationship" error
+        // that was silently swallowed into a permanent stuck/empty state.
+        .select('*, actors!actor_id(traceability_code, contact_name, country), beekeepers(traceability_code, full_name, villages(name)), stocks!destination_stock_id(batch_reference, unit)')
         .eq('transaction_code', transactionCode)
         .order('created_at', { ascending: true });
       if (error) throw error;

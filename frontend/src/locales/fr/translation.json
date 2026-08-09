@@ -151,7 +151,9 @@
     "traditionalSingle": "Ruches traditionnelles à entrée simple",
     "traditionalDouble": "Ruches traditionnelles à double entrée",
     "modernHives": "Ruches modernes",
-    "other": "Autre"
+    "other": "Autre",
+    "totalHives": "Total des ruches",
+    "activeYears": "Années actives"
   },
   "contracts": {
     "title": "Contrats",

@@ -233,7 +233,11 @@ export default function ReceiveStockForm() {
                     data-testid="receive-file-input"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) bulkUpload.loadFile(file);
+                      // parseError state (surfaced below) already carries
+                      // the message — this .catch() just prevents the
+                      // rejection itself from becoming an unhandled
+                      // promise rejection / dev error overlay.
+                      if (file) bulkUpload.loadFile(file).catch(() => {});
                     }}
                   />
                   <span className="inline-flex items-center gap-1 bg-[#0f48aa] text-white hover:bg-[#0d3d91] rounded-[5px] px-4 py-2 text-sm font-medium cursor-pointer" data-testid="receive-upload-verify">
@@ -242,6 +246,11 @@ export default function ReceiveStockForm() {
                 </label>
                 {bulkUpload.fileName && (
                   <span className="ml-3 text-sm text-[#7089b4]">{bulkUpload.fileName}</span>
+                )}
+                {bulkUpload.parseError && (
+                  <p className="mt-2 text-sm text-[#ba550c] font-bold" data-testid="receive-bulk-parse-error">
+                    {bulkUpload.parseError}
+                  </p>
                 )}
 
                 {bulkUpload.rows.length > 0 && (

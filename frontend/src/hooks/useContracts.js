@@ -56,7 +56,14 @@ export function useContract(code) {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from('contracts')
-        .select('*, actors(traceability_code, contact_name, country)')
+        // `actors!actor_id(...)` disambiguates the embed: contracts has
+        // TWO foreign keys to actors (actor_id = the counterparty/supplier,
+        // owning_actor_id = the actor who created this on the company's
+        // behalf) — an unqualified `actors(...)` embed made PostgREST
+        // error with "more than one relationship was found", which the
+        // hook swallowed into a permanent stuck/false-empty state on the
+        // Contract detail page (confirmed bug, iteration_4/5 test passes).
+        .select('*, actors!actor_id(traceability_code, contact_name, country)')
         .eq('contract_code', code)
         .order('created_at', { ascending: true });
       if (error) throw error;
