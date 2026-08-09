@@ -50,6 +50,10 @@ export default function TransactionDetail() {
   const rejectTransaction = useRejectTransaction();
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectComment, setRejectComment] = useState('');
+  const [rejecting, setRejecting] = useState(false);
 
   if (isLoading || !tx) {
     return (
@@ -80,11 +84,6 @@ export default function TransactionDetail() {
       toast({ title: t('transactionDetail.approveFailed'), description: err.message, variant: 'destructive' });
     }
   };
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-  const [rejectComment, setRejectComment] = useState('');
-  const [rejecting, setRejecting] = useState(false);
-
   const handleReject = async () => {
     if (!rejectReason) return;
     setRejecting(true);
