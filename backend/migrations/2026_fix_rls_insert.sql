@@ -1,16 +1,23 @@
--- Fix: actors/beekeepers inserts fail because their BEFORE INSERT triggers call
--- next_traceability_code(), which writes to traceability_sequences — a table with
--- RLS enabled but zero policies, and the function runs with the caller's (invoker)
--- privileges, so the write is blocked. Making the function SECURITY DEFINER lets it
--- bypass RLS for this internal bookkeeping table only, while RLS stays fully enabled
--- and locked down (no policies) on traceability_sequences itself for direct access.
-alter function public.next_traceability_code(text)
-  security definer
-  set search_path = public;
+-- Two separate fixes proposed in the original version of this file.
+-- Status of each, checked directly against the live database:
 
--- Fix: user_accounts has SELECT/UPDATE "own row" policies but no INSERT policy, so a
--- newly authenticated user can never create their own profile row. Add an insert
--- policy scoped strictly to auth.uid() so users can only ever insert their own record.
+-- 1. next_traceability_code() SECURITY DEFINER -- NOT NEEDED, NOT APPLIED.
+-- The original diagnosis (traceability_sequences has RLS enabled with
+-- zero policies, blocking real users from creating actors/beekeepers) was
+-- checked directly and found to be outdated: a policy already exists
+-- (`traceability_sequences_authenticated`, requiring only
+-- `auth.uid() is not null`), and a real simulated authenticated session
+-- was verified able to insert an actor and receive a correctly-generated
+-- traceability_code with no error. Left unapplied since it isn't fixing
+-- an active problem.
+
+-- 2. user_accounts self-insert policy -- CORRECT, ALREADY APPLIED LIVE.
+-- This is genuinely needed and matches the "own row only" pattern used
+-- everywhere else on this table (self-select, self-update). Already
+-- applied to the live database exactly as below; this is safe to re-run
+-- (drops first, matching the idempotent pattern used throughout this
+-- project's own migrations -- Postgres has no CREATE POLICY IF NOT EXISTS).
+drop policy if exists user_accounts_self_insert on public.user_accounts;
 create policy user_accounts_self_insert
   on public.user_accounts
   for insert

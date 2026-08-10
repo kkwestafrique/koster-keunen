@@ -1,41 +1,41 @@
--- Fix: every new "Received from a beekeeper" transaction (beekeeper_id set,
--- actor_id null -- the normal/only shape a beekeeper-sourced Received
--- transaction ever has) was being silently force-approved on INSERT,
--- regardless of what status the client explicitly sent, skipping the
--- entire Approve/Reject workflow that TransactionDetail.jsx's UI (and the
--- reject_transaction_with_reversal RPC) exist specifically to drive.
+-- DO NOT APPLY THIS FILE'S ORIGINAL VERSION — it has been reviewed and
+-- rejected. Kept in the repo (rather than deleted) specifically so the
+-- reasoning is visible to whoever finds it next, instead of silently
+-- vanishing and possibly getting re-diagnosed and re-proposed later.
 --
--- Root cause, confirmed directly against the live project via
--- pg_get_functiondef(): the BEFORE INSERT trigger function
--- transactions_before_write() contained this unconditional block:
+-- The original version of this file removed the following block from
+-- transactions_before_write():
+--
 --   if NEW.direction = 'Received' and NEW.beekeeper_id is not null and NEW.actor_id is null then
 --     NEW.status := 'Approved';
 --   end if;
--- Since that condition matches EVERY normal beekeeper-sourced Received row
--- (there is no legitimate Received-from-beekeeper case where actor_id is
--- ever set), this made the Approve/Reject feature permanently unreachable
--- via the standard creation flow.
 --
--- This fix only removes that block; the transaction_code generation logic
--- in the same function (unrelated) is preserved byte-for-byte, and the
--- separate create_linked_received_for_send trigger (which explicitly sets
--- 'Pending' on the linked Received row it creates for Send transactions,
--- and always has actor_id set on that row) is untouched and unaffected
--- either way.
-create or replace function public.transactions_before_write()
-returns trigger
-language plpgsql
-as $function$
-declare
-  v_code text;
-begin
-  if NEW.transaction_code is null or btrim(NEW.transaction_code) = '' then
-    select transaction_code into v_code
-    from public.transactions
-    where transaction_group_id = NEW.transaction_group_id and transaction_code is not null
-    limit 1;
-    NEW.transaction_code := coalesce(v_code, public.random_transaction_code());
-  end if;
-  return NEW;
-end;
-$function$;
+-- This block is NOT a bug — it's a deliberate, tested, confirmed business
+-- rule from this project's very first Transactions audit: beekeeper-
+-- sourced Received transactions have NO approval step at all. ONLY
+-- actor-sourced Received transactions (the ones auto-created when another
+-- actor hits Send) go through a real Pending -> Approve/Reject workflow.
+-- This distinction is the whole reason `direction`, `beekeeper_id`, and
+-- `actor_id` all exist as separate fields on this table.
+--
+-- The test that led to this file's original diagnosis created a
+-- transaction for "Musa Ibrahim" — a BEEKEEPER — and then found the
+-- Approve/Reject UI unreachable. That's expected and correct: a
+-- beekeeper-sourced receipt is SUPPOSED to auto-approve immediately, with
+-- no pending state at all. It does not indicate the approval workflow is
+-- broken — it indicates the wrong kind of transaction was used to try to
+-- exercise it.
+--
+-- To actually test the real Pending -> Approve/Reject workflow: create a
+-- SEND transaction from one actor to a different actor (not a beekeeper
+-- receipt). This automatically creates a linked, Pending "Received"
+-- record for the destination actor — that linked record is the one that
+-- correctly shows the pending banner and Approve/Reject buttons. This is
+-- the only way actor-sourced Received transactions currently get created
+-- in this system; there's no separate manual "Received from Actor" form.
+--
+-- Verified live in the database at time of writing: the auto-approve
+-- block above is present and unmodified in transactions_before_write() —
+-- this file's original version was written but never actually applied,
+-- so no live behavior needs reverting. This file exists purely to
+-- document why it should stay that way.
