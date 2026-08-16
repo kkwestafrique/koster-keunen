@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 const EMPTY = {
   actor_from_id: '',
   actor_to_id: '',
-  status: 'Active',
   connection_type: '',
   contact_gender: '',
   year: new Date().getFullYear(),
@@ -33,6 +32,15 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
   const { toast } = useToast();
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+
+  // Mutual self-exclusion: an actor can't connect to itself. Filters both
+  // directions since either field might be picked first, and clears the
+  // other side if it becomes invalid as a result of a later change --
+  // same bug class as the one already fixed on Contracts' Supplier field.
+  const setActorFrom = (val) => setForm((f) => ({ ...f, actor_from_id: val, actor_to_id: f.actor_to_id === val ? '' : f.actor_to_id }));
+  const setActorTo = (val) => setForm((f) => ({ ...f, actor_to_id: val, actor_from_id: f.actor_from_id === val ? '' : f.actor_from_id }));
+  const actorsForFrom = actors.filter((a) => a.id !== form.actor_to_id);
+  const actorsForTo = actors.filter((a) => a.id !== form.actor_from_id);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,19 +67,19 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.actorFrom')}</Label>
-            <Select value={form.actor_from_id} onValueChange={set('actor_from_id')}>
+            <Select value={form.actor_from_id} onValueChange={setActorFrom}>
               <SelectTrigger data-testid="conn-form-from"><SelectValue placeholder={t('forms.selectActor')} /></SelectTrigger>
               <SelectContent>
-                {actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name} ({a.traceability_code})</SelectItem>)}
+                {actorsForFrom.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name} ({a.traceability_code})</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.actorTo')}</Label>
-            <Select value={form.actor_to_id} onValueChange={set('actor_to_id')}>
+            <Select value={form.actor_to_id} onValueChange={setActorTo}>
               <SelectTrigger data-testid="conn-form-to"><SelectValue placeholder={t('forms.selectActor')} /></SelectTrigger>
               <SelectContent>
-                {actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name} ({a.traceability_code})</SelectItem>)}
+                {actorsForTo.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name} ({a.traceability_code})</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -81,13 +89,9 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.status')}</Label>
-            <Select value={form.status} onValueChange={set('status')}>
-              <SelectTrigger data-testid="conn-form-status"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Active">{t('common.active')}</SelectItem>
-                <SelectItem value="Revoked">{t('common.revoked')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="h-10 flex items-center px-3 text-sm text-[#7089b4] bg-[#f4f6fa] rounded-md border border-input">
+              {t('forms.connectionStartsPending')}
+            </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('forms.contactGender')}</Label>

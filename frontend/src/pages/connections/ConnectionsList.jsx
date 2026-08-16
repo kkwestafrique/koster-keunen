@@ -6,7 +6,9 @@ import DataTable from '@/components/common/DataTable';
 import StatusBadge from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Plus, Check, X } from 'lucide-react';
-import { useConnections } from '@/hooks/useConnections';
+import { useConnections, useApproveConnection } from '@/hooks/useConnections';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import ConnectionFormDialog from '@/pages/connections/ConnectionFormDialog';
 
 const YEAR_OPTIONS = Array.from({ length: 8 }, (_, i) => {
@@ -23,6 +25,18 @@ export default function ConnectionsList() {
   const [formOpen, setFormOpen] = useState(false);
 
   const { data, isLoading } = useConnections({ page, search, status, year });
+  const { profile } = useAuth();
+  const { toast } = useToast();
+  const approveConnection = useApproveConnection();
+
+  const handleApprove = async (connectionId) => {
+    try {
+      await approveConnection.mutateAsync(connectionId);
+      toast({ title: t('connectionsList.approved') });
+    } catch (err) {
+      toast({ title: t('connectionsList.approveFailed'), description: err.message, variant: 'destructive' });
+    }
+  };
 
   const columns = [
     { key: 'actor_from', label: t('connectionsList.actorFrom'), render: (row) => row.actor_from?.contact_name || '—' },
@@ -39,6 +53,22 @@ export default function ConnectionsList() {
       key: 'is_buyer',
       label: t('connectionsList.buyer'),
       render: (row) => (row.is_buyer ? <Check className="h-4 w-4 text-[#219653]" /> : <X className="h-4 w-4 text-[#7089b4]" />),
+    },
+    {
+      key: 'approve_action',
+      label: '',
+      render: (row) =>
+        row.status === 'Pending' && row.actor_to_id === profile?.current_actor_id ? (
+          <Button
+            size="sm"
+            data-testid={`connection-approve-${row.id}`}
+            onClick={(e) => { e.stopPropagation(); handleApprove(row.id); }}
+            disabled={approveConnection.isPending}
+            className="bg-[#219653] text-white hover:bg-[#1c7f47]"
+          >
+            {t('connectionsList.approve')}
+          </Button>
+        ) : null,
     },
   ];
 
@@ -66,7 +96,11 @@ export default function ConnectionsList() {
             label: t('connectionsList.status'),
             value: status,
             onChange: (v) => { setStatus(v); setPage(1); },
-            options: [{ value: 'Active', label: t('common.active') }, { value: 'Revoked', label: t('common.revoked') }],
+            options: [
+              { value: 'Pending', label: t('connectionsList.pending') },
+              { value: 'Active', label: t('common.active') },
+              { value: 'Revoked', label: t('common.revoked') },
+            ],
           },
           {
             key: 'year',

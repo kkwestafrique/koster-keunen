@@ -145,7 +145,7 @@ export function useBeekeeperTransactions(beekeeperId) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('transactions')
-        .select('id, transaction_date, direction, product, quantity, unit, total_amount, currency')
+        .select('id, transaction_code, transaction_date, direction, product, quantity, unit, total_amount, currency')
         .eq('beekeeper_id', beekeeperId)
         .order('transaction_date', { ascending: false });
       if (error) throw error;

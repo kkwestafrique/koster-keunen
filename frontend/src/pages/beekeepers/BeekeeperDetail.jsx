@@ -523,6 +523,7 @@ function OverviewTab({ bk }) {
 
 function TransactionsTab({ beekeeperId }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: transactions = [] } = useBeekeeperTransactions(beekeeperId);
 
   if (transactions.length === 0) {
@@ -541,7 +542,12 @@ function TransactionsTab({ beekeeperId }) {
       </thead>
       <tbody>
         {transactions.map((tx) => (
-          <tr key={tx.id} className="border-b border-[#f0f0f0] text-[#032b71]">
+          <tr
+            key={tx.id}
+            data-testid={`bk-transaction-row-${tx.id}`}
+            className="border-b border-[#f0f0f0] text-[#032b71] cursor-pointer hover:bg-[#f5f5f5]"
+            onClick={() => navigate(`/transactions/${tx.direction.toLowerCase()}/${tx.transaction_code}`)}
+          >
             <td className="py-2">{tx.transaction_date}</td>
             <td className="py-2">{tx.product}</td>
             <td className="py-2">{tx.quantity} {tx.unit}</td>

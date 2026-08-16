@@ -96,6 +96,25 @@ export function useConnectionBetween(actorAId, actorBId) {
   });
 }
 
+// Only whoever is currently acting as the actor BEING connected to
+// (actor_to_id) can call this successfully -- enforced inside the RPC
+// itself, not just hidden in the UI. Approving a Pending connection can
+// no longer happen via a plain table update at all (blocked by a
+// database trigger), so this is the only real path to Active.
+export function useApproveConnection() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (connectionId) => {
+      const { error } = await supabase.rpc('approve_connection', { p_connection_id: connectionId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+      queryClient.invalidateQueries({ queryKey: ['connection-between'] });
+    },
+  });
+}
+
 export function useUpdateConnectionStatus() {
   const queryClient = useQueryClient();
   return useMutation({

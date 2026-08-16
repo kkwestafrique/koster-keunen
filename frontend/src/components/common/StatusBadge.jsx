@@ -7,6 +7,7 @@ const STATUS_COLORS = {
   Inactive: '#7089b4',
   Potential: '#79730a',
   Revoked: '#ba550c',
+  Pending: '#79730a',
 };
 
 export default function StatusBadge({ status, testId }) {
