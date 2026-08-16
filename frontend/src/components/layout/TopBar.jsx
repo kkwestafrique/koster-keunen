@@ -1,10 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Download, ChevronDown, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Download, Bell, ChevronDown, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite } from '@/hooks/useActors';
 import { useRecentExports } from '@/hooks/useExports';
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/useNotifications';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import {
@@ -114,6 +115,86 @@ function DownloadsPanel() {
   );
 }
 
+function timeAgo(dateStr) {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function NotificationBell() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { data: notifications = [] } = useNotifications();
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+  const unreadCount = notifications.filter((n) => !n.read_at).length;
+
+  const handleClick = (n) => {
+    if (!n.read_at) markRead.mutate(n.id);
+    if (n.link) navigate(n.link);
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          data-testid="top-bar-notifications"
+          className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-[#f5f5f5] transition-colors"
+        >
+          <Bell className="h-5 w-5 text-[#032b71]" />
+          {unreadCount > 0 && (
+            <span
+              className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#ba550c] text-white text-[10px] font-bold flex items-center justify-center"
+              data-testid="top-bar-notifications-count"
+            >
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-0 bg-white" data-testid="notifications-panel">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f0]">
+          <p className="text-sm font-bold text-[#032b71]">{t('topbar.notifications')}</p>
+          {unreadCount > 0 && (
+            <button
+              data-testid="mark-all-notifications-read"
+              onClick={() => markAllRead.mutate()}
+              className="text-xs font-bold text-[#0f48aa] hover:underline"
+            >
+              {t('topbar.markAllRead')}
+            </button>
+          )}
+        </div>
+        <div className="max-h-96 overflow-y-auto">
+          {notifications.length === 0 ? (
+            <p className="text-sm text-[#7089b4] text-center py-8">{t('topbar.noNotificationsYet')}</p>
+          ) : (
+            notifications.map((n) => (
+              <button
+                key={n.id}
+                data-testid={`notification-row-${n.id}`}
+                onClick={() => handleClick(n)}
+                className={`w-full text-left flex items-start gap-2.5 px-4 py-2.5 border-b border-[#f5f5f5] last:border-0 hover:bg-[#f5f5f5] transition-colors ${!n.read_at ? 'bg-[#ebf6ff]' : ''}`}
+              >
+                {!n.read_at && <span className="h-2 w-2 rounded-full bg-[#0f48aa] mt-1.5 shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-[#032b71] font-medium">{n.title}</p>
+                  {n.message && <p className="text-xs text-[#7089b4] truncate">{n.message}</p>}
+                  <p className="text-xs text-[#7089b4] mt-0.5">{timeAgo(n.created_at)}</p>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function TopBar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -135,6 +216,7 @@ export default function TopBar() {
       <div className="flex items-center gap-4">
         <LanguageSwitcher />
 
+        <NotificationBell />
         <DownloadsPanel />
 
         <DropdownMenu>
