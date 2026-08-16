@@ -10,6 +10,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useActor } from '@/hooks/useActors';
 import { useConnectionBetween, useUpdateConnectionStatus } from '@/hooks/useConnections';
 import { useActorTransactions } from '@/hooks/useTransactions';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +20,7 @@ export default function ActorDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile } = useAuth();
+  const { canEdit } = usePermissions();
   const { data: actor, isLoading } = useActor(id);
   const { data: connection } = useConnectionBetween(profile?.current_actor_id, id);
   const updateConnectionStatus = useUpdateConnectionStatus();
@@ -143,12 +145,14 @@ export default function ActorDetail() {
               {isActive ? t('actorProfile.statusActive') : t('common.revoked')}
             </p>
           </div>
-          <Switch
-            checked={isActive}
-            onCheckedChange={handleToggle}
-            disabled={!connection || updateConnectionStatus.isPending}
-            data-testid="actor-connection-toggle"
-          />
+          {canEdit ? (
+            <Switch
+              checked={isActive}
+              onCheckedChange={handleToggle}
+              disabled={!connection || updateConnectionStatus.isPending}
+              data-testid="actor-connection-toggle"
+            />
+          ) : null}
         </div>
       </div>
     </AppLayout>

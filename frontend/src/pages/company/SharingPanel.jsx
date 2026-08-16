@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RequiredLabel from '@/components/common/RequiredLabel';
 import { Plus, X } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   useMyGrants,
   useGrantsReceived,
@@ -129,6 +130,7 @@ function ShareAccessDialog({ open, onOpenChange }) {
 export default function SharingPanel() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { canEdit } = usePermissions();
   const { data: myGrants = [], isLoading: loadingMyGrants } = useMyGrants();
   const { data: grantsReceived = [], isLoading: loadingReceived } = useGrantsReceived();
   const revokeGrant = useRevokeGrant();
@@ -155,15 +157,17 @@ export default function SharingPanel() {
     <div data-testid="sharing-panel">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-black text-[#032b71]">{t('sharing.sharedByMe')}</h3>
-        <Button
-          type="button"
-          size="sm"
-          data-testid="sharing-open-dialog"
-          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
-          onClick={() => setShareDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4 mr-1" /> {t('sharing.shareAccess')}
-        </Button>
+        {canEdit && (
+          <Button
+            type="button"
+            size="sm"
+            data-testid="sharing-open-dialog"
+            className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+            onClick={() => setShareDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" /> {t('sharing.shareAccess')}
+          </Button>
+        )}
       </div>
 
       {loadingMyGrants ? (
@@ -197,7 +201,7 @@ export default function SharingPanel() {
                   )}
                 </td>
                 <td className="py-2">
-                  {!g.revoked_at && (
+                  {!g.revoked_at && canEdit && (
                     <button
                       type="button"
                       data-testid={`sharing-revoke-${g.id}`}

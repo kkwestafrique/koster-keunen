@@ -14,6 +14,7 @@ import { useContract, useUpdateContractGroup, useContractDeliveries } from '@/ho
 import FormattedNumberInput from '@/components/common/FormattedNumberInput';
 import { uploadMediaFile } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 
@@ -199,6 +200,7 @@ export default function ContractDetail() {
   const { id: contractCode } = useParams();
   const navigate = useNavigate();
   const { data: contract, isLoading } = useContract(contractCode);
+  const { canEdit } = usePermissions();
   const [updateOpen, setUpdateOpen] = useState(false);
   const { isReadOnly } = useActingActor();
 
@@ -244,15 +246,17 @@ export default function ContractDetail() {
               {t('contractDetail.lastUpdatedOn')}: {String(contract.updated_at).slice(0, 10)}
             </span>
           )}
-          <Button
-            data-testid="update-contract-button"
-            className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isReadOnly}
-            title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
-            onClick={() => setUpdateOpen(true)}
-          >
-            <Pencil className="h-4 w-4 mr-1" /> {t('contractDetail.updateContract')}
-          </Button>
+          {canEdit && (
+            <Button
+              data-testid="update-contract-button"
+              className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isReadOnly}
+              title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
+              onClick={() => setUpdateOpen(true)}
+            >
+              <Pencil className="h-4 w-4 mr-1" /> {t('contractDetail.updateContract')}
+            </Button>
+          )}
         </div>
       </div>
 

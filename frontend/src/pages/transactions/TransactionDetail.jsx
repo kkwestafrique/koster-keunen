@@ -14,6 +14,7 @@ import { ChevronLeft, Paperclip } from 'lucide-react';
 import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction } from '@/hooks/useTransactions';
 import { uploadMediaFile, supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,6 +46,7 @@ export default function TransactionDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { supplyChainId } = useAuth();
+  const { canApprove } = usePermissions();
   const { data: tx, isLoading } = useTransaction(transactionCode);
   const { data: sourceBatches = [] } = useTransactionBatchSelections(tx?.transaction_group_id);
   const approveTransaction = useApproveTransaction();
@@ -145,14 +147,16 @@ export default function TransactionDetail() {
       {tx.direction === 'Received' && tx.status === 'Pending' && (
         <div className="bg-[#fffaec] border border-[#f2e4b3] rounded-[5px] p-4 mb-6 flex items-center justify-between" data-testid="transaction-pending-banner">
           <p className="text-sm text-[#79730a] font-bold">{t('transactionDetail.notYetApproved')}</p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="border-[#ba550c] text-[#ba550c] disabled:opacity-50 disabled:cursor-not-allowed" data-testid="transaction-reject" disabled={isReadOnly} title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined} onClick={() => setRejectDialogOpen(true)}>
-              {t('transactionDetail.rejectTransaction')}
-            </Button>
-            <Button size="sm" className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed" data-testid="transaction-approve" disabled={isReadOnly} title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined} onClick={handleApprove}>
-              {t('transactionDetail.approveTransaction')}
-            </Button>
-          </div>
+          {canApprove && (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="border-[#ba550c] text-[#ba550c] disabled:opacity-50 disabled:cursor-not-allowed" data-testid="transaction-reject" disabled={isReadOnly} title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined} onClick={() => setRejectDialogOpen(true)}>
+                {t('transactionDetail.rejectTransaction')}
+              </Button>
+              <Button size="sm" className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed" data-testid="transaction-approve" disabled={isReadOnly} title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined} onClick={handleApprove}>
+                {t('transactionDetail.approveTransaction')}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

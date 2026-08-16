@@ -18,6 +18,7 @@ import { STANDARDS, COMMITMENT_OF_BEEKEEPER, HIVE_SPREAD_CROPS } from '@/data/re
 import { useBeekeeper, useUpdateBeekeeper, useBeekeeperYearlyRecords } from '@/hooks/useBeekeepers';
 import { useBeekeeperTransactions } from '@/hooks/useTransactions';
 import { useFindOrCreateVillage } from '@/hooks/useVillages';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -40,6 +41,7 @@ function splitPhone(contactPhone) {
 function HeaderCard({ bk }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { canEdit } = usePermissions();
   const updateBeekeeper = useUpdateBeekeeper();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
@@ -92,7 +94,7 @@ function HeaderCard({ bk }) {
             </div>
           </div>
         </div>
-        {!editing && (
+        {!editing && canEdit && (
           <Button variant="outline" data-testid="beekeeper-edit-button" className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#f5f5f5]" onClick={startEdit}>
             <Pencil className="h-4 w-4 mr-1" /> {t('actorProfile.edit')}
           </Button>
@@ -167,6 +169,7 @@ function HeaderCard({ bk }) {
 function DetailsTab({ bk }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { canEdit } = usePermissions();
   const updateBeekeeper = useUpdateBeekeeper();
   const findOrCreateVillage = useFindOrCreateVillage();
   const [editing, setEditing] = useState(false);
@@ -243,9 +246,11 @@ function DetailsTab({ bk }) {
           <DetailField label={t('actorProfile.contactNumber')} value={bk.contact_phone} testId="bk-field-phone" />
         </div>
 
-        <Button variant="outline" data-testid="bk-details-edit-button" className="border-[#0f48aa] text-[#0f48aa] bg-white" onClick={startEdit}>
-          <Pencil className="h-4 w-4 mr-1" /> {t('beekeeperDetail.editBeekeeperDetails')}
-        </Button>
+        {canEdit && (
+          <Button variant="outline" data-testid="bk-details-edit-button" className="border-[#0f48aa] text-[#0f48aa] bg-white" onClick={startEdit}>
+            <Pencil className="h-4 w-4 mr-1" /> {t('beekeeperDetail.editBeekeeperDetails')}
+          </Button>
+        )}
       </div>
     );
   }
@@ -319,6 +324,7 @@ function DetailsTab({ bk }) {
 function OverviewTab({ bk }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { canEdit } = usePermissions();
   const updateBeekeeper = useUpdateBeekeeper();
   const { data: yearlyRecords = [] } = useBeekeeperYearlyRecords(bk.id);
   const [editing, setEditing] = useState(false);
@@ -429,9 +435,11 @@ function OverviewTab({ bk }) {
           <DetailField label={t('beekeeperDetail.year')} value={current?.year} testId="bk-overview-year" />
           <DetailField label={t('forms.commitmentOfBeekeeper')} value={(bk.commitment || []).join(', ') || '-'} testId="bk-overview-commitment" />
         </div>
-        <Button variant="outline" data-testid="bk-overview-edit-button" className="border-[#0f48aa] text-[#0f48aa] bg-white" onClick={startEdit}>
-          <Pencil className="h-4 w-4 mr-1" /> {t('companyProfile.update')}
-        </Button>
+        {canEdit && (
+          <Button variant="outline" data-testid="bk-overview-edit-button" className="border-[#0f48aa] text-[#0f48aa] bg-white" onClick={startEdit}>
+            <Pencil className="h-4 w-4 mr-1" /> {t('companyProfile.update')}
+          </Button>
+        )}
       </div>
 
       <p className="text-xs text-[#7089b4] mb-2">{t('forms.hiveSpreadPerCrop')}</p>

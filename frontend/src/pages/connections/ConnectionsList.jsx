@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Check, X } from 'lucide-react';
 import { useConnections, useApproveConnection } from '@/hooks/useConnections';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import ConnectionFormDialog from '@/pages/connections/ConnectionFormDialog';
 
@@ -26,6 +27,7 @@ export default function ConnectionsList() {
 
   const { data, isLoading } = useConnections({ page, search, status, year });
   const { profile } = useAuth();
+  const { canApprove } = usePermissions();
   const { toast } = useToast();
   const approveConnection = useApproveConnection();
 
@@ -58,7 +60,7 @@ export default function ConnectionsList() {
       key: 'approve_action',
       label: '',
       render: (row) =>
-        row.status === 'Pending' && row.actor_to_id === profile?.current_actor_id ? (
+        row.status === 'Pending' && row.actor_to_id === profile?.current_actor_id && canApprove ? (
           <Button
             size="sm"
             data-testid={`connection-approve-${row.id}`}

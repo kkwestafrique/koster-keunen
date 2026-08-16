@@ -20,6 +20,7 @@ import {
 import { Pencil, MoreVertical, Plus } from 'lucide-react';
 import { ACTOR_TYPES, STANDARDS, TEAM_ROLES } from '@/data/regions';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useActor, useUpdateActor, useActingActor } from '@/hooks/useActors';
 import {
   useTeamMembers, useInviteTeamMember, useUpdateTeamMemberRole, useRemoveTeamMember,
@@ -35,6 +36,7 @@ export default function CompanyProfile() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { profile, supplyChainId } = useAuth();
+  const { canManageTeam } = usePermissions();
   const actorId = profile?.current_actor_id;
   const { data: currentActor } = useActor(actorId);
   const actor = currentActor || {};
@@ -365,6 +367,7 @@ export default function CompanyProfile() {
                           <span className={`font-bold ${m.status === 'Active' ? 'text-[#219653]' : 'text-[#79730a]'}`}>{m.status}</span>
                         </td>
                         <td className="py-2.5 text-right">
+                          {canManageTeam && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
@@ -385,6 +388,7 @@ export default function CompanyProfile() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -392,16 +396,18 @@ export default function CompanyProfile() {
                 </table>
               )}
 
-              <Button
-                variant="outline"
-                data-testid="add-team-member-button"
-                className="border-[#0f48aa] text-[#0f48aa] disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isReadOnly}
-                title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
-                onClick={() => setInviteOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-1" /> {t('companyProfile.addNewTeamMembers')}
-              </Button>
+              {canManageTeam && (
+                <Button
+                  variant="outline"
+                  data-testid="add-team-member-button"
+                  className="border-[#0f48aa] text-[#0f48aa] disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isReadOnly}
+                  title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
+                  onClick={() => setInviteOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> {t('companyProfile.addNewTeamMembers')}
+                </Button>
+              )}
             </TabsContent>
 
             <TabsContent value="sharing" className="pt-5">
