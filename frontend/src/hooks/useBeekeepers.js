@@ -105,13 +105,15 @@ export function useBeekeeperAggregates({ country = '' } = {}) {
         total: data.length,
         male: 0,
         female: 0,
+        genderOther: 0,
         traditional: 0,
         modern: 0,
         other: 0,
       };
       data.forEach((row) => {
         if (row.gender === 'Male') agg.male += 1;
-        if (row.gender === 'Female') agg.female += 1;
+        else if (row.gender === 'Female') agg.female += 1;
+        else if (row.gender === 'Other') agg.genderOther += 1;
         agg.traditional += (row.hives_traditional_single || 0) + (row.hives_traditional_double || 0);
         agg.modern += row.hives_modern || 0;
         agg.other += row.hives_other || 0;

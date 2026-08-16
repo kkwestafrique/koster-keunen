@@ -72,6 +72,8 @@
   },
   "scripts": {
     "start": "craco start",
+    "i18n-check": "node scripts/i18n-check.js",
+    "prebuild": "npm run i18n-check",
     "build": "craco build",
     "test": "craco test"
   },

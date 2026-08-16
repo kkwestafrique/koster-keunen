@@ -51,7 +51,7 @@ const ACTOR_TYPE_COLORS = {
 };
 
 const HIVE_COLORS = { Traditional: '#0f48aa', Modern: '#9fb6dd', Other: '#c5cae9' };
-const GENDER_COLORS = { Male: '#0f48aa', Female: '#9fb6dd' };
+const GENDER_COLORS = { Male: '#0f48aa', Female: '#9fb6dd', Other: '#219653' };
 
 const CATEGORY_TRANSLATION_KEY = {
   'Producer Organisation': 'dashboard.categoryProducerOrganisation',
@@ -99,6 +99,7 @@ export default function Dashboard() {
     ? [
         { name: 'Male', translatedName: t('dashboard.categoryMale'), value: bkAgg.male },
         { name: 'Female', translatedName: t('dashboard.categoryFemale'), value: bkAgg.female },
+        { name: 'Other', translatedName: t('dashboard.categoryOther'), value: bkAgg.genderOther },
       ].filter((d) => d.value > 0)
     : [];
 
