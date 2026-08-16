@@ -8,6 +8,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    // sessionStorage instead of the default localStorage — an XSS attack
+    // could still grab the token while the tab is open, but it can't
+    // persist across browser restarts the way localStorage can. This
+    // downgrades the risk from "permanent account takeover" to "temporary,
+    // session-only access" — a real, meaningful improvement even though
+    // it's not a complete elimination of the risk category. The tradeoff
+    // is that users must re-login when they close and reopen the browser.
+    storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
   },
 });
 

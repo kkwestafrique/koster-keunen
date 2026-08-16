@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { identifyUser, resetIdentity } from '@/lib/posthog';
 
@@ -8,6 +9,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null); // row from user_accounts
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const loadProfile = useCallback(async (userId) => {
     if (!userId) {
@@ -50,13 +52,25 @@ export function AuthProvider({ children }) {
 
   const switchActor = async (actorId) => {
     if (!profile) return;
-    // Uses the switch_current_actor RPC (not a raw update) -- it validates
-    // server-side that this person actually has an active team_members
-    // row on the target actor before allowing the switch, rather than
-    // trusting the client to only ever pass a valid id.
     const { error } = await supabase.rpc('switch_current_actor', { p_actor_id: actorId });
     if (error) throw error;
     setProfile((prev) => ({ ...prev, current_actor_id: actorId }));
+    // Invalidate every cache that RLS scopes by current_actor_id — without
+    // this, already-fetched data from the PREVIOUS actor stays visible until
+    // its staleTime naturally expires, which is exactly the "switching
+    // actors doesn't refresh the screen" bug reported and verified earlier.
+    queryClient.invalidateQueries({ queryKey: ['beekeepers'] });
+    queryClient.invalidateQueries({ queryKey: ['beekeeper'] });
+    queryClient.invalidateQueries({ queryKey: ['beekeeper-aggregates'] });
+    queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    queryClient.invalidateQueries({ queryKey: ['contract'] });
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    queryClient.invalidateQueries({ queryKey: ['transaction'] });
+    queryClient.invalidateQueries({ queryKey: ['stocks'] });
+    queryClient.invalidateQueries({ queryKey: ['loss-records'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-transaction-summary'] });
+    queryClient.invalidateQueries({ queryKey: ['available-batches'] });
+    queryClient.invalidateQueries({ queryKey: ['my-actors'] });
   };
 
   return (

@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
 const RECENT_LIMIT = 15;
+const STALE_EXPORT_MINUTES = 5;
 
 // Powers the TopBar downloads panel: a live list of report exports for the
 // current supply chain, updated in real time via Supabase Realtime as rows
@@ -12,6 +13,26 @@ const RECENT_LIMIT = 15;
 export function useRecentExports() {
   const { supplyChainId } = useAuth();
   const queryClient = useQueryClient();
+
+  // Recover from the "stuck at Inprogress forever" failure mode: if the
+  // browser tab closed, the network dropped, or the browser crashed while
+  // a report was being generated client-side, that export row is left
+  // permanently at Inprogress with no way to retry or recover. On load,
+  // mark anything that's been Inprogress for more than 5 minutes as Failed
+  // — if it hasn't finished by then, it never will.
+  useEffect(() => {
+    if (!supplyChainId) return;
+    const cutoff = new Date(Date.now() - STALE_EXPORT_MINUTES * 60 * 1000).toISOString();
+    supabase
+      .from('exports')
+      .update({ status: 'Failed', error_message: 'Timed out — the browser tab was likely closed before this report finished generating.' })
+      .eq('status', 'Inprogress')
+      .eq('supply_chain_id', supplyChainId)
+      .lt('created_at', cutoff)
+      .then(({ error }) => {
+        if (!error) queryClient.invalidateQueries({ queryKey: ['exports', supplyChainId] });
+      });
+  }, [supplyChainId, queryClient]);
 
   const query = useQuery({
     queryKey: ['exports', supplyChainId],
