@@ -18,6 +18,7 @@ import { STANDARDS, COMMITMENT_OF_BEEKEEPER, HIVE_SPREAD_CROPS } from '@/data/re
 import { useBeekeeper, useUpdateBeekeeper, useBeekeeperYearlyRecords } from '@/hooks/useBeekeepers';
 import { useBeekeeperTransactions } from '@/hooks/useTransactions';
 import { useFindOrCreateVillage } from '@/hooks/useVillages';
+import { useAllActorsLite } from '@/hooks/useActors';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -44,6 +45,7 @@ function HeaderCard({ bk }) {
   const { toast } = useToast();
   const { canEdit } = usePermissions();
   const updateBeekeeper = useUpdateBeekeeper();
+  const { data: actors = [] } = useAllActorsLite();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -55,7 +57,7 @@ function HeaderCard({ bk }) {
       internal_code: bk.internal_code || '',
       standards: bk.standards || [],
       charter_signed: bk.charter_signed || false,
-      linked_producer_organisation: bk.linked_producer_organisation || '',
+      linked_producer_organisation_id: bk.linked_producer_organisation_id || '',
     });
     setEditing(true);
   };
@@ -108,7 +110,7 @@ function HeaderCard({ bk }) {
           <DetailField label={t('actorProfile.traceabilityCode')} value={bk.traceability_code} testId="bk-header-code" />
           <DetailField label={t('forms.internalCode')} value={bk.internal_code} testId="bk-header-internal-code" />
           <DetailField label={t('actorProfile.charterSigned')} value={bk.charter_signed ? t('common.yes') : t('common.no')} testId="bk-header-charter" />
-          <DetailField label={t('forms.linkedProducerOrganisation')} value={bk.linked_producer_organisation} testId="bk-header-linked-org" />
+          <DetailField label={t('forms.linkedProducerOrganisation')} value={bk.linked_producer_organisation_actor?.contact_name || bk.linked_producer_organisation} testId="bk-header-linked-org" />
         </div>
       ) : (
         <div className="flex flex-col gap-4" data-testid="beekeeper-header-edit-form">
@@ -127,7 +129,12 @@ function HeaderCard({ bk }) {
             </div>
             <div className="flex flex-col gap-1.5">
               <RequiredLabel required={false}>{t('forms.linkedProducerOrganisation')}</RequiredLabel>
-              <Input className="bg-white" data-testid="bk-header-edit-linked-org" value={form.linked_producer_organisation} onChange={(e) => set('linked_producer_organisation')(e.target.value)} />
+              <Select value={form.linked_producer_organisation_id} onValueChange={(v) => set('linked_producer_organisation_id')(v)}>
+                <SelectTrigger className="bg-white" data-testid="bk-header-edit-linked-org"><SelectValue placeholder={t('forms.linkedProducerOrganisation')} /></SelectTrigger>
+                <SelectContent>
+                  {actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

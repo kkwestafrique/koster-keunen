@@ -56,7 +56,7 @@ export function useBeekeeper(id) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('beekeepers')
-        .select('*, villages(name, country, state_region, lga_municipality), actors(contact_name, traceability_code)')
+        .select('*, villages(name, country, state_region, lga_municipality), actors!beekeepers_actor_id_fkey(contact_name, traceability_code), linked_producer_organisation_actor:actors!linked_producer_organisation_id(id, contact_name)')
         .eq('id', id)
         .single();
       if (error) throw error;

@@ -11,6 +11,7 @@ import PhoneInput from '@/components/common/PhoneInput';
 import { STANDARDS, COMMITMENT_OF_BEEKEEPER, HIVE_SPREAD_CROPS } from '@/data/regions';
 import { useFindOrCreateVillage } from '@/hooks/useVillages';
 import { useCreateBeekeeper } from '@/hooks/useBeekeepers';
+import { useAllActorsLite } from '@/hooks/useActors';
 import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -26,7 +27,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OF_BIRTH_OPTIONS = Array.from({ length: 80 }, (_, i) => CURRENT_YEAR - 18 - i);
 
 const EMPTY = {
-  linked_producer_organisation: '',
+  linked_producer_organisation_id: '',
   full_name: '',
   country: '', state_region: '', lga_municipality: '', village: '',
   contact_email: '',
@@ -224,6 +225,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
   const [saving, setSaving] = useState(false);
   const findOrCreateVillage = useFindOrCreateVillage();
   const createBeekeeper = useCreateBeekeeper();
+  const { data: actors = [] } = useAllActorsLite();
   const { toast } = useToast();
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
@@ -250,7 +252,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
 
       await createBeekeeper.mutateAsync({
         full_name: form.full_name,
-        linked_producer_organisation: form.linked_producer_organisation || null,
+        linked_producer_organisation_id: form.linked_producer_organisation_id || null,
         contact_email: form.contact_email || null,
         contact_phone,
         national_id: form.national_id || null,
@@ -301,7 +303,12 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
                     <h3 className="text-sm font-black text-[#032b71]">{t('forms.basicDetails')}</h3>
                     <div className="flex flex-col gap-1.5">
                       <RequiredLabel required={false}>{t('forms.linkedProducerOrganisation')}</RequiredLabel>
-                      <Input data-testid="bk-wizard-linked-org" value={form.linked_producer_organisation} onChange={(e) => set('linked_producer_organisation')(e.target.value)} placeholder={t('forms.linkedProducerOrganisation')} />
+                      <Select value={form.linked_producer_organisation_id} onValueChange={(v) => set('linked_producer_organisation_id')(v)}>
+                        <SelectTrigger data-testid="bk-wizard-linked-org"><SelectValue placeholder={t('forms.linkedProducerOrganisation')} /></SelectTrigger>
+                        <SelectContent>
+                          {actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <RequiredLabel required>{t('forms.beekeeperFullName')}</RequiredLabel>
