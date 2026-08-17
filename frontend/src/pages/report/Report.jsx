@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { csvBlobFromRows, downloadBlob } from '@/hooks/useReportData';
 import { useCreateExport, useUpdateExport } from '@/hooks/useExports';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const YEARS = ['2027', '2026', '2025', '2024', '2023', '2022'];
 
@@ -173,7 +174,7 @@ export default function Report() {
       if (exportRow) {
         await updateExport.mutateAsync({ id: exportRow.id, status: 'Failed', error_message: err.message, completed_at: new Date().toISOString() }).catch(() => {});
       }
-      toast({ title: t('report.generateFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('report.generateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setGenerating(false);
     }

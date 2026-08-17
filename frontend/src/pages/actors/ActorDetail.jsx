@@ -13,6 +13,7 @@ import { useActorTransactions } from '@/hooks/useTransactions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 export default function ActorDetail() {
   const { t } = useTranslation();
@@ -33,7 +34,7 @@ export default function ActorDetail() {
     try {
       await updateConnectionStatus.mutateAsync({ id: connection.id, status: checked ? 'Active' : 'Revoked' });
     } catch (err) {
-      toast({ title: t('actorProfile.connectionUpdateFailed') || 'Failed to update connection', description: err.message, variant: 'destructive' });
+      toast({ title: t('actorProfile.connectionUpdateFailed') || 'Failed to update connection', description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }
   };
 

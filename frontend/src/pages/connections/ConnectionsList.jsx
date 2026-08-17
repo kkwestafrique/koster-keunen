@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import ConnectionFormDialog from '@/pages/connections/ConnectionFormDialog';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const YEAR_OPTIONS = Array.from({ length: 8 }, (_, i) => {
   const y = new Date().getFullYear() - i;
@@ -36,7 +37,7 @@ export default function ConnectionsList() {
       await approveConnection.mutateAsync(connectionId);
       toast({ title: t('connectionsList.approved') });
     } catch (err) {
-      toast({ title: t('connectionsList.approveFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('connectionsList.approveFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }
   };
 

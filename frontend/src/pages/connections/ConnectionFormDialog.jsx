@@ -10,6 +10,7 @@ import { useAllActorsLite } from '@/hooks/useActors';
 import { useAllVillagesLite } from '@/hooks/useVillages';
 import { useCreateConnection } from '@/hooks/useConnections';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const EMPTY = {
   actor_from_id: '',
@@ -51,7 +52,7 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
       setForm(EMPTY);
       onOpenChange(false);
     } catch (err) {
-      toast({ title: t('forms.connectionCreateFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('forms.connectionCreateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }

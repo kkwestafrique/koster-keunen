@@ -20,6 +20,7 @@ import { useBeekeeperTransactions } from '@/hooks/useTransactions';
 import { useFindOrCreateVillage } from '@/hooks/useVillages';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OF_BIRTH_OPTIONS = Array.from({ length: 80 }, (_, i) => CURRENT_YEAR - 18 - i);
@@ -74,7 +75,7 @@ function HeaderCard({ bk }) {
       toast({ title: t('companyProfile.saved') });
       setEditing(false);
     } catch (err) {
-      toast({ title: t('companyProfile.saveFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('companyProfile.saveFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -213,7 +214,7 @@ function DetailsTab({ bk }) {
       toast({ title: t('companyProfile.saved') });
       setEditing(false);
     } catch (err) {
-      toast({ title: t('companyProfile.saveFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('companyProfile.saveFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -376,7 +377,7 @@ function OverviewTab({ bk }) {
       toast({ title: t('companyProfile.saved') });
       setEditing(false);
     } catch (err) {
-      toast({ title: t('companyProfile.saveFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('companyProfile.saveFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }

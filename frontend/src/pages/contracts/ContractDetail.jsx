@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -61,7 +62,7 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
       toast({ title: t('contractDetail.updated') });
       onOpenChange(false);
     } catch (err) {
-      toast({ title: t('contractDetail.updateFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('contractDetail.updateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }

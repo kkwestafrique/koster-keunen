@@ -27,6 +27,7 @@ import {
 } from '@/hooks/useTeamMembers';
 import { uploadMediaFile } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 // Actor (company) profile. Edit mode is deliberately limited, matching the
 // live site: only Actor name, Actor type (radio), and logo are editable —
@@ -99,7 +100,7 @@ export default function CompanyProfile() {
       toast({ title: t('companyProfile.saved') });
       setEditing(false);
     } catch (err) {
-      toast({ title: t('companyProfile.saveFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('companyProfile.saveFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -113,7 +114,7 @@ export default function CompanyProfile() {
       setInviteOpen(false);
       setInviteForm({ name: '', email: '', role: '' });
     } catch (err) {
-      toast({ title: t('companyProfile.inviteFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('companyProfile.inviteFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }
   };
 
@@ -123,7 +124,7 @@ export default function CompanyProfile() {
       toast({ title: t('companyProfile.roleUpdated') });
       setEditRoleFor(null);
     } catch (err) {
-      toast({ title: t('companyProfile.roleUpdateFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('companyProfile.roleUpdateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }
   };
 
@@ -132,7 +133,7 @@ export default function CompanyProfile() {
       await removeMember.mutateAsync({ id: member.id, actorId });
       toast({ title: t('companyProfile.memberRemoved') });
     } catch (err) {
-      toast({ title: t('companyProfile.removeFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('companyProfile.removeFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }
   };
 

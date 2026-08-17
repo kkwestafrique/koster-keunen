@@ -11,6 +11,7 @@ import { useAllActorsLite, useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction, useConsumeStockBatch } from '@/hooks/useTransactions';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 // Send stock form (Transactions > Send). Per the live-site audit, Send has
 // NO Single/Multiple toggle — unlike Receive, it's a single flat form:
@@ -84,7 +85,7 @@ export default function SendStockForm() {
       toast({ title: t('sendForm.created') });
       navigate('/send');
     } catch (err) {
-      toast({ title: t('sendForm.createFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('sendForm.createFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }

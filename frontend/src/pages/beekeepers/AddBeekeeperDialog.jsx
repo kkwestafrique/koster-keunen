@@ -13,6 +13,7 @@ import { useFindOrCreateVillage } from '@/hooks/useVillages';
 import { useCreateBeekeeper } from '@/hooks/useBeekeepers';
 import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const STEP_BASIC = 1;
 const STEP_CONNECTION = 2;
@@ -124,7 +125,7 @@ function MultiUploadBody({ onDone }) {
     } catch (err) {
       setPhase('idle');
       setProgress(0);
-      toast({ title: t('forms.fileParseFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('forms.fileParseFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }
   };
 
@@ -273,7 +274,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
       toast({ title: t('forms.beekeeperCreated'), description: t('forms.beekeeperCreatedDescription', { name: form.full_name }) });
       handleClose();
     } catch (err) {
-      toast({ title: t('forms.beekeeperCreateFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('forms.beekeeperCreateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }

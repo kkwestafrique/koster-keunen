@@ -9,6 +9,7 @@ import { COUNTRIES } from '@/data/regions';
 import { useStatesForCountry, useLgasForState } from '@/hooks/useRegions';
 import { useCreateVillage } from '@/hooks/useVillages';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const EMPTY = { name: '', country: '', state_region: '', lga_municipality: '' };
 
@@ -38,7 +39,7 @@ export default function VillageFormDialog({ open, onOpenChange }) {
       setForm(EMPTY);
       onOpenChange(false);
     } catch (err) {
-      toast({ title: t('forms.villageCreateFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('forms.villageCreateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }

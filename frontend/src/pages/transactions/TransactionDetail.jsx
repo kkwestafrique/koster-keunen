@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 // NOTE: this audit was text-only (no screenshots, unlike Contracts), so
 // exact pixel layout here is less certain than elsewhere in this rebuild —
@@ -92,7 +93,7 @@ export default function TransactionDetail() {
       await approveTransaction.mutateAsync(tx.transaction_group_id);
       toast({ title: t('transactionDetail.approved') });
     } catch (err) {
-      toast({ title: t('transactionDetail.approveFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('transactionDetail.approveFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }
   };
   const handleReject = async () => {
@@ -109,7 +110,7 @@ export default function TransactionDetail() {
       setRejectReason('');
       setRejectComment('');
     } catch (err) {
-      toast({ title: t('transactionDetail.rejectFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('transactionDetail.rejectFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setRejecting(false);
     }
@@ -123,7 +124,7 @@ export default function TransactionDetail() {
       await supabase.from('transactions').update({ attachment_url: url }).eq('transaction_group_id', tx.transaction_group_id);
       toast({ title: t('transactionDetail.fileAttached') });
     } catch (err) {
-      toast({ title: t('transactionDetail.attachFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('transactionDetail.attachFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setUploading(false);
     }

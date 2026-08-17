@@ -15,6 +15,7 @@ import { useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction } from '@/hooks/useTransactions';
 import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const EMPTY_PRODUCT_ROW = { product: '', quantity: '', unit: 'Kg', price: '' };
 
@@ -74,7 +75,7 @@ export default function ReceiveStockForm() {
       toast({ title: t('receiveForm.created') });
       navigate('/transactions');
     } catch (err) {
-      toast({ title: t('receiveForm.createFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('receiveForm.createFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }

@@ -15,6 +15,7 @@ import { useCreateContract } from '@/hooks/useContracts';
 import { useToast } from '@/hooks/use-toast';
 import { uploadMediaFile } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const YEARS = ['2027', '2026', '2025', '2024', '2023', '2022'];
 const EMPTY_PRODUCT_ROW = { product: '', expected_quantity: '', unit: 'Kg', price: '' };
@@ -142,7 +143,7 @@ export default function ContractWizard() {
       toast({ title: t('contractWizard.created') });
       navigate('/contracts');
     } catch (err) {
-      toast({ title: t('contractWizard.createFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('contractWizard.createFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }

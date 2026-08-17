@@ -16,6 +16,7 @@ import {
   PERMISSION_LEVELS,
 } from '@/hooks/useSharing';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const MODULE_LABEL_KEYS = {
   actors: 'nav.commercialPartners',
@@ -55,7 +56,7 @@ function ShareAccessDialog({ open, onOpenChange }) {
       // Surfaces the RPC's own real error message (e.g. "No account found
       // for that email") rather than a generic failure — the RPC already
       // raises clear, specific exceptions for every real failure case.
-      toast({ title: t('sharing.grantFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('sharing.grantFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -144,7 +145,7 @@ export default function SharingPanel() {
       await revokeGrant.mutateAsync(grantId);
       toast({ title: t('sharing.grantRevoked') });
     } catch (err) {
-      toast({ title: t('sharing.revokeFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('sharing.revokeFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setRevokingId(null);
     }

@@ -12,6 +12,7 @@ import { ACTOR_TYPES, STANDARDS } from '@/data/regions';
 import { useCreateActor } from '@/hooks/useActors';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const EMPTY = {
   contact_name: '',
@@ -47,7 +48,7 @@ function ConnectIdModal({ open, onOpenChange, onAdded }) {
       if (error) throw error;
       setFound(data?.[0] || null);
     } catch (err) {
-      toast({ title: t('forms.connectIdSearchFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('forms.connectIdSearchFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
       setFound(null);
     } finally {
       setSearching(false);
@@ -75,7 +76,7 @@ function ConnectIdModal({ open, onOpenChange, onAdded }) {
       onOpenChange(false);
       onAdded();
     } catch (err) {
-      toast({ title: t('forms.actorCreateFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('forms.actorCreateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setAdding(false);
     }
@@ -173,7 +174,7 @@ export default function ActorFormDialog({ open, onOpenChange }) {
       setForm(EMPTY);
       onOpenChange(false);
     } catch (err) {
-      toast({ title: t('forms.actorCreateFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('forms.actorCreateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }

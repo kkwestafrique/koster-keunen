@@ -13,6 +13,7 @@ import { useCreateTransaction, useConsumeStockBatch } from '@/hooks/useTransacti
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const EMPTY_DESTINATION_ROW = { converted_product: '', quantity: '', unit: 'Kg' };
 
@@ -112,7 +113,7 @@ export default function ProcessStockForm() {
       toast({ title: t('processForm.created') });
       navigate('/process');
     } catch (err) {
-      toast({ title: t('processForm.createFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('processForm.createFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
