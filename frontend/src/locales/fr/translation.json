@@ -383,7 +383,7 @@
     "goToDetailsPage": "Aller à la page de détails",
     "fileParseFailed": "Impossible de lire le fichier",
     "bulkUploadComplete": "Téléversement terminé",
-    "bulkUploadCompleteDescription": "{{inserted}} apiculteur(s) ajouté(s), {{failed}} ligne(s) en échec.",
+    "bulkUploadCompleteDescription": "{{inserted}} nouvel(le)s apiculteur(s) ajouté(s), {{updated}} apiculteur(s) existant(s) mis à jour, {{failed}} ligne(s) en échec.",
     "bulkUploadFailed": "Échec du téléversement",
     "bulkUploadFailedDescription": "Aucune ligne n'a pu être ajoutée. Vérifiez le fichier et réessayez.",
     "editBeekeeper": "Modifier l'apiculteur",

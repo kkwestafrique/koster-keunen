@@ -272,19 +272,75 @@ export function useBulkUpload(templateKey) {
     const validationFailedCount = rows.length - validRows.length;
 
     let inserted = 0;
+    let updated = 0;
     let failed = 0;
     const errors = [];
 
+    // For beekeepers specifically: re-uploading the same file (accidentally,
+    // or "just to be safe") previously created genuine duplicate records --
+    // the same class of real, documented problem found on the platform this
+    // rebuild is measured against (real duplicate beekeepers, risk of
+    // double-counting or double-payment). There's no traceability_code
+    // column in this template (it's server-generated), so a database-level
+    // upsert isn't directly possible -- instead, match existing beekeepers
+    // by (full_name, village_id) within the same supply chain before
+    // inserting, and update the existing row instead of creating a new one.
+    // This deliberately does NOT attempt fuzzy/similarity matching across
+    // near-duplicate spellings (e.g. "N Tcha Matie" vs "NTctha Matie") --
+    // that's a separate, larger feature (a real merge-screen UI), not a
+    // quick fix bolted onto this one.
+    let existingByKey = new Map();
+    if (template.table === 'beekeepers' && validRows.length > 0) {
+      const { data: existing, error: lookupError } = await supabase
+        .from('beekeepers')
+        .select('id, full_name, village_id')
+        .eq('supply_chain_id', supplyChainId);
+      if (!lookupError && existing) {
+        existingByKey = new Map(
+          existing.map((b) => [`${b.full_name?.trim().toLowerCase()}|${b.village_id}`, b.id])
+        );
+      }
+    }
+
+    const toInsert = [];
+    const toUpdate = [];
+    if (existingByKey.size > 0) {
+      for (const row of validRows) {
+        const key = `${row.full_name?.trim().toLowerCase()}|${row.village_id}`;
+        const existingId = existingByKey.get(key);
+        if (existingId) {
+          toUpdate.push({ id: existingId, ...row });
+        } else {
+          toInsert.push(row);
+        }
+      }
+    } else {
+      toInsert.push(...validRows);
+    }
+
     // Insert in batches of 100 to avoid oversized payloads
     const BATCH_SIZE = 100;
-    for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
-      const batch = validRows.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      const batch = toInsert.slice(i, i + BATCH_SIZE);
       const { error, count } = await supabase.from(template.table).insert(batch).select('*', { count: 'exact' });
       if (error) {
         failed += batch.length;
         errors.push(error.message);
       } else {
         inserted += count ?? batch.length;
+      }
+    }
+
+    // Updates go one at a time (each has a different id, so they can't be
+    // batched into a single statement the way same-shape inserts can).
+    for (const row of toUpdate) {
+      const { id, ...patch } = row;
+      const { error } = await supabase.from(template.table).update(patch).eq('id', id);
+      if (error) {
+        failed += 1;
+        errors.push(error.message);
+      } else {
+        updated += 1;
       }
     }
 
@@ -298,10 +354,10 @@ export function useBulkUpload(templateKey) {
         supply_chain_id: supplyChainId,
         upload_type: template.uploadType,
         file_name: fileName,
-        status: inserted === 0 ? 'Failed' : 'Completed',
+        status: (inserted === 0 && updated === 0) ? 'Failed' : 'Completed',
         progress: 100,
         ...(template.uploadType === 'Connections'
-          ? { new_beekeepers: inserted, updated_beekeepers: 0 }
+          ? { new_beekeepers: inserted, updated_beekeepers: updated }
           : {}),
       });
     } catch (logErr) {
@@ -310,14 +366,14 @@ export function useBulkUpload(templateKey) {
       console.error('Failed to log bulk upload history:', logErr);
     }
 
-    if (inserted > 0) {
+    if (inserted > 0 || updated > 0) {
       queryClient.invalidateQueries({ queryKey: [template.table] });
       queryClient.invalidateQueries({ queryKey: ['bulk_uploads'] });
     }
 
     setUploading(false);
-    setResult({ inserted, failed: totalFailed, errors });
-    return { inserted, failed: totalFailed, errors };
+    setResult({ inserted, updated, failed: totalFailed, errors });
+    return { inserted, updated, failed: totalFailed, errors };
   }, [rows, supplyChainId, template, fileName, queryClient]);
 
   const reset = useCallback(() => {

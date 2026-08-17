@@ -116,8 +116,8 @@ function MultiUploadBody({ onDone }) {
       const result = await submit();
       setProgress(100);
       setPhase('done');
-      if (result.inserted > 0) {
-        toast({ title: t('forms.bulkUploadComplete'), description: t('forms.bulkUploadCompleteDescription', { inserted: result.inserted, failed: result.failed }) });
+      if (result.inserted > 0 || result.updated > 0) {
+        toast({ title: t('forms.bulkUploadComplete'), description: t('forms.bulkUploadCompleteDescription', { inserted: result.inserted, updated: result.updated, failed: result.failed }) });
       } else {
         toast({ title: t('forms.bulkUploadFailed'), description: t('forms.bulkUploadFailedDescription'), variant: 'destructive' });
       }

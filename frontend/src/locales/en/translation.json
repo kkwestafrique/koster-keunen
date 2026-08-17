@@ -383,7 +383,7 @@
     "goToDetailsPage": "Go to details page",
     "fileParseFailed": "Could not read file",
     "bulkUploadComplete": "Upload complete",
-    "bulkUploadCompleteDescription": "{{inserted}} beekeeper(s) added, {{failed}} row(s) failed.",
+    "bulkUploadCompleteDescription": "{{inserted}} new beekeeper(s) added, {{updated}} existing beekeeper(s) updated, {{failed}} row(s) failed.",
     "bulkUploadFailed": "Upload failed",
     "bulkUploadFailedDescription": "No rows could be added. Check the file and try again.",
     "editBeekeeper": "Edit Beekeeper",
