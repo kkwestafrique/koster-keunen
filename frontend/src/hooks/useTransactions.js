@@ -84,7 +84,9 @@ export function useTransactions({ direction, page = 1, pageSize = 5, search = ''
         rows = rows.filter(
           (r) =>
             r.actors?.contact_name?.toLowerCase().includes(s) ||
-            r.beekeepers?.full_name?.toLowerCase().includes(s)
+            r.beekeepers?.full_name?.toLowerCase().includes(s) ||
+            r.transaction_code?.toLowerCase().includes(s) ||
+            r.product?.toLowerCase().includes(s)
         );
       }
       return { rows, total: count };

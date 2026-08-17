@@ -41,15 +41,18 @@ export default function ReceiveStockForm() {
   });
 
   const { data: villages = [] } = useAllVillagesLite();
-  // Cascade: beekeeper list filters to the chosen village only
-  const { data: beekeeperData } = useBeekeepers({ villageId: form.village_id });
-  const beekeepers = form.village_id ? (beekeeperData?.rows || []) : [];
+  // Village is an OPTIONAL narrowing filter, not a requirement -- without
+  // one selected, show every beekeeper so someone can search/select
+  // directly by name. The real audit is explicit that this field must
+  // never block submission; it previously did here.
+  const { data: beekeeperData } = useBeekeepers({ villageId: form.village_id, pageSize: 200 });
+  const beekeepers = beekeeperData?.rows || [];
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
   const setProductRow = (idx, patch) =>
     setForm((f) => ({ ...f, products: f.products.map((row, i) => (i === idx ? { ...row, ...patch } : row)) }));
 
-  const singleValid = form.standard && form.village_id && form.beekeeper_id
+  const singleValid = form.standard && form.beekeeper_id
     && form.transaction_date && form.products.every((p) => p.product && p.quantity);
 
   const handleSubmit = async () => {
@@ -124,9 +127,9 @@ export default function ReceiveStockForm() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[#7089b4]">{t('receiveForm.beekeeperFullName')}</Label>
-                  <Select value={form.beekeeper_id} onValueChange={set('beekeeper_id')} disabled={!form.village_id}>
+                  <Select value={form.beekeeper_id} onValueChange={set('beekeeper_id')}>
                     <SelectTrigger data-testid="receive-beekeeper">
-                      <SelectValue placeholder={form.village_id ? t('receiveForm.selectBeekeeper') : t('receiveForm.selectVillageFirst')} />
+                      <SelectValue placeholder={t('receiveForm.selectBeekeeper')} />
                     </SelectTrigger>
                     <SelectContent>
                       {beekeepers.map((b) => <SelectItem key={b.id} value={b.id}>{b.full_name}</SelectItem>)}
