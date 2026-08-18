@@ -38,15 +38,17 @@ export default function ActorsList({ fixedStatus, title, testId }) {
   const navigate = useNavigate();
   const { isReadOnly } = useActingActor();
 
-  // Gap 5: Admin-only convenience toggle to narrow the (already
-  // company-wide) list down to just this actor's trade connections. For
-  // Member/Field Officer the `actors` table RLS itself now enforces
-  // connections-only visibility for real (see
-  // backend/migrations/2026_actors_connection_scoped_rls.sql), so there is
-  // nothing left for a client-side toggle to restrict further -- showing
-  // one here would be misleading (and the client-side connectedOnly filter
-  // additionally excludes self, which would make the count look wrong vs.
-  // what the DB already returns).
+  // RLS on the `actors` table (backend/migrations/2026_actors_connection_scoped_rls.sql)
+  // is the REAL, unbypassable restriction for Member/Field Officer -- it
+  // deliberately still includes `id = auth_current_actor_id()`, because
+  // Company Profile's own single-record fetch (useActor(currentActorId))
+  // relies on that same policy and genuinely needs to see your own actor.
+  // Removing that clause from RLS was tried and reverted -- it broke
+  // Company Profile. So RLS alone can't distinguish "list view" from
+  // "fetch my own profile"; that distinction has to happen here instead.
+  // connectedOnly's client-side logic (which explicitly excludes self,
+  // see useActors.js) is what actually produces the right LIST content --
+  // unconditionally on for Member/Field Officer, not optional.
   const isAdmin = role === 'Admin';
   const [connectedOnly, setConnectedOnly] = useState(false);
 
@@ -56,7 +58,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
     search,
     actorType,
     status: fixedStatus || status,
-    connectedOnly: isAdmin && connectedOnly,
+    connectedOnly: isAdmin ? connectedOnly : true,
     currentActorId: profile?.current_actor_id,
   });
 

@@ -7,12 +7,22 @@ export function useActors({ page = 1, pageSize = 5, search = '', actorType = '',
   return useQuery({
     queryKey: ['actors', { page, pageSize, search, actorType, country, status, connectedOnly, currentActorId, supplyChainId }],
     queryFn: async () => {
-      // Gap 5: previously showed every actor in the company regardless of
-      // any real trade relationship -- the real platform scopes this to
-      // an actor's actual connections. This is a UI-level default, not an
-      // RLS restriction: other flows that legitimately need to see every
-      // actor (Send's destination picker, the Contract wizard's supplier
-      // picker) are untouched and keep using useAllActorsLite directly.
+      // The real, unbypassable restriction for Member/Field Officer is now
+      // the actors_select RLS policy (backend/migrations/
+      // 2026_actors_connection_scoped_rls.sql) -- this client-side
+      // filtering can't be relied on for security, since RLS already
+      // returns the correct restricted set regardless of what's requested
+      // here. What THIS layer is actually for: RLS deliberately still
+      // allows seeing your own current actor (Company Profile needs that
+      // for a single-record fetch), so it can't distinguish "list view"
+      // from "my own profile" -- this filters the current actor OUT of
+      // the LIST specifically, since your own company is not a
+      // "connection", it's yourself. Flows that legitimately need to
+      // browse EVERY actor (Add Connection, the Contract wizard's
+      // supplier picker, Send's destination picker) use the separate
+      // useActorDirectory() hook, which bypasses this restriction
+      // entirely via the browse_actor_directory() RPC -- unaffected by
+      // any of this.
       let connectedIds = null;
       if (connectedOnly && currentActorId) {
         const { data: conns, error: connErr } = await supabase
@@ -21,7 +31,11 @@ export function useActors({ page = 1, pageSize = 5, search = '', actorType = '',
           .eq('status', 'Active')
           .or(`actor_from_id.eq.${currentActorId},actor_to_id.eq.${currentActorId}`);
         if (connErr) throw connErr;
-        connectedIds = (conns || []).map((c) => (c.actor_from_id === currentActorId ? c.actor_to_id : c.actor_from_id));
+        connectedIds = (conns || [])
+          .map((c) => (c.actor_from_id === currentActorId ? c.actor_to_id : c.actor_from_id))
+          // Never include the current actor itself -- it is not a
+          // "connection", it's yourself.
+          .filter((id) => id !== currentActorId);
       }
 
       let query = supabase
