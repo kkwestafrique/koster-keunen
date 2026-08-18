@@ -2,17 +2,37 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-export function useActors({ page = 1, pageSize = 5, search = '', actorType = '', country = '', status = '' } = {}) {
+export function useActors({ page = 1, pageSize = 5, search = '', actorType = '', country = '', status = '', connectedOnly = false, currentActorId = null } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['actors', { page, pageSize, search, actorType, country, status, supplyChainId }],
+    queryKey: ['actors', { page, pageSize, search, actorType, country, status, connectedOnly, currentActorId, supplyChainId }],
     queryFn: async () => {
+      // Gap 5: previously showed every actor in the company regardless of
+      // any real trade relationship -- the real platform scopes this to
+      // an actor's actual connections. This is a UI-level default, not an
+      // RLS restriction: other flows that legitimately need to see every
+      // actor (Send's destination picker, the Contract wizard's supplier
+      // picker) are untouched and keep using useAllActorsLite directly.
+      let connectedIds = null;
+      if (connectedOnly && currentActorId) {
+        const { data: conns, error: connErr } = await supabase
+          .from('connections')
+          .select('actor_from_id, actor_to_id')
+          .eq('status', 'Active')
+          .or(`actor_from_id.eq.${currentActorId},actor_to_id.eq.${currentActorId}`);
+        if (connErr) throw connErr;
+        connectedIds = (conns || []).map((c) => (c.actor_from_id === currentActorId ? c.actor_to_id : c.actor_from_id));
+      }
+
       let query = supabase
         .from('actors')
         .select('*', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
         .order('created_at', { ascending: false });
 
+      if (connectedIds !== null) {
+        query = connectedIds.length > 0 ? query.in('id', connectedIds) : query.eq('id', '00000000-0000-0000-0000-000000000000');
+      }
       if (search) {
         query = query.or(
           `traceability_code.ilike.%${search}%,contact_name.ilike.%${search}%`

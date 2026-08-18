@@ -133,6 +133,7 @@
     "title": "Actors List",
     "addActor": "Add Actor",
     "searchPlaceholder": "Search by code or name...",
+    "showConnectedOnly": "Show only actors I'm connected to",
     "allActorType": "All actor type",
     "allStatus": "All status",
     "allCountry": "All country",

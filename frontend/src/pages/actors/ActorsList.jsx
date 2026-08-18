@@ -8,6 +8,8 @@ import StatusBadge from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useActors, useActingActor } from '@/hooks/useActors';
+import { useAuth } from '@/contexts/AuthContext';
+import { Checkbox } from '@/components/ui/checkbox';
 import ActorFormDialog from '@/pages/actors/ActorFormDialog';
 import { ACTOR_TYPES } from '@/data/regions';
 
@@ -21,6 +23,7 @@ const ACTOR_TYPE_FILTER_OPTIONS = ACTOR_TYPES;
 // fixedStatus: 'Inactive' -> Potential actors, 'Active' -> Achieved (confirmed) actors, null -> all
 export default function ActorsList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
+  const { profile, role } = useAuth();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [search, setSearch] = useState('');
@@ -30,12 +33,23 @@ export default function ActorsList({ fixedStatus, title, testId }) {
   const navigate = useNavigate();
   const { isReadOnly } = useActingActor();
 
+  // Gap 5: default to only actors this actor is actually connected to for
+  // trade, matching the real platform -- but only as a DEFAULT, and only
+  // for Member/Field Officer. Admin keeps full company oversight by
+  // default, same pattern already established for every other module this
+  // session. Either role can freely toggle either way; this is a UI
+  // convenience, not an access restriction (RLS already scopes everyone
+  // to their own company regardless of this toggle).
+  const [connectedOnly, setConnectedOnly] = useState(role !== 'Admin');
+
   const { data, isLoading } = useActors({
     page,
     pageSize,
     search,
     actorType,
     status: fixedStatus || status,
+    connectedOnly,
+    currentActorId: profile?.current_actor_id,
   });
 
   const columns = [
@@ -87,6 +101,14 @@ export default function ActorsList({ fixedStatus, title, testId }) {
           }]),
         ]}
       />
+
+      <label className="flex items-center gap-2 mb-4 cursor-pointer w-fit" data-testid="actors-connected-only-toggle">
+        <Checkbox
+          checked={connectedOnly}
+          onCheckedChange={(v) => { setConnectedOnly(!!v); setPage(1); }}
+        />
+        <span className="text-sm text-[#032b71]">{t('actorsList.showConnectedOnly')}</span>
+      </label>
 
       <DataTable
         testId={testId}
