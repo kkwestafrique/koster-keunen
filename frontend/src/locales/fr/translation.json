@@ -215,7 +215,13 @@
     "standard": "Norme",
     "quantityAvailable": "Quantité disponible",
     "select": "Sélectionner",
-    "selectAll": "Tout sélectionner"
+    "selectAll": "Tout sélectionner",
+    "stockType": "Type de stock",
+    "village": "Village",
+    "createdOn": "Créé le",
+    "origin": "Origine",
+    "viewOriginTransaction": "Voir la transaction d'origine ({{code}})",
+    "noOriginTransaction": "Aucune transaction liée trouvée pour ce lot."
   },
   "actorProfile": {
     "title": "Profil de l'acteur",
@@ -245,6 +251,7 @@
   "common": {
     "note": "Remarque",
     "loading": "Chargement...",
+    "notFound": "Introuvable.",
     "itemsPerPage": "Éléments par page",
     "of": "sur",
     "noRecordsFound": "Aucun enregistrement trouvé.",

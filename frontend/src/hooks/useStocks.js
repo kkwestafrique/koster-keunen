@@ -4,6 +4,43 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const PAGE_SIZE = 25;
 
+export function useStock(id) {
+  return useQuery({
+    queryKey: ['stock', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stocks')
+        .select('*, villages(name, country)')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
+// Traces which real transaction created this batch, if any -- Send/
+// Receive/Processing all set destination_stock_id on the row that
+// produced the batch, but this was never surfaced anywhere in the UI
+// since there was no detail page for a batch to show it on.
+export function useTransactionForStock(stockId) {
+  return useQuery({
+    queryKey: ['transaction-for-stock', stockId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('transaction_code, transaction_group_id, direction, transaction_type, transaction_date')
+        .eq('destination_stock_id', stockId)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!stockId,
+  });
+}
+
 export function useStocks({ stockType, page = 1, search = '', product = '', standard = '', village = '', date = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({

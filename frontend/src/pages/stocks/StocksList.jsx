@@ -160,6 +160,7 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
         rows={rows}
         total={data?.total || 0}
         page={page}
+        onRowClick={(row) => navigate(`/stocks/detail/${row.id}`)}
         onPageChange={setPage}
         loading={isLoading}
         emptyMessage={t('common.noRecordsFound')}

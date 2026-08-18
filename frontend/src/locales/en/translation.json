@@ -215,7 +215,13 @@
     "standard": "Standard",
     "quantityAvailable": "Quantity available",
     "select": "Select",
-    "selectAll": "Select all"
+    "selectAll": "Select all",
+    "stockType": "Stock type",
+    "village": "Village",
+    "createdOn": "Created on",
+    "origin": "Origin",
+    "viewOriginTransaction": "View originating transaction ({{code}})",
+    "noOriginTransaction": "No linked transaction found for this batch."
   },
   "actorProfile": {
     "title": "Actor profile",
@@ -245,6 +251,7 @@
   "common": {
     "note": "Note",
     "loading": "Loading...",
+    "notFound": "Not found.",
     "itemsPerPage": "Items per page",
     "of": "of",
     "noRecordsFound": "No records found.",
