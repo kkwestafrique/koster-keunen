@@ -7,7 +7,6 @@ import DataTable from '@/components/common/DataTable';
 import StandardBadge from '@/components/common/StandardBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Plus } from 'lucide-react';
 import { useStocks } from '@/hooks/useStocks';
 import { useConstants } from '@/hooks/useConstants';
@@ -21,58 +20,22 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
   const [product, setProduct] = useState('');
   const [standard, setStandard] = useState('');
   const [village, setVillage] = useState('');
-  const [date, setDate] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState(() => new Set());
 
   const { data: products = [] } = useConstants('product_type');
   const { data: standards = [] } = useConstants('standard');
   const { data: villages = [] } = useAllVillagesLite();
 
-  const { data, isLoading } = useStocks({ stockType, page, search, product, standard, village, date });
+  const { data, isLoading } = useStocks({ stockType, page, search, product, standard, village, dateFrom, dateTo });
   const rows = data?.rows || [];
 
   // Per the live-site audit: only Raw material supports Receive stock.
-  // Final product and Loss are read-only lists with Select/Select all
-  // actions instead of any Add/Create button.
+  // Final product and Loss are read-only lists.
   const canReceive = stockType === 'Raw Material';
 
-  const toggleRow = (id) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-
-  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
-  const toggleAll = () =>
-    setSelected((prev) => {
-      if (allSelected) return new Set();
-      return new Set(rows.map((r) => r.id));
-    });
-
   const columns = [
-    ...(!canReceive
-      ? [{
-          key: '__select',
-          label: (
-            <Checkbox
-              data-testid={`${testId}-select-all`}
-              checked={allSelected}
-              onCheckedChange={toggleAll}
-              onClick={(e) => e.stopPropagation()}
-            />
-          ),
-          render: (row) => (
-            <Checkbox
-              data-testid={`${testId}-select-${row.id}`}
-              checked={selected.has(row.id)}
-              onCheckedChange={() => toggleRow(row.id)}
-              onClick={(e) => e.stopPropagation()}
-            />
-          ),
-        }]
-      : []),
     { key: 'id', label: t('stocks.stockId'), render: (row) => String(row.id).slice(0, 8) },
     { key: 'batch_reference', label: t('stocks.batch') },
     { key: 'product', label: t('stocks.product') },
@@ -140,19 +103,21 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
         />
         <Input
           type="date"
-          data-testid={`${testId}-date-filter`}
-          value={date}
-          onChange={(e) => { setDate(e.target.value); setPage(1); }}
-          placeholder={t('stocks.selectDate')}
+          data-testid={`${testId}-date-from-filter`}
+          value={dateFrom}
+          onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+          placeholder={t('stocks.dateFrom')}
+          className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
+        />
+        <Input
+          type="date"
+          data-testid={`${testId}-date-to-filter`}
+          value={dateTo}
+          onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+          placeholder={t('stocks.dateTo')}
           className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
         />
       </div>
-
-      {!canReceive && selected.size > 0 && (
-        <p className="text-sm text-[#7089b4] mb-2" data-testid={`${testId}-selected-count`}>
-          {selected.size} {t('stocks.select').toLowerCase()}ed
-        </p>
-      )}
 
       <DataTable
         testId={testId}

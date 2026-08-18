@@ -41,10 +41,10 @@ export function useTransactionForStock(stockId) {
   });
 }
 
-export function useStocks({ stockType, page = 1, search = '', product = '', standard = '', village = '', date = '' } = {}) {
+export function useStocks({ stockType, page = 1, search = '', product = '', standard = '', village = '', dateFrom = '', dateTo = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['stocks', { stockType, page, search, product, standard, village, date, supplyChainId }],
+    queryKey: ['stocks', { stockType, page, search, product, standard, village, dateFrom, dateTo, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('stocks')
@@ -56,7 +56,19 @@ export function useStocks({ stockType, page = 1, search = '', product = '', stan
       if (product) query = query.eq('product', product);
       if (standard) query = query.eq('standard', standard);
       if (village) query = query.eq('village_id', village);
-      if (date) query = query.gte('created_at', `${date}T00:00:00`).lte('created_at', `${date}T23:59:59`);
+      // Real UX limitation fixed here: this used to only match one exact
+      // calendar day, which meant knowing the precise creation date of a
+      // batch to find it at all. Now a genuine from/to range -- either
+      // end can be used alone.
+      if (dateFrom) query = query.gte('created_at', `${dateFrom}T00:00:00`);
+      if (dateTo) query = query.lte('created_at', `${dateTo}T23:59:59`);
+      // Real bug fixed here: this used to run AFTER .range() had already
+      // limited results to one page, so it only ever searched whatever
+      // 25 rows happened to be on the CURRENT page -- a match on a
+      // different page would silently return nothing. Moved into the
+      // actual query, before pagination, so it searches the full,
+      // correctly-scoped dataset and paginates the real results.
+      if (search) query = query.ilike('batch_reference', `%${search}%`);
 
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
@@ -65,12 +77,7 @@ export function useStocks({ stockType, page = 1, search = '', product = '', stan
       const { data, error, count } = await query;
       if (error) throw error;
 
-      let rows = data;
-      if (search) {
-        const s = search.toLowerCase();
-        rows = rows.filter((r) => r.batch_reference?.toLowerCase().includes(s));
-      }
-      return { rows, total: count };
+      return { rows: data, total: count };
     },
     enabled: !!supplyChainId && !!stockType,
     staleTime: 30_000,
