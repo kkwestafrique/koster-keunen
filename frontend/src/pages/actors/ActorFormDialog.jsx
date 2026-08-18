@@ -9,6 +9,7 @@ import RequiredLabel from '@/components/common/RequiredLabel';
 import AddressFields from '@/components/common/AddressFields';
 import PhoneInput from '@/components/common/PhoneInput';
 import { ACTOR_TYPES, STANDARDS } from '@/data/regions';
+import { useActorTypes } from '@/hooks/useActorTypes';
 import { useCreateActor } from '@/hooks/useActors';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
@@ -139,6 +140,7 @@ function ConnectIdModal({ open, onOpenChange, onAdded }) {
 
 export default function ActorFormDialog({ open, onOpenChange }) {
   const { t } = useTranslation();
+  const { data: actorTypes = ACTOR_TYPES } = useActorTypes();
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [connectIdOpen, setConnectIdOpen] = useState(false);
@@ -215,7 +217,7 @@ export default function ActorFormDialog({ open, onOpenChange }) {
           <div className="flex flex-col gap-1.5">
             <RequiredLabel required spaced={false}>{t('forms.actorType')}</RequiredLabel>
             <RadioGroup value={form.actor_type} onValueChange={set('actor_type')} className="flex gap-6">
-              {ACTOR_TYPES.map((ty) => (
+              {actorTypes.map((ty) => (
                 <label key={ty} className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
                   <RadioGroupItem value={ty} data-testid={`actor-form-type-${ty}`} /> {ty}
                 </label>

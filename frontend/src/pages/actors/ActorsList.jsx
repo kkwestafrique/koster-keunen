@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Checkbox } from '@/components/ui/checkbox';
 import ActorFormDialog from '@/pages/actors/ActorFormDialog';
 import { ACTOR_TYPES } from '@/data/regions';
+import { useActorTypes } from '@/hooks/useActorTypes';
 
 // Matches the live site's Actor Type filter exactly — 'Buyer' is a valid
 // actor_type value elsewhere in the app but is not offered here or in the
@@ -24,6 +25,7 @@ const ACTOR_TYPE_FILTER_OPTIONS = ACTOR_TYPES;
 export default function ActorsList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
   const { profile, role } = useAuth();
+  const { data: actorTypeOptions = ACTOR_TYPE_FILTER_OPTIONS } = useActorTypes();
   const [page, setPage] = useState(1);
   // Gap 13: was 5 -- the same default the real platform's own audit
   // flagged as a real usability problem (398 beekeepers = 80 pages to
@@ -89,7 +91,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
             label: t('actorsList.allActorType'),
             value: actorType,
             onChange: (v) => { setActorType(v); setPage(1); },
-            options: ACTOR_TYPE_FILTER_OPTIONS.map((v) => ({ value: v, label: v })),
+            options: actorTypeOptions.map((v) => ({ value: v, label: v })),
           },
           ...(fixedStatus ? [] : [{
             key: 'status',
