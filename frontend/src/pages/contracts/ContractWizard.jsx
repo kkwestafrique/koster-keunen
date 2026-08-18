@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import StandardBadge from '@/components/common/StandardBadge';
 import { Plus, Trash2 } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, STANDARDS, COUNTRY_CURRENCY } from '@/data/regions';
-import { useAllActorsLite, useActingActor } from '@/hooks/useActors';
+import { useActorDirectory, useActingActor } from '@/hooks/useActors';
 import { useCreateContract } from '@/hooks/useContracts';
 import { useToast } from '@/hooks/use-toast';
 import { uploadMediaFile } from '@/lib/supabaseClient';
@@ -27,7 +27,7 @@ export default function ContractWizard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { supplyChainId, profile } = useAuth();
-  const { data: actors = [] } = useAllActorsLite();
+  const { data: actors = [] } = useActorDirectory();
   const createContract = useCreateContract();
   const { isReadOnly } = useActingActor();
 

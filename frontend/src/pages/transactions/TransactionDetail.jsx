@@ -209,10 +209,11 @@ export default function TransactionDetail() {
             <h3 className="text-sm font-black text-[#032b71] mt-4 mb-2">{t('transactionDetail.destinationDetails')}</h3>
             <div className="flex flex-wrap gap-x-12 gap-y-3 mb-3">
               <DetailField label={t('transactionDetail.actor')} value={tx.actors?.contact_name} />
-              <DetailField label={t('actorProfile.actorType')} value={tx.actors?.country} />
+              <DetailField label={t('actorProfile.actorType')} value={tx.actors?.actor_type} />
               <DetailField label={t('contractWizard.product')} value={tx.product} />
               <DetailField label={t('sendForm.quantityRequired')} value={tx.total_quantity != null ? `${tx.total_quantity} Kg` : null} />
-              <DetailField label={t('transactions.totalAmount')} value={tx.total_amount != null ? `${Number(tx.total_amount).toLocaleString()} ${tx.currency || ''}` : null} />
+              <DetailField label={t('contractWizard.currency')} value={tx.currency} />
+              <DetailField label={t('transactions.totalAmount')} value={tx.total_amount != null ? Number(tx.total_amount).toLocaleString() : null} />
             </div>
             <p className="text-xs text-[#7089b4] mb-1">{t('transactionDetail.destinationBatches')}</p>
             <BatchChips batches={destinationBatchChips} testId="transaction-destination-batches" />

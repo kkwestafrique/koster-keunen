@@ -38,14 +38,17 @@ export default function ActorsList({ fixedStatus, title, testId }) {
   const navigate = useNavigate();
   const { isReadOnly } = useActingActor();
 
-  // Gap 5: default to only actors this actor is actually connected to for
-  // trade, matching the real platform -- but only as a DEFAULT, and only
-  // for Member/Field Officer. Admin keeps full company oversight by
-  // default, same pattern already established for every other module this
-  // session. Either role can freely toggle either way; this is a UI
-  // convenience, not an access restriction (RLS already scopes everyone
-  // to their own company regardless of this toggle).
-  const [connectedOnly, setConnectedOnly] = useState(role !== 'Admin');
+  // Gap 5: Admin-only convenience toggle to narrow the (already
+  // company-wide) list down to just this actor's trade connections. For
+  // Member/Field Officer the `actors` table RLS itself now enforces
+  // connections-only visibility for real (see
+  // backend/migrations/2026_actors_connection_scoped_rls.sql), so there is
+  // nothing left for a client-side toggle to restrict further -- showing
+  // one here would be misleading (and the client-side connectedOnly filter
+  // additionally excludes self, which would make the count look wrong vs.
+  // what the DB already returns).
+  const isAdmin = role === 'Admin';
+  const [connectedOnly, setConnectedOnly] = useState(false);
 
   const { data, isLoading } = useActors({
     page,
@@ -53,7 +56,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
     search,
     actorType,
     status: fixedStatus || status,
-    connectedOnly,
+    connectedOnly: isAdmin && connectedOnly,
     currentActorId: profile?.current_actor_id,
   });
 
@@ -107,13 +110,15 @@ export default function ActorsList({ fixedStatus, title, testId }) {
         ]}
       />
 
-      <label className="flex items-center gap-2 mb-4 cursor-pointer w-fit" data-testid="actors-connected-only-toggle">
-        <Checkbox
-          checked={connectedOnly}
-          onCheckedChange={(v) => { setConnectedOnly(!!v); setPage(1); }}
-        />
-        <span className="text-sm text-[#032b71]">{t('actorsList.showConnectedOnly')}</span>
-      </label>
+      {isAdmin && (
+        <label className="flex items-center gap-2 mb-4 cursor-pointer w-fit" data-testid="actors-connected-only-toggle">
+          <Checkbox
+            checked={connectedOnly}
+            onCheckedChange={(v) => { setConnectedOnly(!!v); setPage(1); }}
+          />
+          <span className="text-sm text-[#032b71]">{t('actorsList.showConnectedOnly')}</span>
+        </label>
+      )}
 
       <DataTable
         testId={testId}

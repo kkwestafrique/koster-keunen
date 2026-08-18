@@ -1,0 +1,32 @@
+{
+  "summary": "Frontend UI verification of actors-RLS-scoping change + Send currency-label fix. All 3 roles tested (Admin, Member, Field Officer) across Actors list, Add Connection dialog, Contract wizard supplier picker, Send destination picker, and Send transaction detail page. All core requirements verified passing.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "TransactionDetail.jsx (Send direction, Destination details section)",
+        "issue": "Pre-existing bug (NOT introduced this session, NOT in scope of this fix): the 'Actor type' field renders `tx.actors?.country` (shows 'Nigeria') instead of `tx.actors?.actor_type` (should show e.g. 'Aggregator'). Line ~212. The Received section correctly shows counterpart info. Flagging for main agent since it was visible while validating the Currency-label fix that lives 3 lines below it.",
+        "selector": "TransactionDetail.jsx line 212",
+        "priority": "P2"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: fix TransactionDetail Send-section 'Actor type' field which currently displays country (tx.actors?.country) instead of tx.actors?.actor_type — pre-existing, not part of this session's change, but noticed during verification."
+  ],
+  "critical_code_review_comments": [
+    "useActors hook still applies a client-side connectedOnly filter that excludes self by querying `connections` and building a not-including-self list. Now that RLS on `actors` already restricts to self + connected, the client-side filter is redundant AND has a subtle side-effect: when Member/Field Officer TOGGLE OFF 'Show connected only', self reappears (1 extra row). The review request said 'unchecking should NOT reveal any additional actors' — currently it reveals exactly one (the acting-actor themselves). Not a functional/security issue (RLS still enforces the true scope) but the checkbox is no longer a true no-op for non-Admin. Consider hiding the checkbox for non-Admin or removing the client-side connectedOnly branch entirely.",
+    "Otherwise the browse_actor_directory RPC wiring in ConnectionFormDialog, ContractWizard, and SendStockForm is clean and consistent (all 3 call useActorDirectory, all 3 render all 8 actors for Member as verified in-app)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (Supabase-direct, no custom backend)", "frontend": "100% on RLS + directory + currency-label requirements; 1 pre-existing out-of-scope P2 UI bug noted"},
+  "test_credentials": "Used /app/memory/test_credentials.md — all 3 accounts logged in successfully",
+  "seed_data_creation": "None. Read-only verification.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "This iteration verified the actors-RLS-scoping change. Confirmed via UI: Admin sees Potential(3)+Achieved(4)=7 in list pages (8th actor 'Wend Miel' is Disabled status so does not appear under Potential=Inactive or Achieved=Active — expected/pre-existing, verified 8 total in browse_actor_directory RPC via Add Connection dropdown). Member (Amina Yusuf) sees exactly 2 actors on the list once connected-only is toggled off (self + Honey Producers); with default toggle ON, sees only Honey Producers (self excluded by client-side filter). Field Officer (Honey Producers) sees exactly 3 actors with toggle off (self + Amina + Chinedu); with toggle ON, sees 2 (Amina + Chinedu, self excluded). Add Connection dialog: both dropdowns show all 8 actors for Member and Admin. Contract wizard supplier picker: Member with Standard=Sustainable sees 5 actors including ones with no existing connection (e.g. Wend Miel, Women in Beekeeping) — confirms useActorDirectory bypasses RLS. Send destination picker: Member sees all 8 actors. Currency label fix confirmed on Send transaction detail page (standalone 'Currency: NGN' + 'Total amount: 1,000' without appended code). One pre-existing P2 in TransactionDetail Send section noted (Actor type field shows country).",
+  "rca of the issue": "N/A — verification pass, no bugs to RCA. The subtle checkbox observation is documented under critical_code_review_comments."
+}

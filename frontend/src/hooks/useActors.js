@@ -102,6 +102,28 @@ export function useActingActor() {
   };
 }
 
+// Full company directory (bypasses the connections-scoped actors_select
+// RLS via the browse_actor_directory() RPC) -- for the 3 flows that must
+// legitimately browse EVERY actor regardless of connection status: Add
+// Connection's two actor pickers, the Contract wizard's supplier picker,
+// and Send's destination picker. You can't create a connection with
+// someone you're not yet connected to, so these can't use useActors/
+// useAllActorsLite, which are now scoped to actors you already have a
+// relationship with.
+export function useActorDirectory() {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['actor-directory', supplyChainId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('browse_actor_directory');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!supplyChainId,
+    staleTime: 30_000,
+  });
+}
+
 export function useAllActorsLite() {
   const { supplyChainId } = useAuth();
   return useQuery({

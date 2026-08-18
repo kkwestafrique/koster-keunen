@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
-import { useAllActorsLite, useActingActor } from '@/hooks/useActors';
+import { useActorDirectory, useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction, useConsumeStockBatch } from '@/hooks/useTransactions';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
@@ -28,7 +28,7 @@ export default function SendStockForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: actors = [] } = useAllActorsLite();
+  const { data: actors = [] } = useActorDirectory();
   const createTransaction = useCreateTransaction();
   const consumeBatch = useConsumeStockBatch();
   const { isReadOnly } = useActingActor();

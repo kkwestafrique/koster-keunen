@@ -157,20 +157,47 @@ page — user explicitly declined widening the `bulk_uploads.upload_type` CHECK 
 Verified end-to-end via testing_agent (iteration_10 → 11): Received/Send historical rows persist
 Approved with correct currency, stock auto-consumes FIFO across batches correctly for Send.
 
+## Actors/Beekeepers Member-Scoped Visibility Audit (2026-08, Run N+1)
+Found and fixed a real gap: `actors` table had NO RLS restriction at all (any authenticated
+user in the supply chain could SELECT every actor company-wide), unlike `beekeepers`
+(already correctly scoped to `actor_id = auth_current_actor_id()`). Applied directly to
+the live Supabase DB (verified via simulated `SET LOCAL ROLE authenticated` sessions, not
+assumed) via `backend/migrations/2026_actors_connection_scoped_rls.sql`:
+- New `actors_select` RLS: Admin sees every actor (unchanged); Member/Field Officer only see
+  their own current actor + actors they have a real ACTIVE connection with (either direction
+  via `connections`); cross-company `has_permission` sharing grants unaffected.
+- New SECURITY DEFINER RPC `browse_actor_directory()` — the one shared "browse everyone"
+  escape hatch for the 3 flows that must legitimately discover NOT-yet-connected actors:
+  Add Connection dialog (both pickers), Contract wizard's supplier picker, Send's destination
+  picker. Wired via new `useActorDirectory()` hook in `useActors.js`.
+- `ActorsList.jsx`'s "Show connected only" checkbox is now Admin-only (hidden for Member/
+  Field Officer, since RLS already fully governs their view — no longer a togglable no-op
+  that briefly re-added self when unchecked).
+- Also fixed: Send transaction detail page was missing a standalone "Currency" field (was
+  appended inline to Total Amount instead, unlike the Received section) — now matches;
+  plus an unrelated pre-existing bug found during this pass where Send's "Actor type" field
+  displayed `tx.actors?.country` instead of `tx.actors?.actor_type`.
+- Verified via testing_agent (iteration_12): Admin/Member/Field Officer visibility counts
+  correct by name (not just count), full-directory pickers unaffected, currency fix confirmed.
+- Known minor side-effect (not fixed, out of current scope): `connections_select` RLS is
+  still supply-chain-wide (unchanged) — a Member viewing the Connections list can see a
+  connection row between two OTHER actors they have no relationship with; the embedded
+  actor name for the "unrelated" side now renders as "—" since that actor is correctly
+  hidden by the new `actors` RLS. Flag for a future Connections-module-specific decision.
+
 ## Prioritized Backlog
 - P0: None blocking.
 - P1 (Part 2, from original handoff, not yet started): Email notification on transaction
   reject — user chose **Supabase's built-in email** (dev-only/limited) over Resend/SendGrid;
   Historical data migration script using `app.bulk_import_mode` + `auto_consume_stock_for_bulk_import()`.
-- P2: Re-verify Actors/Beekeepers end-to-end audit for Member actor-scoping; full Stocks
-  section review (Loss list already spot-checked OK); Bulk Uploads history page audit;
-  currency display check across lists; role-based hiding of Add/Edit buttons for Viewer role
-  (if a Viewer role exists); real Sentry DSN / PostHog key once provided.
+- P2: Full Stocks section review (Loss list already spot-checked OK); Bulk Uploads history
+  page audit; Loss list select/select-all checkboxes to match Final Product; Connections list
+  cross-actor visibility decision (see note above); real Sentry DSN / PostHog key once provided.
 
 ## Next Action Items
 - Build Task 2 (Part 2A): transaction-reject email notification via Supabase's built-in email.
 - Build Task 3 (Part 2B): historical data migration script/tooling.
-- Re-verification audits: Task 4 (Actors/Beekeepers), Task 5 (Stocks lifecycle), Task 6 (Bulk
-  Uploads history), Task 7 (currency display).
+- Remaining audits: Task 5 (Stocks lifecycle full review), Task 6 (Bulk Uploads history),
+  Loss list checkboxes.
 - When ready to deploy to Vercel: connect the repo, set REACT_APP_SUPABASE_URL /
   REACT_APP_SUPABASE_ANON_KEY as Vercel env vars.

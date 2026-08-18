@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAllActorsLite } from '@/hooks/useActors';
+import { useActorDirectory } from '@/hooks/useActors';
 import { useAllVillagesLite } from '@/hooks/useVillages';
 import { useCreateConnection } from '@/hooks/useConnections';
 import { useToast } from '@/hooks/use-toast';
@@ -27,7 +27,7 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
   const { t } = useTranslation();
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
-  const { data: actors = [] } = useAllActorsLite();
+  const { data: actors = [] } = useActorDirectory();
   const { data: villages = [] } = useAllVillagesLite();
   const createConnection = useCreateConnection();
   const { toast } = useToast();
