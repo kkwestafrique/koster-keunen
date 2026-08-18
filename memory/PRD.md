@@ -130,6 +130,18 @@ the live app, across 8 testing_agent passes (iteration_1 → iteration_8). All c
   an earlier "silent failure" report did not reproduce on retest (network-level confirmed
   create_grant returns 200 and persists across a hard reload).
 
+## Stock Lifecycle Check (2026-08, verification-only pass)
+Full Receive → Approve → Processing → Merging → Loss walkthrough verified 100% against the
+live app (iteration_9.json): Raw Material batch quantity decrements exactly on Processing
+consumption, Final Product batch created at destination quantity, Loss row records
+quantity_lost = source − destination, Merging locks destination=source and yields 0 loss, all
+stock-list filters work. Two trivial fixes applied: Approve/Reject mutations were invalidating
+the transaction detail query by the wrong cache key (group id vs the transaction_code it's
+actually keyed by) — status badge could lag after clicking Approve/Reject; and a missing
+data-testid on the Processing-mode destination-product selector. Open design question (not
+fixed, needs your call): Loss list has no select/select-all checkboxes while Final Product
+does — Loss list is a separate simpler component that never had that pattern ported over.
+
 ## Prioritized Backlog
 - P0: None blocking — Part 1 checklist (Actors/Beekeepers/Contracts/Transactions/Sharing) is
   now fully verified end-to-end.

@@ -1,0 +1,33 @@
+{
+  "summary": "Stock Lifecycle Check (Part 2D) verification pass. Walked through the full Receive -> Approve -> Raw Material stock creation flow, then Processing (consumes RM, creates FP, records Loss), then Merging (0-loss sanity), then all stock-list filters and Select/Action-button design contract. Every requested behavior verified end-to-end via the real UI against Supabase. No production bugs found. One design discrepancy noted for follow-up (Loss list has NO select checkboxes even though the prompt states it should).",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/stocks/loss (LossList.jsx)",
+        "issues": [
+          "The request spec says 'Final Product and Loss lists should have NO create button, only select checkboxes' — Final Product list correctly has select+select-all checkboxes (verified via data-testid=stocks-final-product-table-select-all), but Loss list has NO checkboxes at all because LossList.jsx is a separate component from StocksList.jsx and never renders a select column. If the intended design is to allow bulk-selecting Loss rows (e.g. for export), LossList.jsx needs the same select column pattern StocksList uses when canReceive=false. If Loss is deliberately read-only-view-only, the spec should be updated. Flagging for main-agent design decision — not blocking."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Decide whether /stocks/loss should have select checkboxes to match the stated design contract; if yes, port the select-column pattern from StocksList.jsx into LossList.jsx."
+  ],
+  "critical_code_review_comments": [
+    "LossList.jsx duplicates the StocksList list shell (FilterBar + DataTable + AppLayout + page-size state) instead of reusing StocksList's abstractions — makes design invariants like 'Loss and Final Product both show select checkboxes' silently drift, which is exactly what happened here.",
+    "ProcessStockForm's destination product select (for the non-Merging path) has no data-testid on the destination-product-0 combobox — had to select it by 'first combobox without data-testid', which is fragile. Add data-testid=`process-destination-product-${idx}` on the SelectTrigger even in Processing mode (only Merging currently sets it, on the locked read-only div).",
+    "Approve mutation invalidates queryKey ['transaction', groupId] but the detail page keys off transaction_code (not group id), so the detail page's status badge does not always re-render immediately after Approve — the test observed Approved status NOT visible on the detail page immediately post-click, though the DB write and downstream stock creation both worked correctly. Consider invalidating ['transaction', transactionCode] as well (or refetching from the caller)."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a", "frontend": "100%" },
+  "test_credentials": "kkwestafrique@gmail.com / BeeswaxMIS@2026! — switched to actor Amina Yusuf (33333333-3333-3333-3333-333333333331)",
+  "seed_data_creation": "Created 1 Received tx (NZUFI73AQ5, Royal Jelly 33Kg @ 100 NGN, Conventional, Kwara Central, beekeeper Musa Ibrahim) -> Approved -> raw-material stock af4ada3a (33 Kg). Then created 1 Processing tx (G1P8TC7ZDS: source Royal Jelly 20 Kg from batch af4ada3a -> destination Beeswax-Yellow 15 Kg -> quantity_lost=5). Raw-material batch af4ada3a decremented from 33 -> 13 Kg. Final-product stock 9fbf828e (Beeswax-Yellow 15 Kg, Conventional) created. Loss row for G1P8TC7ZDS with 5 Kg lost. Then created 1 Merging tx (TZJI4OIUGF: Royal Jelly 5 Kg -> Royal Jelly 5 Kg, quantity_lost=0). Both transactions appear on /process with correct Transaction type column ('Processing' vs 'Merging').",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Full Stock Lifecycle verified. Verified behaviors: (a) Receive tx -> Pending; Approve -> Approved + Raw Material stock created with exact quantity (33 Kg); (b) StockDetail page loads via [data-testid=stock-detail-batch-reference|quantity|village|created-on] and the origin-transaction link renders (data-testid=stock-detail-origin-transaction); (c) Processing decrements the picked RM batch by exactly the consumed amount (33 -> 13), does NOT delete it, creates a Final Product stock at the destination quantity (15 Kg), and records quantity_lost=source-destination on the Processing tx (5 Kg on /stocks/loss); (d) Merging locks destination product to source (data-testid=process-destination-product-0 renders as read-only div showing source product) and equal source/destination produces 0-loss (Loss list count unchanged); (e) Product filter narrows raw-material 8->5 rows (Royal Jelly), Loss product filter works; (f) Design contract: RM has action button + NO select column; Final Product has select+select-all + NO action button; Loss has NEITHER (design gap flagged). Data left behind in Supabase: NZUFI73AQ5 (Approved, 15Kg RM… wait, 33Kg RM -> 13Kg after processing), G1P8TC7ZDS (Processing), TZJI4OIUGF (Merging).",
+  "rca of the issue": "n/a — verification-only pass, no bugs found. Only a design decision item on Loss list checkboxes."
+}

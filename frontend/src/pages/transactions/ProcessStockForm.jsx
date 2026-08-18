@@ -198,7 +198,7 @@ export default function ProcessStockForm() {
                     </div>
                   ) : (
                     <Select value={row.converted_product} onValueChange={(v) => setDestination(idx, { converted_product: v })}>
-                      <SelectTrigger><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
+                      <SelectTrigger data-testid={`process-destination-product-${idx}`}><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
                       <SelectContent>
                         {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                       </SelectContent>

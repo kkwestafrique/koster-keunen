@@ -322,9 +322,13 @@ export function useApproveTransaction() {
       if (error) throw error;
       return transactionGroupId;
     },
-    onSuccess: (groupId) => {
+    onSuccess: () => {
+      // The detail query is keyed by transaction_code, not group id (see
+      // useTransaction above) — invalidating by group id never matched,
+      // so the detail page's status badge could lag after Approve. Just
+      // invalidate the whole 'transaction' prefix instead.
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['transaction', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['transaction'] });
     },
   });
 }
@@ -352,9 +356,9 @@ export function useRejectTransaction() {
       if (error) throw error;
       return transactionGroupId;
     },
-    onSuccess: (groupId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['transaction', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['transaction'] });
       queryClient.invalidateQueries({ queryKey: ['stocks'] });
     },
   });
