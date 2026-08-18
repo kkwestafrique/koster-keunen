@@ -164,6 +164,11 @@
   "contracts": {
     "title": "Contracts",
     "create": "Create contract",
+    "bulkImport": "Bulk import",
+    "bulkImportTitle": "Import historical contracts",
+    "bulkImportDescription": "Upload past contracts in bulk using the template below. Each row becomes one contract.",
+    "bulkImportComplete": "Imported {{count}} contract(s) successfully",
+    "bulkImportFailed": "Import failed — please check the file and try again",
     "selectCountry": "Select country",
     "allContracts": "All contracts",
     "year": "Year",
@@ -533,7 +538,10 @@
     "invalid": "Invalid",
     "bulkImportComplete": "Imported {{count}} transaction(s) successfully",
     "bulkImportFailed": "Import failed — please check the file and try again",
-    "importValidRows": "Import {{count}} valid row(s)"
+    "importValidRows": "Import {{count}} valid row(s)",
+    "historicalDataLabel": "This is historical data.",
+    "historicalDataNote": "Rows are approved immediately (no Pending review step) and Send rows auto-consume matching stock — only Received and Send are supported this way, Processing rows will be rejected.",
+    "bulkImportShortfallWarning": "{{count}} row(s) didn't have enough matching stock available — check the transaction detail page for details"
   },
   "batchPicker": {
     "title": "Add batch details",

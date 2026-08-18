@@ -142,9 +142,23 @@ data-testid on the Processing-mode destination-product selector. Open design que
 fixed, needs your call): Loss list has no select/select-all checkboxes while Final Product
 does — Loss list is a separate simpler component that never had that pattern ported over.
 
+## Bulk Import Tool (2026-08, feature build)
+Built the "This is historical data" toggle on the Transactions bulk-upload (Received > Multiple
+mode) plus a new Contracts bulk-import dialog, per user's explicit scope choices (Transactions +
+Contracts, reuse existing Transactions template columns, historical Received rows land Approved
+immediately). New backend: `bulk_import_transaction(...)` RPC (applied by user) wraps
+`app.bulk_import_mode` + the pre-existing `auto_consume_stock_for_bulk_import()` in one
+transaction — also fixed a latent bug in that pre-existing function (missing `SECURITY DEFINER`
+meant its stock UPDATE silently no-op'd under RLS; added via `ALTER FUNCTION`). Historical
+Processing rows are rejected client-side (template has no source/destination product columns).
+Contracts bulk-import reuses the plain insert path (no special RPC needed — contracts have no
+bulk_import_mode-gated trigger). Note: Contracts imports don't appear on the Bulk Uploads history
+page — user explicitly declined widening the `bulk_uploads.upload_type` CHECK constraint for it.
+Verified end-to-end via testing_agent (iteration_10 → 11): Received/Send historical rows persist
+Approved with correct currency, stock auto-consumes FIFO across batches correctly for Send.
+
 ## Prioritized Backlog
-- P0: None blocking — Part 1 checklist (Actors/Beekeepers/Contracts/Transactions/Sharing) is
-  now fully verified end-to-end.
+- P0: None blocking.
 - P1 (Part 2, from original handoff, not yet started): Email notification on transaction
   reject — user chose **Supabase's built-in email** (dev-only/limited) over Resend/SendGrid;
   Historical data migration script using `app.bulk_import_mode` + `auto_consume_stock_for_bulk_import()`.

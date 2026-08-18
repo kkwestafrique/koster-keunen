@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, Download, Upload } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
 import { useAllVillagesLite } from '@/hooks/useVillages';
@@ -231,6 +232,17 @@ export default function ReceiveStockForm() {
                     <Download className="h-4 w-4 mr-1" /> {t('receiveForm.downloadTemplate')}
                   </Button>
                 </div>
+                <label className="flex items-start gap-2 mt-3 max-w-md cursor-pointer" data-testid="receive-historical-toggle-label">
+                  <Checkbox
+                    data-testid="receive-historical-toggle"
+                    checked={bulkUpload.isHistorical}
+                    onCheckedChange={(v) => bulkUpload.setIsHistorical(!!v)}
+                  />
+                  <span className="text-xs text-[#7089b4]">
+                    <span className="font-bold text-[#032b71]">{t('receiveForm.historicalDataLabel')}</span>
+                    {' '}{t('receiveForm.historicalDataNote')}
+                  </span>
+                </label>
               </div>
               <div>
                 <p className="text-sm font-bold text-[#032b71] mb-2">2. {t('receiveForm.uploadAndVerify')}</p>
@@ -313,12 +325,23 @@ export default function ReceiveStockForm() {
                         disabled={bulkUpload.validCount === 0 || bulkUpload.uploading}
                         className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
                         onClick={async () => {
-                          const res = await bulkUpload.submit();
+                          const res = await bulkUpload.submit({ currency: form.currency });
                           if (res.inserted > 0) {
-                            toast({ title: t('receiveForm.bulkImportComplete', { count: res.inserted }) });
+                            if (res.shortfallCount > 0) {
+                              toast({
+                                title: t('receiveForm.bulkImportComplete', { count: res.inserted }),
+                                description: t('receiveForm.bulkImportShortfallWarning', { count: res.shortfallCount }),
+                              });
+                            } else {
+                              toast({ title: t('receiveForm.bulkImportComplete', { count: res.inserted }) });
+                            }
                             navigate('/transactions');
                           } else {
-                            toast({ title: t('receiveForm.bulkImportFailed'), variant: 'destructive' });
+                            toast({
+                              title: t('receiveForm.bulkImportFailed'),
+                              description: res.errors?.[0],
+                              variant: 'destructive',
+                            });
                           }
                         }}
                       >

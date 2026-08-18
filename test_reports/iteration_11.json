@@ -1,0 +1,39 @@
+{
+  "summary": "Narrow re-verification of the iteration_10 bug: historical Transactions bulk-import RPC now passes p_currency from ReceiveStockForm's Multiple-mode currency dropdown. FIX VERIFIED. Uploaded /app/test_reports/artifacts/hist_ok.xlsx (1 Received + 1 Send row, dates 2024-06-15 & 2024-06-20) as admin kkwestafrique@gmail.com on actor Amina Yusuf via /transactions/received/new (Multiple mode, Conventional, currency NGN, historical toggle checked). Preview showed '2 valid row(s)'. After submit, both rows were created with status Approved: Received row at /transactions (2024-06-15 BBWBCGN2HU, Musa Ibrahim, Crude Honey 5 Kg, Currency=NGN, Total 500) and Send row at /send (2024-06-20 M1HAA37Q46, Chinedu Okafor, Beeswax-Yellow 2 Kg, Total 1,000 NGN, Approved, source batch 'Created by processing 2 Kg'). Currency propagation from form.currency into bulk_import_transaction RPC works end-to-end. Contracts bulk-import button [data-testid=contracts-bulk-import-button] still visible on /contracts (light spot-check only, per instructions).",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Send transaction detail page",
+        "issues": ["No explicit 'Currency' label on Send Transaction Detail (unlike Received detail which has a dedicated Currency field). Currency is only visible embedded inside 'Total amount' (e.g. '1,000 NGN'). Minor consistency nit — user can still read the currency, but the two detail layouts differ."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/artifacts/verify_03_preview.png",
+    "/app/test_reports/artifacts/verify_04_after_submit.png",
+    "/app/test_reports/artifacts/verify_06_txlist_2024.png",
+    "/app/test_reports/artifacts/verify_07_detail_recv.png",
+    "/app/test_reports/artifacts/verify_send_list.png",
+    "/app/test_reports/artifacts/verify_send_detail.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fix is clean: useBulkUpload.submit(options) now accepts a { currency } arg and forwards it as p_currency to the RPC; ReceiveStockForm calls bulkUpload.submit({ currency: form.currency }). BulkImportContractsDialog still calls submit() with no args (correct — contracts template already includes currency per row).",
+    "Minor: the destructive 'Bulk import failed' toast in ReceiveStockForm now surfaces the RPC error message per the fix note, which resolves the second recommendation from iteration_10.",
+    "Optional follow-up (not blocking): consider adding a 'Currency' field to Send TransactionDetail for visual parity with Received detail (currently only shown embedded in Total amount)."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "frontend": "100% — 1/1 target flow (historical import Received+Send) passed; spot-checks (Contracts button visible) passed",
+    "backend": "n/a (Supabase direct — RPC previously verified working)"
+  },
+  "test_credentials": "kkwestafrique@gmail.com / BeeswaxMIS@2026! (admin, switched to Amina Yusuf)",
+  "seed_data_creation": "1 Received (2024-06-15, Musa Ibrahim, Crude Honey 5 Kg @ 100 NGN, Approved) and 1 Send (2024-06-20, actor KKWA-NG-0002 → Chinedu Okafor, Beeswax-Yellow 2 Kg @ 500 NGN, Approved) via historical bulk import. Both persisted with currency NGN. Also observed prior stale rows from iteration_10's server-side direct-REST verification (2024-06-15 UJHMKU73RS shows Total amount '500' with no currency string — pre-fix row, harmless).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "iteration_10's single blocker (p_currency undefined in historical Transactions bulk import) is now fully fixed and verified end-to-end via the UI. Both Received and Send historical rows persist with the currency chosen in the Multiple-mode currency dropdown. No further re-testing required unless the shared submit() signature in useBulkUpload.js is changed again.",
+  "rca of the issue": "N/A — bug from iteration_10 is fixed; this iteration only re-verified the patch."
+}

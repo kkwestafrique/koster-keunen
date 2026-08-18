@@ -164,6 +164,11 @@
   "contracts": {
     "title": "Contrats",
     "create": "Créer un contrat",
+    "bulkImport": "Import groupé",
+    "bulkImportTitle": "Importer des contrats historiques",
+    "bulkImportDescription": "Téléchargez des contrats passés en masse avec le modèle ci-dessous. Chaque ligne devient un contrat.",
+    "bulkImportComplete": "{{count}} contrat(s) importé(s) avec succès",
+    "bulkImportFailed": "Échec de l'importation — veuillez vérifier le fichier et réessayer",
     "selectCountry": "Sélectionner un pays",
     "allContracts": "Tous les contrats",
     "year": "Année",
@@ -533,7 +538,10 @@
     "invalid": "Invalide",
     "bulkImportComplete": "{{count}} transaction(s) importée(s) avec succès",
     "bulkImportFailed": "Échec de l'importation — veuillez vérifier le fichier et réessayer",
-    "importValidRows": "{{count}} ligne(s) valide(s) à importer"
+    "importValidRows": "{{count}} ligne(s) valide(s) à importer",
+    "historicalDataLabel": "Ce sont des données historiques.",
+    "historicalDataNote": "Les lignes sont approuvées immédiatement (pas d'étape d'attente) et les lignes d'envoi consomment automatiquement le stock correspondant — seuls Réception et Envoi sont pris en charge ainsi, les lignes de Transformation seront rejetées.",
+    "bulkImportShortfallWarning": "{{count}} ligne(s) n'avaient pas assez de stock disponible — consultez la page de détail de la transaction"
   },
   "batchPicker": {
     "title": "Ajouter les détails du lot",

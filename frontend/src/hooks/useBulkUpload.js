@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
-import { STANDARDS, COMMITMENT_OF_BEEKEEPER } from '@/data/regions';
+import { STANDARDS, COMMITMENT_OF_BEEKEEPER, PRODUCTS } from '@/data/regions';
 
 // Column definitions per target table. "required" fields must be present and non-empty on every row.
 export const BULK_UPLOAD_TEMPLATES = {
@@ -50,6 +50,23 @@ export const BULK_UPLOAD_TEMPLATES = {
       { key: 'unit', label: 'Unit', required: false },
       { key: 'price', label: 'Price', required: true, type: 'number' },
       { key: 'direction', label: 'Direction', required: true, allowed: ['Received', 'Processing', 'Send'] },
+    ],
+  },
+  contracts: {
+    label: 'Contracts',
+    table: 'contracts',
+    uploadType: 'Contracts',
+    columns: [
+      { key: 'signature_date', label: 'Signature date', required: true },
+      { key: 'actor_code', label: 'Supplier actor traceability code', required: true },
+      { key: 'standard', label: 'Standard', required: true, allowed: ['Sustainable', 'Organic', 'Conventional'] },
+      { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
+      { key: 'expected_quantity', label: 'Expected quantity', required: true, type: 'number' },
+      { key: 'unit', label: 'Unit', required: false },
+      { key: 'price', label: 'Maximum price', required: true, type: 'number' },
+      { key: 'currency', label: 'Currency', required: true },
+      { key: 'advance_amount_paid', label: 'Advance amount paid', required: false, type: 'number' },
+      { key: 'comments', label: 'Comments', required: false },
     ],
   },
 };
@@ -116,7 +133,7 @@ async function fetchLookups(supplyChainId, templateKey) {
     data.forEach((v) => { lookups.villagesByName[v.name.trim().toLowerCase()] = v.id; });
   }
 
-  if (templateKey === 'transactions') {
+  if (templateKey === 'transactions' || templateKey === 'contracts') {
     const [actorsRes, beekeepersRes] = await Promise.all([
       supabase.from('actors').select('id, traceability_code').eq('supply_chain_id', supplyChainId),
       supabase.from('beekeepers').select('id, traceability_code').eq('supply_chain_id', supplyChainId),
@@ -130,7 +147,7 @@ async function fetchLookups(supplyChainId, templateKey) {
   return lookups;
 }
 
-function validateRows(rows, template, lookups) {
+function validateRows(rows, template, lookups, isHistorical) {
   return rows.map((row, index) => {
     const errors = [];
     const cleaned = {};
@@ -210,14 +227,44 @@ function validateRows(rows, template, lookups) {
       if (typeof cleaned.quantity === 'number' && typeof cleaned.price === 'number') {
         cleaned.total_amount = cleaned.quantity * cleaned.price;
       }
+      // Historical import re-uses this same template/column shape (per
+      // product owner's call) but only Received and Send map cleanly onto
+      // it -- Processing needs a separate source vs. destination product,
+      // which this flat template has no columns for. Rather than silently
+      // mis-handling those rows, reject them clearly.
+      if (isHistorical && cleaned.direction === 'Processing') {
+        errors.push('Historical import does not support Processing rows yet — only Received and Send');
+      }
       // Same explicit status as the single-transaction forms: Send is
       // auto-Approved at creation, Received (and Processing, which has no
       // status badge either way) start Pending so the Approve/Reject
       // workflow on the detail page actually has something to act on —
       // never rely on the table's own default here (confirmed bug:
       // defaults to 'Approved' for everything, which silently skips the
-      // whole approval step for bulk-uploaded Received rows too).
-      cleaned.status = cleaned.direction === 'Send' ? 'Approved' : 'Pending';
+      // whole approval step for bulk-uploaded Received rows too). Historical
+      // rows are an explicit exception: they're already-completed past
+      // records, so they land Approved immediately, same as Send.
+      cleaned.status = (cleaned.direction === 'Send' || isHistorical) ? 'Approved' : 'Pending';
+    }
+
+    // Historical Contracts import: one row = one contract (one product,
+    // its own contract_group_id) — matches the single-Contract-per-product
+    // shape useCreateContract() already produces, just skipping the
+    // interactive wizard. contract_code/owning_actor_id are both set by
+    // existing triggers on insert, same as the normal creation path.
+    if (template.table === 'contracts') {
+      if (!cleaned.actor_id) errors.push('Supplier actor traceability code is required');
+      const parsedDate = cleaned.signature_date ? new Date(cleaned.signature_date) : null;
+      cleaned.year = parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate.getFullYear() : new Date().getFullYear();
+      cleaned.contract_type = 'Send';
+      cleaned.advance_amount_paid = cleaned.advance_amount_paid || 0;
+      if (typeof cleaned.expected_quantity === 'number' && typeof cleaned.price === 'number') {
+        cleaned.total_amount = cleaned.expected_quantity * cleaned.price;
+        cleaned.advance_percent = cleaned.total_amount > 0
+          ? Math.round((cleaned.advance_amount_paid / cleaned.total_amount) * 100)
+          : 0;
+      }
+      cleaned.contract_group_id = crypto.randomUUID();
     }
 
     return { rowNumber: index + 2, data: cleaned, errors };
@@ -234,6 +281,7 @@ export function useBulkUpload(templateKey) {
   const [parsing, setParsing] = useState(false);
   const [parseError, setParseError] = useState(null);
   const [result, setResult] = useState(null);
+  const [isHistorical, setIsHistorical] = useState(false);
 
   const loadFile = useCallback(async (file) => {
     setFileName(file.name);
@@ -245,7 +293,7 @@ export function useBulkUpload(templateKey) {
         parseFile(file),
         fetchLookups(supplyChainId, templateKey),
       ]);
-      setRows(validateRows(rawRows, template, lookups));
+      setRows(validateRows(rawRows, template, lookups, isHistorical));
     } catch (err) {
       // parseFile rejects (e.g. non-.xlsx file) with a real Error. Store it
       // for callers that just read `parseError` state (ReceiveStockForm's
@@ -258,18 +306,77 @@ export function useBulkUpload(templateKey) {
     } finally {
       setParsing(false);
     }
-  }, [template, templateKey, supplyChainId]);
+  }, [template, templateKey, supplyChainId, isHistorical]);
 
   const validCount = rows.filter((r) => r.errors.length === 0).length;
   const errorCount = rows.length - validCount;
 
-  const submit = useCallback(async () => {
+  const submit = useCallback(async (options = {}) => {
     setUploading(true);
     const validRows = rows.filter((r) => r.errors.length === 0).map((r) => ({
       ...r.data,
       supply_chain_id: supplyChainId,
     }));
     const validationFailedCount = rows.length - validRows.length;
+
+    // Historical transactions need `app.bulk_import_mode` set and (for
+    // Send rows) auto_consume_stock_for_bulk_import() called in the SAME
+    // db transaction as the insert -- neither is possible through a plain
+    // client-side .insert(), so this path calls the bulk_import_transaction
+    // RPC once per row instead of the generic batched insert below.
+    if (template.table === 'transactions' && isHistorical) {
+      let inserted = 0;
+      let failed = 0;
+      let shortfallCount = 0;
+      const errors = [];
+      for (const row of validRows) {
+        const { data, error } = await supabase.rpc('bulk_import_transaction', {
+          p_direction: row.direction,
+          p_standard: row.standard,
+          p_actor_id: row.actor_id || null,
+          p_beekeeper_id: row.beekeeper_id || null,
+          p_product: row.product,
+          p_quantity: row.quantity,
+          p_unit: row.unit || 'Kg',
+          p_price: row.price,
+          // The Transactions template has no currency column at all (it's
+          // a supply-chain-wide currency choice made once on the form, not
+          // per-row) -- `row.currency` is always undefined here, which
+          // supabase-js strips entirely, breaking the RPC's arg match.
+          // Callers must pass the form's selected currency explicitly.
+          p_currency: options.currency,
+          p_transaction_date: row.transaction_date,
+        });
+        if (error) {
+          failed += 1;
+          errors.push(error.message);
+        } else {
+          inserted += 1;
+          if (data?.stock_shortfall > 0) shortfallCount += 1;
+        }
+      }
+      const totalFailed = failed + validationFailedCount;
+      try {
+        await supabase.from('bulk_uploads').insert({
+          supply_chain_id: supplyChainId,
+          upload_type: template.uploadType,
+          file_name: fileName,
+          status: inserted === 0 ? 'Failed' : 'Completed',
+          progress: 100,
+        });
+      } catch (logErr) {
+        console.error('Failed to log bulk upload history:', logErr);
+      }
+      if (inserted > 0) {
+        queryClient.invalidateQueries({ queryKey: [template.table] });
+        queryClient.invalidateQueries({ queryKey: ['bulk_uploads'] });
+        queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      }
+      setUploading(false);
+      const res = { inserted, updated: 0, failed: totalFailed, errors, shortfallCount };
+      setResult(res);
+      return res;
+    }
 
     let inserted = 0;
     let updated = 0;
@@ -348,22 +455,28 @@ export function useBulkUpload(templateKey) {
 
     // Log this upload to bulk_uploads so the Bulk Uploads history page
     // (Connections/Transactions tabs) actually reflects real activity,
-    // instead of always showing empty.
-    try {
-      await supabase.from('bulk_uploads').insert({
-        supply_chain_id: supplyChainId,
-        upload_type: template.uploadType,
-        file_name: fileName,
-        status: (inserted === 0 && updated === 0) ? 'Failed' : 'Completed',
-        progress: 100,
-        ...(template.uploadType === 'Connections'
-          ? { new_beekeepers: inserted, updated_beekeepers: updated }
-          : {}),
-      });
-    } catch (logErr) {
-      // Don't let a logging failure block the person from seeing their
-      // actual import result — just note it happened.
-      console.error('Failed to log bulk upload history:', logErr);
+    // instead of always showing empty. Contracts imports are skipped here
+    // on purpose: `bulk_uploads.upload_type` has a CHECK constraint that
+    // doesn't include 'Contracts', and the product owner chose not to
+    // widen it — the contracts themselves still import correctly, they
+    // just won't show up on the Bulk Uploads history page.
+    if (template.table !== 'contracts') {
+      try {
+        await supabase.from('bulk_uploads').insert({
+          supply_chain_id: supplyChainId,
+          upload_type: template.uploadType,
+          file_name: fileName,
+          status: (inserted === 0 && updated === 0) ? 'Failed' : 'Completed',
+          progress: 100,
+          ...(template.uploadType === 'Connections'
+            ? { new_beekeepers: inserted, updated_beekeepers: updated }
+            : {}),
+        });
+      } catch (logErr) {
+        // Don't let a logging failure block the person from seeing their
+        // actual import result — just note it happened.
+        console.error('Failed to log bulk upload history:', logErr);
+      }
     }
 
     if (inserted > 0 || updated > 0) {
@@ -374,7 +487,7 @@ export function useBulkUpload(templateKey) {
     setUploading(false);
     setResult({ inserted, updated, failed: totalFailed, errors });
     return { inserted, updated, failed: totalFailed, errors };
-  }, [rows, supplyChainId, template, fileName, queryClient]);
+  }, [rows, supplyChainId, template, fileName, queryClient, isHistorical]);
 
   const reset = useCallback(() => {
     setRows([]);
@@ -394,6 +507,8 @@ export function useBulkUpload(templateKey) {
     parsing,
     parseError,
     result,
+    isHistorical,
+    setIsHistorical,
     loadFile,
     submit,
     reset,

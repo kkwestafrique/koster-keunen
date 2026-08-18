@@ -5,12 +5,13 @@ import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
 import StandardBadge from '@/components/common/StandardBadge';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { useContracts } from '@/hooks/useContracts';
 import { useConstants } from '@/hooks/useConstants';
 import { useActingActor } from '@/hooks/useActors';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import BulkImportContractsDialog from './BulkImportContractsDialog';
 
 // Matches the live site's "All contracts" filter exactly. Note there is no
 // Standard filter on the live list page — Standard is still shown as a
@@ -35,6 +36,7 @@ export default function ContractsList() {
   // click through). 15 is still one of DataTable's offered options.
   const [pageSize, setPageSize] = useState(15);
   const { isReadOnly } = useActingActor();
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
   const { data: countries = [] } = useConstants('country');
 
@@ -106,16 +108,30 @@ export default function ContractsList() {
     <AppLayout hideDefaultHeader>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-black text-[#0f48aa]">{t('contracts.title')}</h1>
-        <Button
-          data-testid="create-contract-button"
-          className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isReadOnly}
-          title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
-          onClick={() => navigate('/contracts/new')}
-        >
-          <Plus className="h-4 w-4 mr-1" /> {t('contracts.create')}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            data-testid="contracts-bulk-import-button"
+            variant="outline"
+            className="border-[#0f48aa] text-[#0f48aa] disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isReadOnly}
+            title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
+            onClick={() => setBulkImportOpen(true)}
+          >
+            <Upload className="h-4 w-4 mr-1" /> {t('contracts.bulkImport')}
+          </Button>
+          <Button
+            data-testid="create-contract-button"
+            className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isReadOnly}
+            title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
+            onClick={() => navigate('/contracts/new')}
+          >
+            <Plus className="h-4 w-4 mr-1" /> {t('contracts.create')}
+          </Button>
+        </div>
       </div>
+
+      <BulkImportContractsDialog open={bulkImportOpen} onOpenChange={setBulkImportOpen} />
 
       <FilterBar
         testId="contracts-table"

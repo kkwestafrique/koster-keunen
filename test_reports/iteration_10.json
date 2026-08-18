@@ -1,0 +1,50 @@
+{
+  "summary": "End-to-end UI test of the new Historical Bulk Import feature (Transactions historical toggle + Contracts bulk import). 3 of 4 flows passed. TEST 1 (historical transactions import via UI) FAILED with a repeatable 404 from PostgREST on the bulk_import_transaction RPC because the frontend never sends p_currency — the row objects built from the Transactions template do not contain a `currency` field (the template has no currency column) and supabase-js drops the undefined key, so PostgREST cannot resolve the 10-arg RPC and returns 404 for every historical Received/Send row. Server-side RPC itself works fine when called with all 10 params (verified via direct REST call), which is why the main agent's server-side verification passed. The Processing-rejection validation, the non-historical Received (Pending) path, and the Contracts bulk import all worked correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "useBulkUpload.js (submit path for historical transactions)",
+        "issue": "Historical transactions import UI is BROKEN end-to-end. Every historical row (Received AND Send) fails at Supabase with HTTP 404 PGRST202 'Could not find the function public.bulk_import_transaction(...) in the schema cache'. Root cause: hook builds `row` from `validateRows()`, which uses BULK_UPLOAD_TEMPLATES.transactions.columns — that template has NO `currency` column, so `row.currency` is `undefined`. supabase.rpc() strips undefined values from the payload, so only 9 of the 10 required named args reach PostgREST, and the 10-arg signature (which does not have a default for p_currency) does not match. Result: bulk_uploads log records 'Failed' with inserted=0, and the user sees the 'Bulk import failed' destructive toast on the historical toggle path — feature is unusable via UI. Fix: in /app/frontend/src/hooks/useBulkUpload.js around L342 either (a) `p_currency: row.currency || 'NGN'`, or better (b) plumb the ReceiveStockForm's `form.currency` value into the hook (add a param to `submit()` or store it in the hook) so historical rows inherit the currency chosen in the Multiple-mode currency select right above the file uploader.",
+        "selector": "[data-testid=\"receive-bulk-submit\"] (historical toggle checked)",
+        "priority": "CRITICAL"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Historical Transactions bulk import (Received + Send rows, isHistorical=true)",
+        "issue": "0/2 rows persisted via UI even though the preview shows both as Valid and the submit toast fires. Direct REST call to the same RPC with p_currency='NGN' or p_currency=null both succeed and return {stock_shortfall:0, transaction_group_id:...} — confirming the bug is client-side (missing p_currency argument), not RPC-side.",
+        "affected_selectors": ["[data-testid=\"receive-historical-toggle\"]", "[data-testid=\"receive-bulk-submit\"]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/artifacts/hist_ok.xlsx",
+    "/app/test_reports/artifacts/hist_processing.xlsx",
+    "/app/test_reports/artifacts/normal_recv.xlsx",
+    "/app/test_reports/artifacts/contracts.xlsx",
+    "/app/test_reports/artifacts/final_contracts.png"
+  ],
+  "action_items": [
+    "CRITICAL: Fix useBulkUpload.js historical-import branch to always send p_currency (either default to 'NGN' or, preferably, plumb form.currency from ReceiveStockForm's Multiple-mode currency Select down into the hook). Right now every historical row silently 404s.",
+    "Consider surfacing the RPC's error.message in the 'Bulk import failed' toast so users see the real reason (currently they only see 'Bulk import failed' with no clue that all rows were rejected)."
+  ],
+  "critical_code_review_comments": [
+    "useBulkUpload.js L327-344 assumes row objects carry a currency; the transactions template has no such column, so this is guaranteed undefined and breaks the RPC signature match every time. This bug would also have affected historical Send rows (auto-stock-consumption path) had they ever reached the RPC.",
+    "The historical-import UI silently swallows the per-row RPC error text (only counted in the `errors` array, never surfaced) — the destructive toast just says 'Bulk import failed', which hides a critical 404. Adding a short details field with the first error message would have made this bug obvious to the user."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "frontend_flows_passed": "3/4 (75%): Processing-rejection preview OK, non-historical Received Pending OK, Contracts bulk import OK. Historical Transactions import FAILED (404 on every row).",
+    "backend": "n/a (Supabase-direct; RPC verified working via direct REST — bug is client-side)"
+  },
+  "seed_data_creation": "Created 1 historical contract via UI bulk import: Supplier Niakara SARLU (KKWA-ML-0001), 2024-05-10, Send, Conventional, Beeswax-Yellow, 10 Kg @ 800 NGN, contract_group_id auto-generated. Also created 1 normal (non-historical) Received transaction 2026-01-10, Crude Honey, 4 Kg @ 120 NGN, status Pending (KKWA-NG-00001 Musa Ibrahim). Historical transactions import created 0 rows (bug).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "After main agent patches useBulkUpload.js to always send p_currency (default 'NGN' or plumbed from form.currency), re-run T1 with /app/test_reports/artifacts/hist_ok.xlsx while logged in as kkwestafrique@gmail.com on actor Amina Yusuf. Expected: 2 inserted (1 Received + 1 Send), toast shows import complete with count (possibly with shortfall warning for the Send row if there's no Beeswax-Yellow stock), and both rows appear in /transactions with status 'Approved' (year filter on /transactions defaults to 2026, so filter to 2024 or query DB directly). T2/T3/T4 already pass and don't need re-testing unless the fix touches shared code paths.",
+  "rca of the issue": "1) Reproduction: log in as kkwestafrique / BeeswaxMIS@2026!, switch to Amina Yusuf, go /transactions/received/new, Multiple mode, Standard=Conventional, Currency=NGN, check 'This is historical data', upload any valid file with Received/Send rows, submit. 2) Observed: 'Bulk import failed' destructive toast; browser console shows two 'Failed to load resource: 404' errors against /rest/v1/rpc/bulk_import_transaction; bulk_uploads row logs status='Failed'. 3) Root cause: useBulkUpload.js submit() line ~342 passes `p_currency: row.currency`, but the transactions bulk-upload template (BULK_UPLOAD_TEMPLATES.transactions.columns) has NO currency column, so row.currency is undefined; supabase-js strips undefined keys before POSTing to PostgREST, which then cannot find any bulk_import_transaction overload with only 9 named args (the 10-arg signature has no default for p_currency) and returns PGRST202 404. Direct REST call with `p_currency: 'NGN'` (or even null) works fine. 4) Mitigation: change `p_currency: row.currency` to `p_currency: row.currency || 'NGN'` as a one-line fix, OR — cleaner — extend useBulkUpload to accept the caller's chosen currency and pass it through (ReceiveStockForm already collects form.currency for Multiple mode via [data-testid=receive-multi-currency])."
+}
