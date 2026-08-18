@@ -123,7 +123,6 @@
     "categoryOther": "Other",
     "categoryMale": "Male",
     "categoryFemale": "Female",
-    "categoryOther": "Other",
     "categoryProducerOrganisation": "Producer Organisation",
     "categoryAggregator": "Aggregator",
     "categoryLocalPartner": "Local Partner",
@@ -734,5 +733,23 @@
     "passwordsDontMatch": "Passwords do not match",
     "passwordChanged": "Password changed",
     "passwordChangeFailed": "Could not change password"
+  },
+  "verification": {
+    "title": "Verification queue",
+    "description": "Standard claims awaiting review. Verifying a claim is what actually adds that standard to the record.",
+    "entityType": "Type",
+    "standard": "Standard",
+    "evidence": "Evidence",
+    "submittedOn": "Submitted on",
+    "verify": "Verify",
+    "reject": "Reject",
+    "rejectClaim": "Reject claim",
+    "rejectionReason": "Reason for rejection",
+    "rejectionReasonPlaceholder": "Explain why this claim is being rejected...",
+    "noPendingClaims": "No claims are awaiting verification.",
+    "claimVerified": "Claim verified",
+    "verifyFailed": "Could not verify claim",
+    "claimRejected": "Claim rejected",
+    "rejectFailed": "Could not reject claim"
   }
 }

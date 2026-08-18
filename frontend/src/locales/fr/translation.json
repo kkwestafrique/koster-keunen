@@ -123,7 +123,6 @@
     "categoryOther": "Autre",
     "categoryMale": "Homme",
     "categoryFemale": "Femme",
-    "categoryOther": "Autre",
     "categoryProducerOrganisation": "Organisation de producteurs",
     "categoryAggregator": "Agrégateur",
     "categoryLocalPartner": "Partenaire local",
@@ -734,5 +733,23 @@
     "passwordsDontMatch": "Les mots de passe ne correspondent pas",
     "passwordChanged": "Mot de passe modifié",
     "passwordChangeFailed": "Impossible de modifier le mot de passe"
+  },
+  "verification": {
+    "title": "File de vérification",
+    "description": "Revendications de normes en attente d'examen. La vérification d'une revendication est ce qui ajoute réellement cette norme au dossier.",
+    "entityType": "Type",
+    "standard": "Norme",
+    "evidence": "Preuve",
+    "submittedOn": "Soumis le",
+    "verify": "Vérifier",
+    "reject": "Rejeter",
+    "rejectClaim": "Rejeter la revendication",
+    "rejectionReason": "Motif du rejet",
+    "rejectionReasonPlaceholder": "Expliquez pourquoi cette revendication est rejetée...",
+    "noPendingClaims": "Aucune revendication en attente de vérification.",
+    "claimVerified": "Revendication vérifiée",
+    "verifyFailed": "Impossible de vérifier la revendication",
+    "claimRejected": "Revendication rejetée",
+    "rejectFailed": "Impossible de rejeter la revendication"
   }
 }
