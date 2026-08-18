@@ -93,18 +93,58 @@ constants — all in Supabase Postgres, RLS enabled, scoped by supply_chain_id.
   top-5-suppliers ranking, country-wise transaction %, crop-type hive distribution — none of
   this data exists in the current schema; only chart widgets backed by real data were built.
 
+## Part 1 Verification + Critical Bug Fixes (2026-08, Run N)
+Full click-through verification of Actors/Beekeepers/Contracts/Transactions/Sharing against
+the live app, across 8 testing_agent passes (iteration_1 → iteration_8). All confirmed fixed:
+- Sidebar `my-actor-switcher` now fully hidden (static label instead) for single-actor
+  Member/Field Officer users; only renders as a real dropdown for multi-actor Admins.
+- Disabled-actor lockout enforced at the UI level everywhere (new `useActingActor()` hook in
+  `useActors.js`): Add/Edit/Delete buttons disabled across Beekeepers/Actors/Contracts/
+  Transactions/Team-members/Company-profile, plus full-page read-only blocks on direct URL
+  access to Send/Receive/Process/ContractWizard forms.
+- ContractWizard Supplier dropdown now disabled + empty until a Standard is selected.
+- Orphan beekeepers (`actor_id IS NULL`) no longer leak into every actor's Beekeepers list
+  (`.not('actor_id','is',null)` filter in `useBeekeepers.js`).
+- **DB fix** (`backend/migrations/2026_fix_contracts_member_read.sql`, applied by user via
+  Supabase SQL Editor): Member/Field Officer roles could not read `contracts`/`contract_groups`
+  at all — added a permissive `contracts_select_same_supply_chain` RLS policy matching the
+  same supply-chain-wide scope every other entity table already has.
+- **Critical root-cause fix**: `contracts`, `transactions` both have TWO foreign keys to
+  `actors` (the counterparty `actor_id` + an `owning_actor_id`). Every raw-table query using
+  an unqualified `actors(...)` PostgREST embed (ContractDetail, TransactionDetail, Report page
+  aggregates, plus a `beekeepers`→`actors` embed with the same shape found later by a testing
+  agent) threw "more than one relationship was found" / HTTP 300, silently breaking those
+  pages for 2+ testing passes before being root-caused. Fixed everywhere via explicit
+  `actors!actor_id(...)` / `actors!beekeepers_actor_id_fkey(...)` embed hints.
+- **DB fix** (`backend/migrations/2026_fix_received_transaction_status.sql`, applied by user):
+  the `transactions_before_write` trigger unconditionally forced `status := 'Approved'` on
+  every Received-from-beekeeper transaction, making the entire Approve/Reject workflow
+  unreachable. Removed that block — Received transactions now correctly insert as `Pending`,
+  and the raw-material stock batch is only created by `sync_transaction_to_stock` once
+  Approved (Reject leaves no stock behind, restores via `reject_transaction_with_reversal`).
+- Bulk-upload of a non-`.xlsx` file no longer crashes the page (React error overlay) — now
+  shows a clean inline error (`useBulkUpload.js` `loadFile()` catches + surfaces `parseError`).
+- Minor: missing `beekeepersList.totalHives`/`activeYears` i18n keys added (en+fr); `/send/new`
+  now redirects to the canonical `/transactions/send/new` instead of bouncing to the dashboard.
+- Sharing & Permissions round-trip (share → recipient sees it → revoke) verified working —
+  an earlier "silent failure" report did not reproduce on retest (network-level confirmed
+  create_grant returns 200 and persists across a hard reload).
+
 ## Prioritized Backlog
-- P0: None blocking — core CRUD + auth + RLS + storage verified working end-to-end.
-- P1: Actor/Beekeeper Edit persistence for all fields (currently a subset of fields editable
-  inline on Actor Detail); Village/Connection detail+edit views; role-based hiding of
-  Add/Edit buttons for Viewer role.
-- P2: Real Sentry DSN / PostHog key once provided; swap in-memory Edge Middleware rate limiter
-  for Vercel KV/Upstash before production traffic; French language toggle
-  (`language_preference` field exists but UI not localized yet).
+- P0: None blocking — Part 1 checklist (Actors/Beekeepers/Contracts/Transactions/Sharing) is
+  now fully verified end-to-end.
+- P1 (Part 2, from original handoff, not yet started): Email notification on transaction
+  reject — user chose **Supabase's built-in email** (dev-only/limited) over Resend/SendGrid;
+  Historical data migration script using `app.bulk_import_mode` + `auto_consume_stock_for_bulk_import()`.
+- P2: Re-verify Actors/Beekeepers end-to-end audit for Member actor-scoping; full Stocks
+  section review (Loss list already spot-checked OK); Bulk Uploads history page audit;
+  currency display check across lists; role-based hiding of Add/Edit buttons for Viewer role
+  (if a Viewer role exists); real Sentry DSN / PostHog key once provided.
 
 ## Next Action Items
-- Provide real Sentry DSN / PostHog API key when ready to swap placeholders.
-- Confirm if "standard" should be added as a real column/relation for beekeepers filtering.
+- Build Task 2 (Part 2A): transaction-reject email notification via Supabase's built-in email.
+- Build Task 3 (Part 2B): historical data migration script/tooling.
+- Re-verification audits: Task 4 (Actors/Beekeepers), Task 5 (Stocks lifecycle), Task 6 (Bulk
+  Uploads history), Task 7 (currency display).
 - When ready to deploy to Vercel: connect the repo, set REACT_APP_SUPABASE_URL /
-  REACT_APP_SUPABASE_ANON_KEY as Vercel env vars, and consider upgrading middleware.js to use
-  Vercel KV for real distributed rate limiting.
+  REACT_APP_SUPABASE_ANON_KEY as Vercel env vars.

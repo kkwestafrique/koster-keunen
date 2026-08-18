@@ -1,0 +1,30 @@
+{
+  "summary": "Final verification pass for Received transaction Pending/Approve/Reject lifecycle via the actual UI. Full lifecycle now works end-to-end: (1) new Received tx created via ReceiveStockForm is inserted with status='Pending' (trigger fix confirmed); (2) Approve flips status to Approved AND creates the raw-material stock row via sync_transaction_to_stock; (3) Reject sets status to Rejected and does NOT create a stray raw-material stock row. HOWEVER during testing a NEW critical regression was found and fixed by the testing agent: useBeekeepers hook had an ambiguous PostgREST embed causing HTTP 300 Multiple Choices, which broke the beekeeper dropdown in the Receive form and the entire Beekeepers list page (both showed 'No records'). After fix all lifecycle checks pass.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Beekeepers listing / Receive-stock beekeeper dropdown",
+        "issue": "useBeekeepers query used ambiguous embed 'actors(contact_name,traceability_code)' but beekeepers has 2 FKs to actors (actor_id and linked_producer_organisation_id). PostgREST returned HTTP 300 Multiple Choices so the entire beekeeper query silently returned no rows. This blocked creation of any new Received transaction via the UI (no beekeepers appear in the dropdown even for actors that own them e.g. Amina Yusuf -> Musa Ibrahim, Bilkisu Sani). Fixed by disambiguating to actors!beekeepers_actor_id_fkey(...). After fix, both /beekeepers list and Receive-stock dropdown populate correctly.",
+        "affected_selectors": ["[data-testid=receive-beekeeper]", "beekeepers-table"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Review the useBeekeepers embed fix committed by the testing agent (src/hooks/useBeekeepers.js) and confirm it aligns with the intended relationship. Consider auditing other Supabase select() calls that embed 'actors(...)' from tables with more than one FK to actors for the same PGRST ambiguity (search for `actors(` embeds in hooks)."
+  ],
+  "critical_code_review_comments": [
+    "useBeekeepers embed ambiguity -- PostgREST 300 Multiple Choices silently returns no data. Any table embedding a parent that has multiple FK relationships MUST use the disambiguated form actors!<fkname>(...). Consider adding a query-time assertion or a unit test that fails on HTTP 300 responses."
+  ],
+  "updated_files": ["/app/frontend/src/hooks/useBeekeepers.js"],
+  "success_rate": { "backend": "n/a", "frontend": "100% (after fix)" },
+  "test_credentials": "kkwestafrique@gmail.com / BeeswaxMIS@2026! (Admin, actor: Amina Yusuf)",
+  "seed_data_creation": "Created 2 Received transactions as Amina Yusuf against beekeeper Musa Ibrahim in Kwara Central, Conventional standard, product Royal Jelly: JK28C5KHFO (15 Kg @ 60 NGN -> Approved -> stock 527771f9 created) and Y6XZOHST5G (20 Kg @ 70 NGN -> Rejected -> no stock created).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "The Received tx status trigger fix from iteration_7 is verified working end-to-end via the UI. During this pass, a separate critical regression in useBeekeepers (PGRST embed ambiguity causing HTTP 300) was found and patched inline by the testing agent so that the requested Approve/Reject lifecycle could actually be exercised. Main agent should code-review that one-line fix and audit other 'actors(...)' embeds. Data left behind: JK28C5KHFO (Approved, 15Kg Royal Jelly stock 527771f9), Y6XZOHST5G (Rejected, no stock).",
+  "rca of the issue": "Bug found: /beekeepers list and Receive-stock beekeeper dropdown empty for all actors. Reproduction: log in as kkwestafrique / BeeswaxMIS@2026!, switch to Amina Yusuf, go to /beekeepers -> 'No records found', or Transactions > Received > Receive stock, pick standard+village -> beekeeper dropdown has no options. Network shows Supabase REST returns HTTP 300 with no body for the beekeepers query. Root cause: useBeekeepers select() embeds `actors(contact_name, traceability_code)` but the beekeepers table has 2 FKs to actors (actor_id and linked_producer_organisation_id), so PostgREST cannot decide which relationship to use and returns 300 Multiple Choices. Same file's useBeekeeper (singular) already uses the disambiguated form `actors!beekeepers_actor_id_fkey(...)`. Fix: change the useBeekeepers select() embed to `actors!beekeepers_actor_id_fkey(contact_name, traceability_code)`. Verified: beekeepers list now shows Musa Ibrahim + Bilkisu Sani for Amina Yusuf, the Receive form dropdown populates, and the full Approve/Reject lifecycle works as expected."
+}

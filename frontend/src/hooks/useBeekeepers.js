@@ -17,7 +17,7 @@ export function useBeekeepers({
     queryFn: async () => {
       let query = supabase
         .from('beekeepers')
-        .select('*, villages(name), actors(contact_name, traceability_code)', { count: 'exact' })
+        .select('*, villages(name), actors!beekeepers_actor_id_fkey(contact_name, traceability_code)', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
         // Orphan beekeepers (actor_id IS NULL, e.g. imported before an actor
         // link was assigned) must never surface in a per-actor scoped list —
