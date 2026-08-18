@@ -17,7 +17,9 @@
     "bulkUploads": "Bulk uploads",
     "report": "Report",
     "villages": "Villages",
-    "connections": "Connections"
+    "connections": "Connections",
+    "products": "Products",
+    "verifications": "Verifications"
   },
   "topbar": {
     "myActor": "My Actor",
@@ -761,5 +763,10 @@
   },
   "contractsList": {
     "title": "Contracts"
+  },
+  "productsList": {
+    "title": "Products",
+    "description": "The real, editable product catalogue this system's forms and lists draw from.",
+    "name": "Product name"
   }
 }

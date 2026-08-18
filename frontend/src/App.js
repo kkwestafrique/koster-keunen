@@ -32,6 +32,7 @@ import UserProfile from '@/pages/UserProfile';
 import StockDetail from '@/pages/stocks/StockDetail';
 import VerificationQueue from '@/pages/verification/VerificationQueue';
 import BeekeeperCharter from '@/pages/BeekeeperCharter';
+import ProductsList from '@/pages/products/ProductsList';
 
 function ProtectedRoute({ children }) {
   const { session, loading } = useAuth();
@@ -138,6 +139,7 @@ function AppRoutes() {
       <Route path="/stocks/detail/:id" element={<ProtectedRoute><StockDetail /></ProtectedRoute>} />
       <Route path="/verifications" element={<ProtectedRoute><VerificationQueue /></ProtectedRoute>} />
       <Route path="/beekeeper-charter" element={<ProtectedRoute><BeekeeperCharter /></ProtectedRoute>} />
+      <Route path="/products" element={<ProtectedRoute><ProductsList /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

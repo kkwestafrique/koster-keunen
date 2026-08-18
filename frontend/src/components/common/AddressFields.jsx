@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import RequiredLabel from '@/components/common/RequiredLabel';
 import SearchableSelect from '@/components/common/SearchableSelect';
 import { COUNTRIES } from '@/data/regions';
+import { useCountries } from '@/hooks/useReferenceData';
 import { useStatesForCountry, useLgasForState } from '@/hooks/useRegions';
 
 // Cascading address block used by Add Actor / Add Beekeeper / Add Village:
@@ -22,6 +23,7 @@ import { useStatesForCountry, useLgasForState } from '@/hooks/useRegions';
 const OTHER_LGA_VALUE = '__other__';
 
 export default function AddressFields({ value, onChange, testIdPrefix = 'address', required = true }) {
+  const { data: countries = COUNTRIES.map((name) => ({ name })) } = useCountries();
   const { t } = useTranslation();
   const { country = '', state_region = '', lga_municipality = '', village = '' } = value || {};
 
@@ -53,7 +55,7 @@ export default function AddressFields({ value, onChange, testIdPrefix = 'address
           value={country}
           onChange={(v) => { set({ country: v, state_region: '', lga_municipality: '' }); setLgaIsOther(false); }}
           placeholder={t('forms.selectCountry')}
-          options={COUNTRIES.map((c) => ({ value: c, label: c }))}
+          options={countries.map((c) => ({ value: c.name, label: c.name }))}
         />
       </div>
 

@@ -17,7 +17,9 @@
     "bulkUploads": "Téléchargements groupés",
     "report": "Rapport",
     "villages": "Villages",
-    "connections": "Connexions"
+    "connections": "Connexions",
+    "products": "Produits",
+    "verifications": "Vérifications"
   },
   "topbar": {
     "myActor": "Mon acteur",
@@ -761,5 +763,10 @@
   },
   "contractsList": {
     "title": "Contrats"
+  },
+  "productsList": {
+    "title": "Produits",
+    "description": "Le catalogue de produits réel et modifiable utilisé par les formulaires et listes de ce système.",
+    "name": "Nom du produit"
   }
 }
