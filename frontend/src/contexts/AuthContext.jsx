@@ -38,6 +38,39 @@ export function AuthProvider({ children }) {
     return () => subscription.subscription.unsubscribe();
   }, [loadProfile]);
 
+  // Gap 11: previously nothing detected a role change mid-session at all
+  // -- someone's screen could keep showing buttons for a role they no
+  // longer have until they happened to refresh manually. Not a security
+  // gap (every real permission check goes through RLS, re-verified fresh
+  // on every single query, never trusting stale client state) but a real
+  // UX inconsistency, and the real platform explicitly forces a logout
+  // when this happens. Matches that behavior deliberately rather than a
+  // silent refresh -- a demoted user shouldn't keep operating with a
+  // stale, more-privileged UI even briefly.
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return undefined;
+
+    const channel = supabase
+      .channel(`role-watch-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'user_accounts', filter: `id=eq.${userId}` },
+        (payload) => {
+          const oldRole = payload.old?.role;
+          const newRole = payload.new?.role;
+          if (oldRole && newRole && oldRole !== newRole) {
+            signOut();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id]);
+
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
