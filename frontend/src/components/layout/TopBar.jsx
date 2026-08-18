@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite } from '@/hooks/useActors';
 import { useRecentExports } from '@/hooks/useExports';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/useNotifications';
+import { useUpdateMyProfile } from '@/hooks/useMyProfile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import {
@@ -22,7 +23,24 @@ const LANGUAGES = [
 
 function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
+  const { profile } = useAuth();
+  const updateProfile = useUpdateMyProfile();
   const current = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0];
+
+  const handleChangeLanguage = (code) => {
+    i18n.changeLanguage(code);
+    // Persist the choice, not just apply it for this session -- previously
+    // this only ever called i18n.changeLanguage(), so the choice never
+    // survived a fresh login on a different device/browser. Best-effort:
+    // if this fails (e.g. profile not loaded yet), the language still
+    // changes for the current session regardless. The database stores the
+    // full word ('English'/'French'), not i18next's 2-letter code -- a
+    // real mismatch confirmed directly against the live constraint.
+    if (profile?.id) {
+      const dbLanguage = code === 'fr' ? 'French' : 'English';
+      updateProfile.mutate({ id: profile.id, username: profile.username, language_preference: dbLanguage });
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -42,7 +60,7 @@ function LanguageSwitcher() {
           <DropdownMenuItem
             key={lang.code}
             data-testid={`language-option-${lang.code}`}
-            onClick={() => i18n.changeLanguage(lang.code)}
+            onClick={() => handleChangeLanguage(lang.code)}
             className="flex items-center gap-2"
           >
             <span>{lang.flag}</span>
@@ -238,7 +256,7 @@ export default function TopBar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem data-testid="top-bar-my-profile" onClick={() => navigate('/company-profile')}>
+            <DropdownMenuItem data-testid="top-bar-my-profile" onClick={() => navigate('/user-profile')}>
               {t('topbar.myProfile')}
             </DropdownMenuItem>
             <DropdownMenuItem data-testid="logout-button" onClick={signOut}>

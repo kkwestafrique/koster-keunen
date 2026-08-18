@@ -709,5 +709,22 @@
     "grantFailed": "Could not share access",
     "grantRevoked": "Access revoked",
     "revokeFailed": "Could not revoke access"
+  },
+  "userProfile": {
+    "title": "My Profile",
+    "accountDetails": "Account details",
+    "email": "Email",
+    "role": "Role",
+    "memberSince": "Member since",
+    "name": "Name",
+    "profileSaved": "Profile updated",
+    "saveFailed": "Could not save profile",
+    "changePassword": "Change password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordsDontMatch": "Passwords do not match",
+    "passwordChanged": "Password changed",
+    "passwordChangeFailed": "Could not change password"
   }
 }

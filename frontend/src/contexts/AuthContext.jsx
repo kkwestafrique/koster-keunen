@@ -83,6 +83,7 @@ export function AuthProvider({ children }) {
         signIn,
         signOut,
         switchActor,
+        refreshProfile: () => loadProfile(session?.user?.id),
         role: profile?.role || 'Field Officer',
         supplyChainId: profile?.supply_chain_id || null,
       }}

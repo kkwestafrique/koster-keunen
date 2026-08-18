@@ -28,6 +28,7 @@ import StocksList from '@/pages/stocks/StocksList';
 import LossList from '@/pages/stocks/LossList';
 import BulkUploads from '@/pages/bulkUploads/BulkUploads';
 import Report from '@/pages/report/Report';
+import UserProfile from '@/pages/UserProfile';
 
 function ProtectedRoute({ children }) {
   const { session, loading } = useAuth();
@@ -130,6 +131,7 @@ function AppRoutes() {
 
       <Route path="/bulk-uploads" element={<ProtectedRoute><BulkUploads /></ProtectedRoute>} />
       <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+      <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
