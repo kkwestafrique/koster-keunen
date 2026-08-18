@@ -9,7 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StandardBadge from '@/components/common/StandardBadge';
 import { Plus, Trash2 } from 'lucide-react';
-import { CURRENCIES, PRODUCTS, STANDARDS, COUNTRY_CURRENCY } from '@/data/regions';
+import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
+import { useCountries } from '@/hooks/useReferenceData';
 import { useActorDirectory, useActingActor } from '@/hooks/useActors';
 import { useCreateContract } from '@/hooks/useContracts';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +29,7 @@ export default function ContractWizard() {
   const { toast } = useToast();
   const { supplyChainId, profile } = useAuth();
   const { data: actors = [] } = useActorDirectory();
+  const { data: countries = [] } = useCountries();
   const createContract = useCreateContract();
   const { isReadOnly } = useActingActor();
 
@@ -82,7 +84,9 @@ export default function ContractWizard() {
   // only sets a sensible default at the moment of selection.
   const handleSupplierChange = (actorId) => {
     const selected = actors.find((a) => a.id === actorId);
-    const mappedCurrency = selected?.country ? COUNTRY_CURRENCY[selected.country] : null;
+    const mappedCurrency = selected?.country
+      ? countries.find((c) => c.name === selected.country)?.currency
+      : null;
     setForm((f) => ({
       ...f,
       supplier_actor_id: actorId,

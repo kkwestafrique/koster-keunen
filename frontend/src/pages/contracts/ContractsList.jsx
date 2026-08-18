@@ -7,7 +7,7 @@ import StandardBadge from '@/components/common/StandardBadge';
 import { Button } from '@/components/ui/button';
 import { Plus, Upload } from 'lucide-react';
 import { useContracts } from '@/hooks/useContracts';
-import { useConstants } from '@/hooks/useConstants';
+import { useCountries } from '@/hooks/useReferenceData';
 import { useActingActor } from '@/hooks/useActors';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -38,7 +38,7 @@ export default function ContractsList() {
   const { isReadOnly } = useActingActor();
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
-  const { data: countries = [] } = useConstants('country');
+  const { data: countries = [] } = useCountries();
 
   const { data, isLoading } = useContracts({ page, pageSize, search, country, contractType });
 
@@ -144,7 +144,7 @@ export default function ContractsList() {
             label: t('contracts.selectCountry'),
             value: country,
             onChange: (v) => { setCountry(v); setPage(1); },
-            options: countries.map((c) => ({ value: c.value, label: c.label })),
+            options: countries.map((c) => ({ value: c.name, label: c.name })),
             searchable: true,
           },
           {

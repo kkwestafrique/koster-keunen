@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite, useActorTypeCounts } from '@/hooks/useActors';
 import { useBeekeeperAggregates } from '@/hooks/useBeekeepers';
 import { useDashboardTransactionSummary } from '@/hooks/useTransactions';
-import { useConstants } from '@/hooks/useConstants';
+import { useCountries } from '@/hooks/useReferenceData';
 import { COUNTRIES } from '@/data/regions';
 import {
   Select,
@@ -79,7 +79,7 @@ export default function Dashboard() {
   const { data: actorCounts } = useActorTypeCounts({ country });
   const { data: bkAgg } = useBeekeeperAggregates({ country });
   const { data: txSummary } = useDashboardTransactionSummary({ year });
-  const { data: countries = [] } = useConstants('country');
+  const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
 
@@ -184,7 +184,7 @@ export default function Dashboard() {
                   <SelectContent>
                     <SelectItem value="all">{t('dashboard.allCountry')}</SelectItem>
                     {(countries.length > 0
-                      ? countries.map((c) => ({ key: c.id, value: c.value, label: c.label }))
+                      ? countries.map((c) => ({ key: c.name, value: c.name, label: c.name }))
                       : COUNTRIES.map((c) => ({ key: c, value: c, label: c }))
                     ).map((c) => (
                       <SelectItem key={c.key} value={c.value}>{c.label}</SelectItem>
