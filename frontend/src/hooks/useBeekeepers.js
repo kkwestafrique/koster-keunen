@@ -85,6 +85,56 @@ export function useCreateBeekeeper() {
   });
 }
 
+// Gap 21: dashboard metrics had no written, tested definition anywhere --
+// exactly the kind of gap that let the real platform's dashboard show two
+// contradictory beekeeper counts on the same screen without anyone
+// noticing. This is the definition for every number this hook produces;
+// see src/hooks/__tests__/dashboardMetrics.test.js for the test that
+// verifies the actual behavior matches it.
+//
+// DEFINITION (v1):
+//   total          = count of DISTINCT beekeeper records in this supply
+//                    chain (optionally filtered to one country via their
+//                    village). One beekeeper = one unit, regardless of
+//                    how many transactions they have -- this is the exact
+//                    distinction the real platform's own audit found
+//                    broken (their equivalent metric silently counted
+//                    TRANSACTIONS, showing ~12,000 against a real total of
+//                    534 people).
+//   male/female/genderOther = count of beekeepers whose gender field
+//                    exactly matches that value. These three MUST always
+//                    sum to `total` -- if they don't, some beekeeper has a
+//                    gender value outside the three enum options, which
+//                    the test explicitly checks for.
+//   traditional/modern/other = SUM of hive counts (not beekeeper counts)
+//                    across the relevant hive-type columns. These are
+//                    physical hive totals, not people -- deliberately a
+//                    different kind of number from the counts above, and
+//                    should never be compared directly against `total`.
+// Pure function, deliberately separated from the network/query concerns
+// above it so it can be unit-tested directly with plain JS objects -- see
+// src/hooks/__tests__/dashboardMetrics.test.js.
+export function aggregateBeekeepers(rows) {
+  const agg = {
+    total: rows.length,
+    male: 0,
+    female: 0,
+    genderOther: 0,
+    traditional: 0,
+    modern: 0,
+    other: 0,
+  };
+  rows.forEach((row) => {
+    if (row.gender === 'Male') agg.male += 1;
+    else if (row.gender === 'Female') agg.female += 1;
+    else if (row.gender === 'Other') agg.genderOther += 1;
+    agg.traditional += (row.hives_traditional_single || 0) + (row.hives_traditional_double || 0);
+    agg.modern += row.hives_modern || 0;
+    agg.other += row.hives_other || 0;
+  });
+  return agg;
+}
+
 export function useBeekeeperAggregates({ country = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
@@ -101,24 +151,7 @@ export function useBeekeeperAggregates({ country = '' } = {}) {
       if (country) query = query.eq('villages.country', country);
       const { data, error } = await query;
       if (error) throw error;
-      const agg = {
-        total: data.length,
-        male: 0,
-        female: 0,
-        genderOther: 0,
-        traditional: 0,
-        modern: 0,
-        other: 0,
-      };
-      data.forEach((row) => {
-        if (row.gender === 'Male') agg.male += 1;
-        else if (row.gender === 'Female') agg.female += 1;
-        else if (row.gender === 'Other') agg.genderOther += 1;
-        agg.traditional += (row.hives_traditional_single || 0) + (row.hives_traditional_double || 0);
-        agg.modern += row.hives_modern || 0;
-        agg.other += row.hives_other || 0;
-      });
-      return agg;
+      return aggregateBeekeepers(data);
     },
     enabled: !!supplyChainId,
     staleTime: 30_000,

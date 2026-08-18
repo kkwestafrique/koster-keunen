@@ -160,6 +160,34 @@ export function useBeekeeperTransactions(beekeeperId) {
 // Transaction Overview tab on the Dashboard: total quantity per direction
 // for the selected year, plus a per-product breakdown for Received (the
 // most common direction to actually have volume in early on).
+// DEFINITION (v1):
+//   total       = count of transaction records (one row per product line,
+//                 NOT one per real transaction -- a multi-product Send
+//                 counts as multiple here). Deliberately NOT the same
+//                 counting unit as transaction_groups elsewhere in the
+//                 app; this exists to answer "how much line-item activity
+//                 happened", not "how many transactions happened". Never
+//                 label this on screen as a count of transactions without
+//                 that distinction.
+//   byDirection = SUM of quantity, grouped by direction (Received/
+//                 Processing/Send). A physical quantity total, not a
+//                 count.
+//   byProduct   = SUM of quantity, grouped by product name. Also a
+//                 physical quantity total.
+export function summarizeTransactions(rows) {
+  const byDirection = { Received: 0, Processing: 0, Send: 0 };
+  const byProduct = {};
+  rows.forEach((row) => {
+    byDirection[row.direction] = (byDirection[row.direction] || 0) + (Number(row.quantity) || 0);
+    if (row.product) byProduct[row.product] = (byProduct[row.product] || 0) + (Number(row.quantity) || 0);
+  });
+  return {
+    total: rows.length,
+    byDirection,
+    byProduct: Object.entries(byProduct).map(([product, quantity]) => ({ product, quantity })),
+  };
+}
+
 export function useDashboardTransactionSummary({ year = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
@@ -173,19 +201,7 @@ export function useDashboardTransactionSummary({ year = '' } = {}) {
 
       const { data, error } = await query;
       if (error) throw error;
-
-      const byDirection = { Received: 0, Processing: 0, Send: 0 };
-      const byProduct = {};
-      data.forEach((row) => {
-        byDirection[row.direction] = (byDirection[row.direction] || 0) + (Number(row.quantity) || 0);
-        if (row.product) byProduct[row.product] = (byProduct[row.product] || 0) + (Number(row.quantity) || 0);
-      });
-
-      return {
-        total: data.length,
-        byDirection,
-        byProduct: Object.entries(byProduct).map(([product, quantity]) => ({ product, quantity })),
-      };
+      return summarizeTransactions(data);
     },
     enabled: !!supplyChainId,
     staleTime: 30_000,
