@@ -158,7 +158,7 @@
     "modernHives": "Ruches modernes",
     "other": "Autre",
     "totalHives": "Total des ruches",
-    "activeYears": "Années actives"
+    "lastActiveYear": "Dernière année active"
   },
   "contracts": {
     "title": "Contrats",

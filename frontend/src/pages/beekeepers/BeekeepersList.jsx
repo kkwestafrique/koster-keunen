@@ -51,7 +51,7 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
     { key: 'modern_hives', label: t('beekeepersList.modernHives'), render: (row) => row.hives_modern ?? 0 },
     { key: 'other', label: t('beekeepersList.other'), render: (row) => row.hives_other ?? 0 },
     { key: 'total_hives', label: t('beekeepersList.totalHives'), render: (row) => row.total_hives ?? 0 },
-    { key: 'active_years', label: t('beekeepersList.activeYears'), render: (row) => row.active_years ?? 0 },
+    { key: 'last_active_year', label: t('beekeepersList.lastActiveYear'), render: (row) => row.last_active_year || '—' },
   ];
 
   const YEAR_OPTIONS = ['2027', '2026', '2025', '2024', '2023'].map((y) => ({ value: y, label: y }));

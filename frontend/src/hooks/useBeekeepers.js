@@ -43,7 +43,32 @@ export function useBeekeepers({
 
       const { data, error, count } = await query;
       if (error) throw error;
-      return { rows: data, total: count };
+
+      // "Active years" previously showed a static, disconnected stored
+      // integer (beekeepers.active_years) that had no real relationship
+      // to actual activity. This computes the real last year a beekeeper
+      // made a transaction, scoped to just the current page's IDs (cheap,
+      // not a full-table scan) rather than touching the old column at
+      // all.
+      const ids = (data || []).map((b) => b.id);
+      let lastActiveYearById = {};
+      if (ids.length > 0) {
+        const { data: txRows, error: txError } = await supabase
+          .from('transactions')
+          .select('beekeeper_id, transaction_date')
+          .in('beekeeper_id', ids);
+        if (txError) throw txError;
+        (txRows || []).forEach((t) => {
+          if (!t.transaction_date) return;
+          const yr = new Date(t.transaction_date).getFullYear();
+          if (!lastActiveYearById[t.beekeeper_id] || yr > lastActiveYearById[t.beekeeper_id]) {
+            lastActiveYearById[t.beekeeper_id] = yr;
+          }
+        });
+      }
+      const rows = (data || []).map((b) => ({ ...b, last_active_year: lastActiveYearById[b.id] || null }));
+
+      return { rows, total: count };
     },
     enabled: !!supplyChainId,
     staleTime: 30_000,

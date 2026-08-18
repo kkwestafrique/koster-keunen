@@ -158,7 +158,7 @@
     "modernHives": "Modern hives",
     "other": "Other",
     "totalHives": "Total hives",
-    "activeYears": "Active years"
+    "lastActiveYear": "Last active year"
   },
   "contracts": {
     "title": "Contracts",
