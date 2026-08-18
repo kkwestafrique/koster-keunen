@@ -29,7 +29,10 @@ export default function TransactionsList({ direction, title, actionLabel, testId
   const [source, setSource] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  // Gap 13: was 5 -- the same default the real platform's own audit
+  // flagged as a real usability problem (398 beekeepers = 80 pages to
+  // click through). 15 is still one of DataTable's offered options.
+  const [pageSize, setPageSize] = useState(15);
   const { isReadOnly } = useActingActor();
 
   const { data: products = [] } = useConstants('product_type');

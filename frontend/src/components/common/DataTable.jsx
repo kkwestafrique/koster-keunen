@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Table,
@@ -47,8 +47,44 @@ export default function DataTable({
   testId = 'data-table',
 }) {
   const { t } = useTranslation();
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState('asc');
   const resolvedEmptyMessage = emptyMessage ?? t('common.noRecordsFound');
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize));
+
+  // Gap 14: no table anywhere could be sorted by clicking a column -- the
+  // same limitation as the real platform. Opt-in per column via
+  // `sortable: true`, so existing pages are completely unaffected unless
+  // they explicitly enable it.
+  //
+  // Deliberately CLIENT-side, sorting only the rows currently on screen.
+  // Server-side sorting across the whole dataset would need a real `order`
+  // param threaded through every list hook and every query -- a much
+  // larger change. Sorting the visible page is genuinely useful and
+  // honest about what it does; it just isn't a full-dataset sort.
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const displayRows = React.useMemo(() => {
+    if (!sortKey) return rows;
+    const sorted = [...rows].sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === 'number' && typeof bv === 'number') return av - bv;
+      return String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' });
+    });
+    return sortDir === 'asc' ? sorted : sorted.reverse();
+  }, [rows, sortKey, sortDir]);
+
   // "X - Y of Z" range format, matching the live site exactly (confirmed
   // against both the Commercial Partners audit's "1 - 5 of 13" and the
   // Contracts audit's "1 - 5 of 37" / empty-state "0 of 0") — not the
@@ -63,7 +99,21 @@ export default function DataTable({
           <TableRow className="border-b border-[#cfd8e6] hover:bg-transparent">
             {columns.map((col) => (
               <TableHead key={col.key} className="text-[#7089b4] font-bold bg-transparent">
-                {col.label}
+                {col.sortable ? (
+                  <button
+                    type="button"
+                    data-testid={`${testId}-sort-${col.key}`}
+                    onClick={() => handleSort(col.key)}
+                    className="flex items-center gap-1 hover:text-[#032b71] transition-colors"
+                  >
+                    {col.label}
+                    <span className="text-[10px]">
+                      {sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}
+                    </span>
+                  </button>
+                ) : (
+                  col.label
+                )}
               </TableHead>
             ))}
           </TableRow>
@@ -82,7 +132,7 @@ export default function DataTable({
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((row, idx) => (
+            displayRows.map((row, idx) => (
               <TableRow
                 key={row.id || idx}
                 className="border-b border-[#cfd8e6] cursor-pointer transition-colors"

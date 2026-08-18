@@ -15,6 +15,7 @@ import { csvBlobFromRows, downloadBlob } from '@/hooks/useReportData';
 import { useCreateExport, useUpdateExport } from '@/hooks/useExports';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const YEARS = ['2027', '2026', '2025', '2024', '2023', '2022'];
 
@@ -71,6 +72,7 @@ function MultiCheck({ options, allLabel, value, onChange, testIdPrefix }) {
 
 export default function Report() {
   const { t } = useTranslation();
+  usePageTitle(t('report.title'));
   const { toast } = useToast();
   const { supplyChainId } = useAuth();
   const createExport = useCreateExport();

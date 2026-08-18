@@ -11,12 +11,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUpdateMyProfile, useChangePassword } from '@/hooks/useMyProfile';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Gap 3: "My Profile" in the TopBar previously just navigated to the
 // COMPANY profile -- there was no page for a person to view or manage
 // their own account at all.
 export default function UserProfile() {
   const { t } = useTranslation();
+  usePageTitle(t('userProfile.title'));
   const { toast } = useToast();
   const { user, profile, refreshProfile } = useAuth();
   const updateProfile = useUpdateMyProfile();

@@ -25,7 +25,10 @@ export default function ActorsList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
   const { profile, role } = useAuth();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  // Gap 13: was 5 -- the same default the real platform's own audit
+  // flagged as a real usability problem (398 beekeepers = 80 pages to
+  // click through). 15 is still one of DataTable's offered options.
+  const [pageSize, setPageSize] = useState(15);
   const [search, setSearch] = useState('');
   const [actorType, setActorType] = useState('');
   const [status, setStatus] = useState('');
@@ -53,8 +56,8 @@ export default function ActorsList({ fixedStatus, title, testId }) {
   });
 
   const columns = [
-    { key: 'traceability_code', label: t('actorsList.traceabilityCode') },
-    { key: 'contact_name', label: t('actorsList.actorName') },
+    { key: 'traceability_code', sortable: true, label: t('actorsList.traceabilityCode') },
+    { key: 'contact_name', sortable: true, label: t('actorsList.actorName') },
     { key: 'actor_type', label: t('actorsList.actorType') },
     { key: 'country', label: t('actorsList.country') },
     { key: 'status', label: t('actorsList.status'), render: (row) => <StatusBadge status={row.status} /> },

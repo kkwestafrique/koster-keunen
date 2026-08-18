@@ -12,6 +12,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import ConnectionFormDialog from '@/pages/connections/ConnectionFormDialog';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const YEAR_OPTIONS = Array.from({ length: 8 }, (_, i) => {
   const y = new Date().getFullYear() - i;
@@ -20,6 +21,7 @@ const YEAR_OPTIONS = Array.from({ length: 8 }, (_, i) => {
 
 export default function ConnectionsList() {
   const { t } = useTranslation();
+  usePageTitle(t('connectionsList.title'));
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');

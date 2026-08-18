@@ -11,12 +11,14 @@ import { usePendingClaims, useVerifyClaim, useRejectClaim } from '@/hooks/useCla
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Gap 12: the queue a verifier actually works from. Verify/Reject are
 // Admin/Member only (enforced server-side too, not just hidden here), and
 // nobody can verify a claim they submitted themselves.
 export default function VerificationQueue() {
   const { t } = useTranslation();
+  usePageTitle(t('verification.title'));
   const { toast } = useToast();
   const { canApprove } = usePermissions();
   const { data: claims = [], isLoading } = usePendingClaims();

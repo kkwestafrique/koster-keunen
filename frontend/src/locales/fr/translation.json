@@ -605,7 +605,8 @@
     "saveFailed": "Échec de la mise à jour du profil",
     "update": "Mettre à jour",
     "roleUpdated": "Rôle du membre mis à jour",
-    "roleUpdateFailed": "Échec de la mise à jour du rôle"
+    "roleUpdateFailed": "Échec de la mise à jour du rôle",
+    "title": "Profil de l'entreprise"
   },
   "report": {
     "commercialPartners": "Partenaires commerciaux",
@@ -635,7 +636,8 @@
     "generateFailed": "Échec de la génération du rapport",
     "noData": "Aucune donnée trouvée pour les filtres sélectionnés",
     "dateFrom": "Date de début",
-    "dateTo": "Date de fin"
+    "dateTo": "Date de fin",
+    "title": "Rapports"
   },
   "bulkUploads": {
     "fileName": "Nom du fichier",
@@ -646,7 +648,8 @@
     "searchPlaceholder": "Rechercher par nom de fichier...",
     "id": "Id",
     "status": "Statut",
-    "allStatus": "Tous les statuts"
+    "allStatus": "Tous les statuts",
+    "title": "Téléversements en masse"
   },
   "transactionDetail": {
     "title": "Détail de la transaction",
@@ -755,5 +758,8 @@
   "charter": {
     "tableOfContents": "Table des matières",
     "readCharter": "Lire la Charte complète"
+  },
+  "contractsList": {
+    "title": "Contrats"
   }
 }

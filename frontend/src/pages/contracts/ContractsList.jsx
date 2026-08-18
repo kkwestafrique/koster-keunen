@@ -10,6 +10,7 @@ import { useContracts } from '@/hooks/useContracts';
 import { useConstants } from '@/hooks/useConstants';
 import { useActingActor } from '@/hooks/useActors';
 import { useNavigate } from 'react-router-dom';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Matches the live site's "All contracts" filter exactly. Note there is no
 // Standard filter on the live list page — Standard is still shown as a
@@ -23,12 +24,16 @@ const money = (v) => (v != null ? Number(v).toLocaleString() : '—');
 
 export default function ContractsList() {
   const { t } = useTranslation();
+  usePageTitle(t('contractsList.title'));
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [country, setCountry] = useState('');
   const [contractType, setContractType] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  // Gap 13: was 5 -- the same default the real platform's own audit
+  // flagged as a real usability problem (398 beekeepers = 80 pages to
+  // click through). 15 is still one of DataTable's offered options.
+  const [pageSize, setPageSize] = useState(15);
   const { isReadOnly } = useActingActor();
 
   const { data: countries = [] } = useConstants('country');
@@ -36,7 +41,7 @@ export default function ContractsList() {
   const { data, isLoading } = useContracts({ page, pageSize, search, country, contractType });
 
   const columns = [
-    { key: 'year', label: t('contracts.year') },
+    { key: 'year', sortable: true, label: t('contracts.year') },
     {
       key: 'supplier_name',
       label: t('contracts.supplierName'),

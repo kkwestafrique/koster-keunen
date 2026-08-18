@@ -605,7 +605,8 @@
     "saveFailed": "Failed to update profile",
     "update": "Update",
     "roleUpdated": "Member role updated",
-    "roleUpdateFailed": "Failed to update role"
+    "roleUpdateFailed": "Failed to update role",
+    "title": "Company Profile"
   },
   "report": {
     "commercialPartners": "Commercial partners",
@@ -635,7 +636,8 @@
     "generateFailed": "Failed to generate report",
     "noData": "No data found for the selected filters",
     "dateFrom": "Start date",
-    "dateTo": "End date"
+    "dateTo": "End date",
+    "title": "Reports"
   },
   "bulkUploads": {
     "fileName": "File name",
@@ -646,7 +648,8 @@
     "searchPlaceholder": "Search by file name...",
     "id": "Id",
     "status": "Status",
-    "allStatus": "All status"
+    "allStatus": "All status",
+    "title": "Bulk Uploads"
   },
   "transactionDetail": {
     "title": "Transaction Detail",
@@ -755,5 +758,8 @@
   "charter": {
     "tableOfContents": "Table contents",
     "readCharter": "Read the full Charter"
+  },
+  "contractsList": {
+    "title": "Contracts"
   }
 }

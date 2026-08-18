@@ -28,6 +28,7 @@ import {
 import { uploadMediaFile } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Actor (company) profile. Edit mode is deliberately limited, matching the
 // live site: only Actor name, Actor type (radio), and logo are editable —
@@ -35,6 +36,7 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 // role edit (only role), and remove.
 export default function CompanyProfile() {
   const { t } = useTranslation();
+  usePageTitle(t('companyProfile.title'));
   const { toast } = useToast();
   const { profile, supplyChainId } = useAuth();
   const { canManageTeam } = usePermissions();

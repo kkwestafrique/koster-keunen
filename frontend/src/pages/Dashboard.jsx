@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 function StatCard({ label, value, testId }) {
   return (
@@ -67,6 +68,7 @@ const CATEGORY_TRANSLATION_KEY = {
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  usePageTitle(t('dashboard.title'));
   const { profile } = useAuth();
   const { data: actors = [] } = useAllActorsLite();
   const [tab, setTab] = useState('supply');

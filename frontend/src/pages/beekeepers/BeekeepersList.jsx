@@ -10,12 +10,17 @@ import { useBeekeepers } from '@/hooks/useBeekeepers';
 import { useAllVillagesLite } from '@/hooks/useVillages';
 import { useActingActor } from '@/hooks/useActors';
 import AddBeekeeperDialog from '@/pages/beekeepers/AddBeekeeperDialog';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // fixedStatus: 'Potential' | 'Achieved' | null (full list)
 export default function BeekeepersList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
+  usePageTitle(t('beekeepersList.title'));
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  // Gap 13: was 5 -- the same default the real platform's own audit
+  // flagged as a real usability problem (398 beekeepers = 80 pages to
+  // click through). 15 is still one of DataTable's offered options.
+  const [pageSize, setPageSize] = useState(15);
   const [search, setSearch] = useState('');
   const [gender, setGender] = useState('');
   const [villageId, setVillageId] = useState('');
@@ -37,8 +42,8 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
   });
 
   const columns = [
-    { key: 'traceability_code', label: t('beekeepersList.traceabilityCode') },
-    { key: 'full_name', label: t('beekeepersList.fullName') },
+    { key: 'traceability_code', sortable: true, label: t('beekeepersList.traceabilityCode') },
+    { key: 'full_name', sortable: true, label: t('beekeepersList.fullName') },
     { key: 'gender', label: t('beekeepersList.gender') },
     { key: 'village', label: t('beekeepersList.village'), render: (row) => row.villages?.name || '—' },
     { key: 'traditional_single', label: t('beekeepersList.traditionalSingle'), render: (row) => row.hives_traditional_single ?? 0 },

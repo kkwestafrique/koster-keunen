@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useVillages } from '@/hooks/useVillages';
 import VillageFormDialog from '@/pages/villages/VillageFormDialog';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function VillagesList() {
   const { t } = useTranslation();
+  usePageTitle(t('villagesList.title'));
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);

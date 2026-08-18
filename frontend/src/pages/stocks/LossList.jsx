@@ -6,6 +6,7 @@ import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
 import { useLossRecords } from '@/hooks/useTransactions';
 import { useConstants } from '@/hooks/useConstants';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Real browsable Loss list, replacing the previous /stocks/loss page,
 // which queried stocks where stock_type='Loss' — a data shape nothing in
@@ -14,6 +15,7 @@ import { useConstants } from '@/hooks/useConstants';
 // transaction is created; this just makes that number browsable.
 export default function LossList() {
   const { t } = useTranslation();
+  usePageTitle(t('lossList.title'));
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [product, setProduct] = useState('');

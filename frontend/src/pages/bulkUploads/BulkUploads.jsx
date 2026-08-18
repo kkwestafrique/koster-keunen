@@ -7,6 +7,7 @@ import DataTable from '@/components/common/DataTable';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const STATUS_OPTIONS = ['Cancelled', 'Inprogress', 'Completed', 'Failed'];
 const STATUS_COLORS = {
@@ -30,6 +31,7 @@ function UploadStatus({ status }) {
 
 function UploadHistoryTable({ uploadType, showProgress, testId }) {
   const { t } = useTranslation();
+  usePageTitle(t('bulkUploads.title'));
   const { supplyChainId } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
