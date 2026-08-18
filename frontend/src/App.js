@@ -61,12 +61,8 @@ function AppRoutes() {
 
       {/* Commercial partners > Actors */}
       <Route
-        path="/actors/potential"
-        element={<ProtectedRoute><ActorsList fixedStatus="Inactive" title="Actors — Potential" testId="actors-potential-table" /></ProtectedRoute>}
-      />
-      <Route
         path="/actors/actual"
-        element={<ProtectedRoute><ActorsList fixedStatus="Active" title="Actors — Achieved" testId="actors-achieved-table" /></ProtectedRoute>}
+        element={<ProtectedRoute><ActorsList testId="actors-table" /></ProtectedRoute>}
       />
       <Route path="/actors/:id" element={<ProtectedRoute><ActorDetail /></ProtectedRoute>} />
 

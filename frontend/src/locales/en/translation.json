@@ -131,7 +131,7 @@
     "categoryBuyer": "Buyer"
   },
   "actorsList": {
-    "title": "Actors List",
+    "title": "Actors",
     "addActor": "Add Actor",
     "searchPlaceholder": "Search by code or name...",
     "allActorType": "All actor type",

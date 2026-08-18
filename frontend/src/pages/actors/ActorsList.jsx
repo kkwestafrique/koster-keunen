@@ -20,8 +20,7 @@ import { useActorTypes } from '@/hooks/useActorTypes';
 // two can never silently drift apart.
 const ACTOR_TYPE_FILTER_OPTIONS = ACTOR_TYPES;
 
-// fixedStatus: 'Inactive' -> Potential actors, 'Active' -> Achieved (confirmed) actors, null -> all
-export default function ActorsList({ fixedStatus, title, testId }) {
+export default function ActorsList({ title, testId }) {
   const { t } = useTranslation();
   const { profile } = useAuth();
   const { data: actorTypeOptions = ACTOR_TYPE_FILTER_OPTIONS } = useActorTypes();
@@ -51,7 +50,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
     pageSize,
     search,
     actorType,
-    status: fixedStatus || status,
+    status,
     connectedOnly,
     currentActorId: profile?.current_actor_id,
   });
@@ -92,7 +91,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
             onChange: (v) => { setActorType(v); setPage(1); },
             options: actorTypeOptions.map((v) => ({ value: v, label: v })),
           },
-          ...(fixedStatus ? [] : [{
+          {
             key: 'status',
             label: t('actorsList.allStatus'),
             value: status,
@@ -102,7 +101,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
               { value: 'Inactive', label: t('common.inactive') },
               { value: 'Disabled', label: t('common.disabled') },
             ],
-          }]),
+          },
         ]}
       />
 

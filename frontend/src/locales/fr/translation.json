@@ -131,7 +131,7 @@
     "categoryBuyer": "Acheteur"
   },
   "actorsList": {
-    "title": "Liste des acteurs",
+    "title": "Acteurs",
     "addActor": "Ajouter un acteur",
     "searchPlaceholder": "Rechercher par code ou nom...",
     "allActorType": "Tous les types d'acteurs",
