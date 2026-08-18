@@ -751,5 +751,9 @@
     "verifyFailed": "Impossible de vérifier la revendication",
     "claimRejected": "Revendication rejetée",
     "rejectFailed": "Impossible de rejeter la revendication"
+  },
+  "charter": {
+    "tableOfContents": "Table des matières",
+    "readCharter": "Lire la Charte complète"
   }
 }

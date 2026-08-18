@@ -751,5 +751,9 @@
     "verifyFailed": "Could not verify claim",
     "claimRejected": "Claim rejected",
     "rejectFailed": "Could not reject claim"
+  },
+  "charter": {
+    "tableOfContents": "Table contents",
+    "readCharter": "Read the full Charter"
   }
 }

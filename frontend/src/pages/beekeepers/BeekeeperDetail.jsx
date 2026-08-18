@@ -154,6 +154,15 @@ function HeaderCard({ bk }) {
             <label className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
               <Checkbox data-testid="bk-header-edit-charter" checked={form.charter_signed} onCheckedChange={set('charter_signed')} /> {t('forms.readAndApprove')}
             </label>
+            <a
+              href="/beekeeper-charter"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="bk-header-charter-link"
+              className="text-xs text-[#0f48aa] hover:underline w-fit"
+            >
+              {t('charter.readCharter')}
+            </a>
           </div>
 
           <div className="flex gap-3">
