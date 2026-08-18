@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useActors, useActingActor } from '@/hooks/useActors';
 import { useAuth } from '@/contexts/AuthContext';
-import { Checkbox } from '@/components/ui/checkbox';
 import ActorFormDialog from '@/pages/actors/ActorFormDialog';
 import { ACTOR_TYPES } from '@/data/regions';
 import { useActorTypes } from '@/hooks/useActorTypes';
@@ -24,7 +23,7 @@ const ACTOR_TYPE_FILTER_OPTIONS = ACTOR_TYPES;
 // fixedStatus: 'Inactive' -> Potential actors, 'Active' -> Achieved (confirmed) actors, null -> all
 export default function ActorsList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
-  const { profile, role } = useAuth();
+  const { profile } = useAuth();
   const { data: actorTypeOptions = ACTOR_TYPE_FILTER_OPTIONS } = useActorTypes();
   const [page, setPage] = useState(1);
   // Gap 13: was 5 -- the same default the real platform's own audit
@@ -38,19 +37,14 @@ export default function ActorsList({ fixedStatus, title, testId }) {
   const navigate = useNavigate();
   const { isReadOnly } = useActingActor();
 
-  // RLS on the `actors` table (backend/migrations/2026_actors_connection_scoped_rls.sql)
-  // is the REAL, unbypassable restriction for Member/Field Officer -- it
-  // deliberately still includes `id = auth_current_actor_id()`, because
-  // Company Profile's own single-record fetch (useActor(currentActorId))
-  // relies on that same policy and genuinely needs to see your own actor.
-  // Removing that clause from RLS was tried and reverted -- it broke
-  // Company Profile. So RLS alone can't distinguish "list view" from
-  // "fetch my own profile"; that distinction has to happen here instead.
-  // connectedOnly's client-side logic (which explicitly excludes self,
-  // see useActors.js) is what actually produces the right LIST content --
-  // unconditionally on for Member/Field Officer, not optional.
-  const isAdmin = role === 'Admin';
-  const [connectedOnly, setConnectedOnly] = useState(false);
+  // No toggle, for any role. Every actor list is unconditionally scoped
+  // to real, active connections with your current actor, excluding
+  // yourself. There is no control, no checkbox, no way to opt into seeing
+  // the full company directory from this page, for anyone -- that need is
+  // served separately by useActorDirectory() inside Add Connection, the
+  // Contract wizard's supplier picker, and Send's destination picker,
+  // where browsing everyone is a genuine, distinct, deliberate need.
+  const connectedOnly = true;
 
   const { data, isLoading } = useActors({
     page,
@@ -58,7 +52,7 @@ export default function ActorsList({ fixedStatus, title, testId }) {
     search,
     actorType,
     status: fixedStatus || status,
-    connectedOnly: isAdmin ? connectedOnly : true,
+    connectedOnly,
     currentActorId: profile?.current_actor_id,
   });
 
@@ -111,16 +105,6 @@ export default function ActorsList({ fixedStatus, title, testId }) {
           }]),
         ]}
       />
-
-      {isAdmin && (
-        <label className="flex items-center gap-2 mb-4 cursor-pointer w-fit" data-testid="actors-connected-only-toggle">
-          <Checkbox
-            checked={connectedOnly}
-            onCheckedChange={(v) => { setConnectedOnly(!!v); setPage(1); }}
-          />
-          <span className="text-sm text-[#032b71]">{t('actorsList.showConnectedOnly')}</span>
-        </label>
-      )}
 
       <DataTable
         testId={testId}

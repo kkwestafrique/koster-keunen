@@ -134,7 +134,6 @@
     "title": "Liste des acteurs",
     "addActor": "Ajouter un acteur",
     "searchPlaceholder": "Rechercher par code ou nom...",
-    "showConnectedOnly": "Afficher uniquement les acteurs auxquels je suis connecté",
     "allActorType": "Tous les types d'acteurs",
     "allStatus": "Tous les statuts",
     "allCountry": "Tous les pays",
