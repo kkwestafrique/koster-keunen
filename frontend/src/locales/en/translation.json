@@ -649,7 +649,8 @@
     "noData": "No data found for the selected filters",
     "dateFrom": "Start date",
     "dateTo": "End date",
-    "title": "Reports"
+    "title": "Reports",
+    "exportRestricted": "Only Admins and Members can generate exports"
   },
   "bulkUploads": {
     "fileName": "File name",

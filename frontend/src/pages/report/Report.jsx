@@ -16,6 +16,7 @@ import { useCreateExport, useUpdateExport } from '@/hooks/useExports';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const YEARS = ['2027', '2026', '2025', '2024', '2023', '2022'];
 
@@ -75,6 +76,7 @@ export default function Report() {
   usePageTitle(t('report.title'));
   const { toast } = useToast();
   const { supplyChainId } = useAuth();
+  const { canEdit } = usePermissions();
   const createExport = useCreateExport();
   const updateExport = useUpdateExport();
   const [activeReport, setActiveReport] = useState(null); // {key, modal, table, ...}
@@ -318,7 +320,13 @@ export default function Report() {
             <Button variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => setActiveReport(null)}>
               {t('common.cancel')}
             </Button>
-            <Button data-testid="report-generate" disabled={generating} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={generate}>
+            <Button
+              data-testid="report-generate"
+              disabled={generating || !canEdit}
+              title={!canEdit ? t('report.exportRestricted') : undefined}
+              className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50"
+              onClick={generate}
+            >
               {generating ? t('report.generating') : t('report.generateReport')}
             </Button>
           </DialogFooter>

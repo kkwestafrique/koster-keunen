@@ -649,7 +649,8 @@
     "noData": "Aucune donnée trouvée pour les filtres sélectionnés",
     "dateFrom": "Date de début",
     "dateTo": "Date de fin",
-    "title": "Rapports"
+    "title": "Rapports",
+    "exportRestricted": "Seuls les administrateurs et les membres peuvent générer des exports"
   },
   "bulkUploads": {
     "fileName": "Nom du fichier",
