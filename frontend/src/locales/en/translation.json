@@ -19,7 +19,8 @@
     "villages": "Villages",
     "connections": "Connections",
     "products": "Products",
-    "verifications": "Verifications"
+    "verifications": "Verifications",
+    "activityLog": "Activity log"
   },
   "topbar": {
     "myActor": "My Actor",
@@ -785,5 +786,19 @@
     "title": "Products",
     "description": "The real, editable product catalogue this system's forms and lists draw from.",
     "name": "Product name"
+  },
+  "activityLog": {
+    "title": "Activity log",
+    "description": "A record of who created or last touched each item across the app, most recently touched first.",
+    "type": "Type",
+    "record": "Record",
+    "createdBy": "Created by",
+    "createdAt": "Created on",
+    "lastUpdatedBy": "Last updated by",
+    "lastUpdatedAt": "Last updated on",
+    "unknown": "Unknown",
+    "allTypes": "All types",
+    "searchPlaceholder": "Search by record name...",
+    "noRecords": "No activity found."
   }
 }

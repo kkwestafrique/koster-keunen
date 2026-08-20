@@ -19,7 +19,8 @@
     "villages": "Villages",
     "connections": "Connexions",
     "products": "Produits",
-    "verifications": "Vérifications"
+    "verifications": "Vérifications",
+    "activityLog": "Journal d'activité"
   },
   "topbar": {
     "myActor": "Mon acteur",
@@ -785,5 +786,19 @@
     "title": "Produits",
     "description": "Le catalogue de produits réel et modifiable utilisé par les formulaires et listes de ce système.",
     "name": "Nom du produit"
+  },
+  "activityLog": {
+    "title": "Journal d'activité",
+    "description": "Un registre de qui a créé ou modifié en dernier chaque élément dans l'application, du plus récent au plus ancien.",
+    "type": "Type",
+    "record": "Enregistrement",
+    "createdBy": "Créé par",
+    "createdAt": "Créé le",
+    "lastUpdatedBy": "Dernière modification par",
+    "lastUpdatedAt": "Dernière modification le",
+    "unknown": "Inconnu",
+    "allTypes": "Tous les types",
+    "searchPlaceholder": "Rechercher par nom d'enregistrement...",
+    "noRecords": "Aucune activité trouvée."
   }
 }

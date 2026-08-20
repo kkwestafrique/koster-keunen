@@ -31,6 +31,7 @@ import Report from '@/pages/report/Report';
 import UserProfile from '@/pages/UserProfile';
 import StockDetail from '@/pages/stocks/StockDetail';
 import VerificationQueue from '@/pages/verification/VerificationQueue';
+import ActivityLog from '@/pages/ActivityLog';
 import BeekeeperCharter from '@/pages/BeekeeperCharter';
 import ProductsList from '@/pages/products/ProductsList';
 
@@ -134,6 +135,7 @@ function AppRoutes() {
       <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path="/stocks/detail/:id" element={<ProtectedRoute><StockDetail /></ProtectedRoute>} />
       <Route path="/verifications" element={<ProtectedRoute><VerificationQueue /></ProtectedRoute>} />
+      <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />
       <Route path="/beekeeper-charter" element={<ProtectedRoute><BeekeeperCharter /></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><ProductsList /></ProtectedRoute>} />
 

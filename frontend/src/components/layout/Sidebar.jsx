@@ -12,6 +12,7 @@ import {
   PieChart,
   Package,
   ShieldCheck,
+  History,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
@@ -61,6 +62,7 @@ const NAV_ITEMS = [
   { key: 'bulkUploads', labelKey: 'nav.bulkUploads', icon: FileSpreadsheet, to: '/bulk-uploads' },
   { key: 'products', labelKey: 'nav.products', icon: Package, to: '/products' },
   { key: 'verifications', labelKey: 'nav.verifications', icon: ShieldCheck, to: '/verifications' },
+  { key: 'activityLog', labelKey: 'nav.activityLog', icon: History, to: '/activity-log' },
   { key: 'report', labelKey: 'nav.report', icon: PieChart, to: '/report' },
 ];
 
