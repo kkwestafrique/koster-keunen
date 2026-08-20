@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, Paperclip } from 'lucide-react';
 import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction } from '@/hooks/useTransactions';
-import { uploadMediaFile, supabase } from '@/lib/supabaseClient';
+import { uploadMediaFile, supabase, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
@@ -201,7 +201,7 @@ export default function TransactionDetail() {
                 >
                   <Paperclip className="h-3 w-3 mr-1" /> {uploading ? t('forms.saving') : t('transactionDetail.attachFile')}
                 </Button>
-                <input ref={fileInputRef} type="file" className="hidden" onChange={handleAttachFile} />
+                <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT_ATTR} className="hidden" onChange={handleAttachFile} />
                 {tx.attachment_url && (
                   <a href={tx.attachment_url} target="_blank" rel="noreferrer" className="text-xs text-[#0f48aa] underline">
                     {t('contractWizard.attachedFile')}

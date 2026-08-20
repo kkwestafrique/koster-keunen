@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, Pencil } from 'lucide-react';
 import { useContract, useUpdateContractGroup, useContractDeliveries } from '@/hooks/useContracts';
 import FormattedNumberInput from '@/components/common/FormattedNumberInput';
-import { uploadMediaFile } from '@/lib/supabaseClient';
+import { uploadMediaFile, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
@@ -117,7 +117,7 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
               {t('contractWizard.uploadFile')}
             </Button>
             <span className="text-sm text-[#7089b4] truncate">{newFile?.name || t('forms.noFileChosen')}</span>
-            <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => setNewFile(e.target.files?.[0] || null)} />
+            <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT_ATTR} className="hidden" onChange={(e) => setNewFile(e.target.files?.[0] || null)} />
           </div>
         </div>
 

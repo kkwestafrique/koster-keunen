@@ -21,6 +21,24 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 export const MEDIA_BUCKET = 'media';
 
+// Mirrors the media bucket's server-side allowed_mime_types and
+// file_size_limit (Supabase Dashboard > Storage > media > Configuration).
+// The server is the real enforcement — a request with a disallowed type or
+// an oversized file is rejected by the Storage API itself, not just by this
+// check. This client-side copy exists only to fail fast with a plain-language
+// message instead of making the person wait for the upload to run and then
+// see a raw storage error.
+export const MEDIA_ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+  'text/csv',
+];
+export const MEDIA_MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB
+export const MEDIA_ACCEPT_ATTR = '.jpg,.jpeg,.png,.webp,.gif,.pdf,.csv';
+
 export function getPublicMediaUrl(path) {
   if (!path) return null;
   const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
@@ -28,6 +46,13 @@ export function getPublicMediaUrl(path) {
 }
 
 export async function uploadMediaFile(file, folder, supplyChainId) {
+  if (!MEDIA_ALLOWED_MIME_TYPES.includes(file.type)) {
+    throw new Error('That file type isn\'t supported. Please upload an image (JPG, PNG, WEBP, GIF), a PDF, or a CSV file.');
+  }
+  if (file.size > MEDIA_MAX_FILE_SIZE_BYTES) {
+    throw new Error('That file is too large. Please upload a file under 15 MB.');
+  }
+
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
   // Path is folder/{supply_chain_id}/filename — the storage RLS policies

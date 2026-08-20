@@ -14,7 +14,7 @@ import { useCountries } from '@/hooks/useReferenceData';
 import { useActorDirectory, useActingActor } from '@/hooks/useActors';
 import { useCreateContract } from '@/hooks/useContracts';
 import { useToast } from '@/hooks/use-toast';
-import { uploadMediaFile } from '@/lib/supabaseClient';
+import { uploadMediaFile, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
@@ -283,6 +283,7 @@ export default function ContractWizard() {
                   <input
                     ref={fileInputRef}
                     type="file"
+                    accept={MEDIA_ACCEPT_ATTR}
                     className="hidden"
                     onChange={(e) => setContractFile(e.target.files?.[0] || null)}
                   />
