@@ -1,25 +1,37 @@
 // Supabase Edge Function: invite-team-member
 //
-// Creates a REAL login for an invited team member — the client-side
-// `team_members` insert alone can't do this, because creating an
-// auth.users account requires the service-role key, which must never be
-// exposed to the browser. This function holds that key server-side only.
+// Creates a REAL login for an invited team member, OR -- new in this
+// version -- adds an EXISTING account to a second actor's team, but only
+// when that invite is for the Admin role. Only Admin can belong to more
+// than one actor; Member/Field Officer are locked to exactly one (also
+// enforced at the database level by a trigger on team_members, so this
+// check here is a friendlier duplicate of that real enforcement, not the
+// only place it's protected).
 //
 // Flow:
 //   1. Verify the caller (via their own JWT) is an Admin on the actor's
-//      supply chain — mirrors what RLS would enforce, done manually here
-//      because this function uses the service-role client for the
-//      privileged parts (auth.admin, and writing user_accounts, which the
-//      caller has no direct RLS-permitted access to for other people).
-//   2. Send a real Supabase Auth invite email (creates the auth.users row).
-//   3. Create the matching user_accounts row (login identity + role +
-//      supply chain + starting actor).
-//   4. Create the team_members row (the existing contact-list entry).
+//      supply chain.
+//   2. Rate limit: this function uses the service-role key to send real
+//      emails and create real auth accounts, which bypasses Supabase's
+//      normal public-signup rate limits entirely. Before doing any real
+//      work, check how many invite attempts this caller has made in the
+//      last hour and reject with 429 if over the limit.
+//   3. Check whether the invited email already has an account:
+//      - If yes AND role is Admin: add a new team_members row for the
+//        existing user_id on this new actor. No new auth user, no new
+//        user_accounts row (one already exists).
+//      - If yes AND role is Member/Field Officer: reject with a clear
+//        message -- they already belong elsewhere and can't join a
+//        second actor except as Admin.
+//      - If no: proceed exactly as before -- send a real Supabase Auth
+//        invite email (creates the auth.users row), then create
+//        user_accounts, then create team_members.
 //
-// The invited person clicks the emailed link, lands on /set-up-password
-// (redirectTo, provided by the caller since it knows its own origin),
-// which establishes a Supabase session from the invite token and lets
-// them set a password via supabase.auth.updateUser({ password }).
+// The invited person (new-account case) clicks the emailed link, lands on
+// /set-up-password (redirectTo, provided by the caller since it knows its
+// own origin), which establishes a Supabase session from the invite token
+// and lets them set a password. That page flips team_members.status from
+// 'Pending' to 'Active'.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -28,14 +40,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// team_members.role (Admin/Member/Field Officer) uses a different
-// vocabulary than user_accounts.role (Admin/Manager/Viewer) — this is the
-// same mapping decision the rest of the app would need to make.
-const TEAM_ROLE_TO_ACCOUNT_ROLE = {
-  Admin: 'Admin',
-  'Field Officer': 'Manager',
-  Member: 'Viewer',
-};
+const VALID_ROLES = ['Admin', 'Member', 'Field Officer'];
+
+// 20 invites per caller per rolling hour. Generous enough for a real team
+// onboarding a batch of people at once, tight enough that a compromised or
+// malicious Admin account can't use this to flood inboxes or enumerate
+// which emails have accounts via repeated calls.
+const RATE_LIMIT_MAX_ATTEMPTS = 20;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -51,7 +63,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    if (!TEAM_ROLE_TO_ACCOUNT_ROLE[role]) {
+    if (!VALID_ROLES.includes(role)) {
       return new Response(JSON.stringify({ error: `Invalid role: ${role}` }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -70,17 +82,10 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    // Acts as the calling user (their own JWT, RLS fully applies) — used
-    // only to establish who's calling and to confirm the target actor is
-    // really in their supply chain, exactly like the browser client would
-    // already be restricted to.
     const supabaseAsCaller = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Bypasses RLS entirely — needed for auth.admin and for writing
-    // user_accounts/team_members on behalf of someone who isn't the
-    // caller. Never exposed to the browser.
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: userData, error: userError } = await supabaseAsCaller.auth.getUser();
@@ -109,9 +114,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // RLS (actors_scoped) means this only returns a row if the actor is
-    // really in the caller's supply chain — a stranger's actor id here
-    // would just come back empty.
+    // Rate limit check -- counts this caller's attempts in the rolling
+    // window, using the service-role client since invite_attempts has no
+    // RLS policies granting access to anyone else.
+    const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+    const { count: recentAttempts, error: rateLimitError } = await supabaseAdmin
+      .from('invite_attempts')
+      .select('id', { count: 'exact', head: true })
+      .eq('caller_id', userData.user.id)
+      .gte('created_at', windowStart);
+    if (rateLimitError) {
+      // Fail closed on a rate-limit check we can't verify -- refusing an
+      // invite is a much smaller cost than silently disabling the limit.
+      return new Response(JSON.stringify({ error: 'Could not verify request rate. Please try again shortly.' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if ((recentAttempts ?? 0) >= RATE_LIMIT_MAX_ATTEMPTS) {
+      return new Response(JSON.stringify({
+        error: `You've sent too many invites in the last hour. Please wait a while before sending more.`,
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    // Record this attempt before doing any real work, so a request that
+    // fails partway through still counts toward the caller's limit.
+    await supabaseAdmin.from('invite_attempts').insert({ caller_id: userData.user.id });
+
     const { data: actor, error: actorError } = await supabaseAsCaller
       .from('actors')
       .select('id, supply_chain_id')
@@ -124,13 +155,57 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Detect whether this email already belongs to an existing account.
+    const { data: existingUserId, error: lookupError } = await supabaseAdmin.rpc('get_user_id_by_email', { p_email: email });
+    if (lookupError) {
+      return new Response(JSON.stringify({ error: `Failed to check existing accounts: ${lookupError.message}` }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (existingUserId) {
+      // Existing account: only Admin can be added to a second actor.
+      if (role !== 'Admin') {
+        return new Response(JSON.stringify({
+          error: `${email} already has an account on another actor. Only Admins can belong to more than one actor -- either invite them as Admin, or remove them from their current actor first.`,
+        }), {
+          status: 409,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: teamMember, error: teamMemberError } = await supabaseAdmin
+        .from('team_members')
+        .insert({ actor_id: actorId, name, email, role, status: 'Active', user_id: existingUserId })
+        .select()
+        .single();
+      if (teamMemberError) {
+        return new Response(JSON.stringify({ error: `Failed to add existing account to this actor: ${teamMemberError.message}` }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, team_member: teamMember, user_id: existingUserId, addedExistingAccount: true }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // No existing account -- proceed with a real new invite.
     const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       redirectTo: redirectTo || undefined,
       data: { full_name: name },
     });
     if (inviteError) {
-      return new Response(JSON.stringify({ error: inviteError.message }), {
-        status: 400,
+      const alreadyExists = /already been registered|already exists|already registered/i.test(inviteError.message || '');
+      return new Response(JSON.stringify({
+        error: alreadyExists
+          ? `${email} has already been invited. Ask them to check their inbox, or use "Forgot password" if they need a new link.`
+          : inviteError.message,
+      }), {
+        status: alreadyExists ? 409 : 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -140,13 +215,11 @@ Deno.serve(async (req) => {
     const { error: accountError } = await supabaseAdmin.from('user_accounts').insert({
       id: newUserId,
       username: name,
-      role: TEAM_ROLE_TO_ACCOUNT_ROLE[role],
+      role,
       supply_chain_id: callerAccount.supply_chain_id,
       current_actor_id: actorId,
     });
     if (accountError) {
-      // Roll back the auth user so a failed invite doesn't leave a
-      // dangling login with no app-side record.
       await supabaseAdmin.auth.admin.deleteUser(newUserId);
       return new Response(JSON.stringify({ error: `Failed to create account: ${accountError.message}` }), {
         status: 500,
@@ -156,7 +229,7 @@ Deno.serve(async (req) => {
 
     const { data: teamMember, error: teamMemberError } = await supabaseAdmin
       .from('team_members')
-      .insert({ actor_id: actorId, name, email, role, status: 'Invited' })
+      .insert({ actor_id: actorId, name, email, role, status: 'Pending', user_id: newUserId })
       .select()
       .single();
     if (teamMemberError) {
