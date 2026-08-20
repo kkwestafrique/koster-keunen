@@ -29,14 +29,27 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 function BatchChips({ batches, testId }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   if (!batches || batches.length === 0) return <span className="text-sm text-[#7089b4]">—</span>;
   return (
     <div className="flex flex-wrap gap-2" data-testid={testId}>
-      {batches.map((b, idx) => (
-        <span key={idx} className="inline-flex items-center gap-1 bg-[#ebf6ff] border border-[#cfd8e6] rounded-full px-3 py-1 text-xs text-[#032b71]">
-          {b.label} {b.quantity != null && <span className="font-bold">{b.quantity} {b.unit || 'Kg'}</span>}
-        </span>
-      ))}
+      {batches.map((b, idx) =>
+        b.stockId ? (
+          <button
+            key={idx}
+            type="button"
+            data-testid={`${testId}-link-${idx}`}
+            onClick={() => navigate(`/stocks/detail/${b.stockId}`)}
+            className="inline-flex items-center gap-1 bg-[#ebf6ff] border border-[#cfd8e6] rounded-full px-3 py-1 text-xs text-[#0f48aa] hover:underline hover:border-[#0f48aa] transition-colors cursor-pointer"
+          >
+            {b.label} {b.quantity != null && <span className="font-bold">{b.quantity} {b.unit || 'Kg'}</span>}
+          </button>
+        ) : (
+          <span key={idx} className="inline-flex items-center gap-1 bg-[#ebf6ff] border border-[#cfd8e6] rounded-full px-3 py-1 text-xs text-[#032b71]">
+            {b.label} {b.quantity != null && <span className="font-bold">{b.quantity} {b.unit || 'Kg'}</span>}
+          </span>
+        )
+      )}
     </div>
   );
 }
@@ -83,6 +96,7 @@ export default function TransactionDetail() {
     label: s.stocks?.batch_reference,
     quantity: s.quantity_selected,
     unit: s.stocks?.unit,
+    stockId: s.stocks?.id,
   }));
   const destinationBatchChips = (tx.products || [])
     .filter((p) => p.destination_batch)

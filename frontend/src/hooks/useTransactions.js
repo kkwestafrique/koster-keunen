@@ -378,7 +378,7 @@ export function useTransactionBatchSelections(transactionGroupId) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('transaction_batch_selections')
-        .select('id, quantity_selected, stocks(batch_reference, unit)')
+        .select('id, quantity_selected, stocks(id, batch_reference, unit)')
         .eq('transaction_group_id', transactionGroupId);
       if (error) throw error;
       return data;
