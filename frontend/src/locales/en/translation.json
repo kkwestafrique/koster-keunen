@@ -507,7 +507,10 @@
     "deliveryNotification": "Delivery notification",
     "noDeliveryNotificationsFound": "No delivery notifications found",
     "deliveringQuantity": "Delivering quantity",
-    "expectedDeliveryDate": "Expected delivery date"
+    "expectedDeliveryDate": "Expected delivery date",
+    "addDelivery": "Add delivery",
+    "deliveryAdded": "Delivery notification added",
+    "deliveryAddFailed": "Could not add delivery notification"
   },
   "receiveForm": {
     "singleTransaction": "Single transaction",

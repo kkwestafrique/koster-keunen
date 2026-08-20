@@ -94,10 +94,9 @@ export function useContract(code) {
 // actor_id, currency, contract_type, country, advance_amount_paid,
 // advance_percent, comments, signature_date) and each entry in `products` is
 // { product, expected_quantity, unit, price }.
-// "Delivery notification" tab on the Contract detail page. Read-only for
-// now — the audit couldn't observe how a delivery gets added (no add-
-// action was visible on a contract with none recorded yet), so only the
-// read side is built; adding one is deliberately not guessed at.
+// "Delivery notification" tab on the Contract detail page. Product,
+// delivering quantity, expected delivery date, comment — exactly the
+// columns observed live on the site.
 export function useContractDeliveries(contractGroupId) {
   return useQuery({
     queryKey: ['contract-deliveries', contractGroupId],
@@ -111,6 +110,41 @@ export function useContractDeliveries(contractGroupId) {
       return data;
     },
     enabled: !!contractGroupId,
+  });
+}
+
+// Adding a delivery notification was never observed live (the audit found
+// no add-action on the one contract it checked, which had none recorded
+// yet) -- this is a best-effort design built from the fields that WERE
+// observed, not a replicated flow. Deliberately does NOT touch stocks or
+// transactions: "Expected delivery date" / "Delivering quantity" read as
+// a forward-looking notice of something coming, not a receipt event --
+// that's what the separate Transactions module already handles. RLS
+// (contract_delivery_notifications_insert) independently restricts this
+// to Admin/Member, matching the UI gate below.
+export function useCreateContractDelivery() {
+  const queryClient = useQueryClient();
+  const { supplyChainId } = useAuth();
+  return useMutation({
+    mutationFn: async ({ contractGroupId, product, deliveringQuantity, expectedDeliveryDate, comment }) => {
+      const { data, error } = await supabase
+        .from('contract_delivery_notifications')
+        .insert({
+          contract_group_id: contractGroupId,
+          supply_chain_id: supplyChainId,
+          product,
+          delivering_quantity: deliveringQuantity,
+          expected_delivery_date: expectedDeliveryDate,
+          comment: comment || null,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['contract-deliveries', variables.contractGroupId] });
+    },
   });
 }
 

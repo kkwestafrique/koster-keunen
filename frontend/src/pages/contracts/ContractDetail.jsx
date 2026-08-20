@@ -9,8 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Pencil } from 'lucide-react';
-import { useContract, useUpdateContractGroup, useContractDeliveries } from '@/hooks/useContracts';
+import { ChevronLeft, Pencil, Plus } from 'lucide-react';
+import { useContract, useUpdateContractGroup, useContractDeliveries, useCreateContractDelivery } from '@/hooks/useContracts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import FormattedNumberInput from '@/components/common/FormattedNumberInput';
 import { uploadMediaFile, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -159,15 +161,120 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
   );
 }
 
-// Read-only for now — the audit explicitly could not observe how a
-// delivery gets added (no add-action was visible on a contract with none
-// recorded yet), so that part is deliberately not guessed at here.
-function DeliveryNotificationTab({ contractGroupId }) {
+// Adding a delivery notification was never observed on the live site --
+// the audit explicitly could not find an add-action on the one contract
+// it checked (which had none recorded yet). This is a best-effort design
+// built from the fields that WERE observed (Product / Delivering
+// quantity / Expected delivery date / Comment), not a replicated flow.
+// Documented assumptions, not facts:
+//  - Gated to Admin/Member (canEdit) -- matches how contracts themselves
+//    are created, and matches the RLS policy on this table's INSERT,
+//    which independently enforces the same restriction.
+//  - Deliberately does NOT touch stocks or transactions. "Expected
+//    delivery date" / "Delivering quantity" read as a forward-looking
+//    notice of something coming, not a receipt event -- the separate
+//    Transactions module already handles actual receipts.
+//  - No approval step, matching how Contracts/Actors work (only
+//    Transactions and Claims were observed to have an explicit
+//    approval workflow).
+//  - Product is chosen from THIS contract's own product lines, so a
+//    delivery can't be logged against something the contract never
+//    actually covers.
+function DeliveryNotificationTab({ contractGroupId, contractProducts, canAdd }) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const { data: deliveries = [] } = useContractDeliveries(contractGroupId);
+  const createDelivery = useCreateContractDelivery();
+
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ product: '', delivering_quantity: '', expected_delivery_date: '', comment: '' });
+  const [saving, setSaving] = useState(false);
+
+  const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+  const isValid = form.product && form.delivering_quantity && form.expected_delivery_date;
+
+  const resetAndClose = () => {
+    setOpen(false);
+    setForm({ product: '', delivering_quantity: '', expected_delivery_date: '', comment: '' });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await createDelivery.mutateAsync({
+        contractGroupId,
+        product: form.product,
+        deliveringQuantity: Number(form.delivering_quantity),
+        expectedDeliveryDate: form.expected_delivery_date,
+        comment: form.comment,
+      });
+      toast({ title: t('contractDetail.deliveryAdded') });
+      resetAndClose();
+    } catch (err) {
+      toast({ title: t('contractDetail.deliveryAddFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="bg-white border border-[#cfd8e6] rounded-b-[5px] border-t-0 p-6" data-testid="contract-detail-deliveries">
+      {canAdd && (
+        <div className="flex justify-end mb-4">
+          <Button
+            type="button"
+            variant="outline"
+            data-testid="add-delivery-trigger"
+            className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#f5f5f5]"
+            onClick={() => setOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" /> {t('contractDetail.addDelivery')}
+          </Button>
+          <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : resetAndClose())}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-[#032b71] font-black">{t('contractDetail.addDelivery')}</DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <RequiredLabel required>{t('contractWizard.product')}</RequiredLabel>
+                  <Select value={form.product} onValueChange={set('product')}>
+                    <SelectTrigger className="bg-white" data-testid="delivery-product"><SelectValue placeholder={t('contractWizard.product')} /></SelectTrigger>
+                    <SelectContent>
+                      {contractProducts.map((p, idx) => (
+                        <SelectItem key={p.product || idx} value={p.product}>{p.product}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <RequiredLabel required>{t('contractDetail.deliveringQuantity')}</RequiredLabel>
+                  <FormattedNumberInput
+                    testId="delivery-quantity"
+                    value={form.delivering_quantity}
+                    onChange={set('delivering_quantity')}
+                    errorMessage={t('contractDetail.invalidQuantity')}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <RequiredLabel required>{t('contractDetail.expectedDeliveryDate')}</RequiredLabel>
+                  <Input type="date" className="bg-white" data-testid="delivery-date" value={form.expected_delivery_date} onChange={(e) => set('expected_delivery_date')(e.target.value)} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <RequiredLabel required={false}>{t('contractWizard.comments')}</RequiredLabel>
+                  <Textarea data-testid="delivery-comment" value={form.comment} onChange={(e) => set('comment')(e.target.value)} />
+                </div>
+              </div>
+              <DialogFooter className="mt-2">
+                <Button variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={resetAndClose}>{t('common.cancel')}</Button>
+                <Button data-testid="delivery-save" disabled={saving || !isValid} onClick={handleSave} className="bg-[#0f48aa] text-white hover:bg-[#0d3c8f]">
+                  {saving ? t('forms.saving') : t('common.save')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
       {deliveries.length === 0 ? (
         <p className="text-sm text-[#7089b4]" data-testid="contract-deliveries-empty">{t('contractDetail.noDeliveryNotificationsFound')}</p>
       ) : (
@@ -349,7 +456,7 @@ export default function ContractDetail() {
         </TabsContent>
 
         <TabsContent value="deliveries">
-          <DeliveryNotificationTab contractGroupId={contract.contract_group_id} />
+          <DeliveryNotificationTab contractGroupId={contract.contract_group_id} contractProducts={products} canAdd={canEdit && !isReadOnly} />
         </TabsContent>
       </Tabs>
 
