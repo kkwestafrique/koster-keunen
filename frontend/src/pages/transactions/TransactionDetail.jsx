@@ -121,7 +121,11 @@ export default function TransactionDetail() {
     setUploading(true);
     try {
       const url = await uploadMediaFile(file, 'transactions', supplyChainId);
-      await supabase.from('transactions').update({ attachment_url: url }).eq('transaction_group_id', tx.transaction_group_id);
+      const { error } = await supabase.rpc('attach_transaction_file', {
+        p_transaction_group_id: tx.transaction_group_id,
+        p_attachment_url: url,
+      });
+      if (error) throw error;
       toast({ title: t('transactionDetail.fileAttached') });
     } catch (err) {
       toast({ title: t('transactionDetail.attachFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });

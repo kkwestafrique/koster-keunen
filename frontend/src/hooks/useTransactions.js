@@ -318,7 +318,13 @@ export function useApproveTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (transactionGroupId) => {
-      const { error } = await supabase.from('transactions').update({ status: 'Approved' }).eq('transaction_group_id', transactionGroupId);
+      // Gap #1 (Critical): transactions were not database-enforced
+      // immutable -- a direct client update/delete would have been
+      // allowed even though no button anywhere used one. Approving is
+      // now a real function with its own explicit authorization check,
+      // not a plain table update; a plain update would now silently
+      // affect zero rows, since RLS blocks it entirely.
+      const { error } = await supabase.rpc('approve_transaction', { p_transaction_group_id: transactionGroupId });
       if (error) throw error;
       return transactionGroupId;
     },
