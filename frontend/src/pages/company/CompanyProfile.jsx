@@ -4,12 +4,12 @@ import AppLayout from '@/components/layout/AppLayout';
 import DetailField from '@/components/common/DetailField';
 import AddressFields from '@/components/common/AddressFields';
 import StandardBadge from '@/components/common/StandardBadge';
+import SubmitClaimDialog from '@/components/common/SubmitClaimDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SharingPanel from './SharingPanel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -18,14 +18,15 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Pencil, MoreVertical, Plus } from 'lucide-react';
-import { ACTOR_TYPES, STANDARDS, TEAM_ROLES } from '@/data/regions';
+import { ACTOR_TYPES, TEAM_ROLES } from '@/data/regions';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useActor, useUpdateActor, useActingActor } from '@/hooks/useActors';
 import {
   useTeamMembers, useInviteTeamMember, useUpdateTeamMemberRole, useRemoveTeamMember,
 } from '@/hooks/useTeamMembers';
-import { uploadMediaFile } from '@/lib/supabaseClient';
+import { useClaimsForEntity } from '@/hooks/useClaims';
+import { uploadMediaFile, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -52,7 +53,7 @@ export default function CompanyProfile() {
   const removeMember = useRemoveTeamMember();
 
   const EMPTY_EDIT_FORM = {
-    contact_name: '', actor_type: '', description: '', standards: [],
+    contact_name: '', actor_type: '', description: '',
     country: '', state_region: '', lga_municipality: '', village: '',
     contact_email: '', contact_phone: '',
   };
@@ -71,12 +72,14 @@ export default function CompanyProfile() {
   // importance) via a DB trigger — never set manually here.
   const completeness = actor.profile_completeness ?? 0;
 
+  const { data: claims = [] } = useClaimsForEntity('actor', actorId);
+  const pendingStandards = claims.filter((c) => c.status === 'Pending').map((c) => c.standard);
+
   const startEdit = () => {
     setEditForm({
       contact_name: actor.contact_name || '',
       actor_type: actor.actor_type || '',
       description: actor.description || '',
-      standards: actor.standards || [],
       country: actor.country || '',
       state_region: actor.state_region || '',
       lga_municipality: actor.lga_municipality || '',
@@ -87,11 +90,6 @@ export default function CompanyProfile() {
     setLogoFile(null);
     setEditing(true);
   };
-
-  const toggleStandard = (std) => setEditForm((f) => ({
-    ...f,
-    standards: f.standards.includes(std) ? f.standards.filter((s) => s !== std) : [...f.standards, std],
-  }));
 
   const saveEdit = async () => {
     setSaving(true);
@@ -170,22 +168,39 @@ export default function CompanyProfile() {
                       {(actor.standards || []).map((s) => (
                         <StandardBadge key={s} standard={s} />
                       ))}
+                      {pendingStandards.map((s) => (
+                        <span key={s} className="text-sm font-bold text-[#7089b4]" data-testid={`company-pending-standard-${s}`}>
+                          {s} ({t('verification.pending')})
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
               </div>
-              {!editing && (
-                <Button
-                  data-testid="company-profile-edit-button"
-                  variant="outline"
-                  onClick={startEdit}
-                  disabled={isReadOnly}
-                  title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
-                  className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#f5f5f5] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Pencil className="h-4 w-4 mr-1" /> {t('actorProfile.edit')}
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {!editing && (
+                  <SubmitClaimDialog
+                    entityType="actor"
+                    entityId={actorId}
+                    currentStandards={actor.standards || []}
+                    pendingStandards={pendingStandards}
+                    disabled={isReadOnly}
+                    testId="company-submit-claim-trigger"
+                  />
+                )}
+                {!editing && (
+                  <Button
+                    data-testid="company-profile-edit-button"
+                    variant="outline"
+                    onClick={startEdit}
+                    disabled={isReadOnly}
+                    title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
+                    className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#f5f5f5] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Pencil className="h-4 w-4 mr-1" /> {t('actorProfile.edit')}
+                  </Button>
+                )}
+              </div>
             </div>
 
             {editing ? (
@@ -213,19 +228,9 @@ export default function CompanyProfile() {
                     ))}
                   </RadioGroup>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4]">{t('forms.addStandards')}</Label>
-                  <div className="flex gap-6">
-                    {STANDARDS.map((std) => (
-                      <label key={std} className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
-                        <Checkbox data-testid={`company-edit-standard-${std}`} checked={editForm.standards.includes(std)} onCheckedChange={() => toggleStandard(std)} /> {std}
-                      </label>
-                    ))}
-                  </div>
-                </div>
                 <div className="flex flex-col gap-1.5 max-w-xs">
                   <Label className="text-[#7089b4]">{t('forms.logo')}</Label>
-                  <Input type="file" accept="image/*" className="bg-white" data-testid="company-edit-logo" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
+                  <Input type="file" accept={MEDIA_ACCEPT_ATTR} className="bg-white" data-testid="company-edit-logo" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
                 </div>
 
                 <div className="flex flex-col gap-1.5">

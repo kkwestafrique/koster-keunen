@@ -761,7 +761,18 @@
     "claimVerified": "Claim verified",
     "verifyFailed": "Could not verify claim",
     "claimRejected": "Claim rejected",
-    "rejectFailed": "Could not reject claim"
+    "rejectFailed": "Could not reject claim",
+    "submitClaim": "Submit a standard for verification",
+    "submitClaimTitle": "Submit for verification",
+    "selectStandard": "Standard",
+    "selectStandardPlaceholder": "Choose a standard",
+    "evidenceNote": "Evidence note",
+    "evidenceNotePlaceholder": "Describe the evidence supporting this claim...",
+    "noStandardsAvailable": "All standards have already been added or are awaiting review.",
+    "pending": "Pending",
+    "claimSubmitted": "Claim submitted for review",
+    "submitFailed": "Could not submit claim",
+    "submit": "Submit"
   },
   "charter": {
     "tableOfContents": "Table contents",

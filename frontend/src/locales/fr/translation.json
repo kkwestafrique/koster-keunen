@@ -761,7 +761,18 @@
     "claimVerified": "Revendication vérifiée",
     "verifyFailed": "Impossible de vérifier la revendication",
     "claimRejected": "Revendication rejetée",
-    "rejectFailed": "Impossible de rejeter la revendication"
+    "rejectFailed": "Impossible de rejeter la revendication",
+    "submitClaim": "Soumettre une norme pour vérification",
+    "submitClaimTitle": "Soumettre pour vérification",
+    "selectStandard": "Norme",
+    "selectStandardPlaceholder": "Choisir une norme",
+    "evidenceNote": "Note justificative",
+    "evidenceNotePlaceholder": "Décrivez les preuves à l'appui de cette demande...",
+    "noStandardsAvailable": "Toutes les normes ont déjà été ajoutées ou sont en attente d'examen.",
+    "pending": "En attente",
+    "claimSubmitted": "Demande soumise pour examen",
+    "submitFailed": "Impossible de soumettre la demande",
+    "submit": "Soumettre"
   },
   "charter": {
     "tableOfContents": "Table des matières",

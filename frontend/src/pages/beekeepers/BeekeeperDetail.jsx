@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import DetailField from '@/components/common/DetailField';
 import StandardBadge from '@/components/common/StandardBadge';
+import SubmitClaimDialog from '@/components/common/SubmitClaimDialog';
 import RequiredLabel from '@/components/common/RequiredLabel';
 import AddressFields from '@/components/common/AddressFields';
 import PhoneInput from '@/components/common/PhoneInput';
@@ -14,11 +15,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
-import { STANDARDS, COMMITMENT_OF_BEEKEEPER, HIVE_SPREAD_CROPS } from '@/data/regions';
+import { COMMITMENT_OF_BEEKEEPER, HIVE_SPREAD_CROPS } from '@/data/regions';
 import { useBeekeeper, useUpdateBeekeeper, useBeekeeperYearlyRecords } from '@/hooks/useBeekeepers';
 import { useBeekeeperTransactions } from '@/hooks/useTransactions';
 import { useFindOrCreateVillage } from '@/hooks/useVillages';
 import { useAllActorsLite } from '@/hooks/useActors';
+import { useClaimsForEntity } from '@/hooks/useClaims';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -36,26 +38,36 @@ function splitPhone(contactPhone) {
 }
 
 // Header card: read view + inline edit (Beekeeper full name*, National ID,
-// Internal code, Add standards* checkboxes, conditional Sustainable
-// Beekeeper charter* checkbox, Linked producer organisation) — matches the
-// live site's header Edit button, which is a DIFFERENT edit surface than
-// the nested "Edit beekeeper details" button further down (audit finding).
+// Internal code, conditional Sustainable Beekeeper charter* checkbox,
+// Linked producer organisation) — matches the live site's header Edit
+// button, which is a DIFFERENT edit surface than the nested "Edit
+// beekeeper details" button further down (audit finding).
+//
+// Standards are deliberately NOT editable here anymore. They used to be
+// plain checkboxes writing straight to bk.standards -- no evidence, no
+// review, a live bypass of the claims verification workflow this app
+// otherwise enforces (see guard_standards_update in the DB and
+// SubmitClaimDialog for the real submission path). The database now
+// rejects a direct write to that column outright; this form just no
+// longer offers it.
 function HeaderCard({ bk }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { canEdit } = usePermissions();
   const updateBeekeeper = useUpdateBeekeeper();
   const { data: actors = [] } = useAllActorsLite();
+  const { data: claims = [] } = useClaimsForEntity('beekeeper', bk.id);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  const pendingStandards = claims.filter((c) => c.status === 'Pending').map((c) => c.standard);
 
   const startEdit = () => {
     setForm({
       full_name: bk.full_name || '',
       national_id: bk.national_id || '',
       internal_code: bk.internal_code || '',
-      standards: bk.standards || [],
       charter_signed: bk.charter_signed || false,
       linked_producer_organisation_id: bk.linked_producer_organisation_id || '',
     });
@@ -63,12 +75,8 @@ function HeaderCard({ bk }) {
   };
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
-  const toggleStandard = (std) => setForm((f) => ({
-    ...f,
-    standards: f.standards.includes(std) ? f.standards.filter((s) => s !== std) : [...f.standards, std],
-  }));
 
-  const charterRequired = form?.standards.includes('Sustainable');
+  const charterRequired = (bk.standards || []).includes('Sustainable');
 
   const handleSave = async () => {
     setSaving(true);
@@ -94,14 +102,30 @@ function HeaderCard({ bk }) {
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-xl font-black text-[#032b71]" data-testid="beekeeper-header-name">{bk.full_name}</h2>
               {(bk.standards || []).map((s) => <StandardBadge key={s} standard={s} />)}
+              {pendingStandards.map((s) => (
+                <span key={s} className="text-sm font-bold text-[#7089b4]" data-testid={`bk-pending-standard-${s}`}>
+                  {s} ({t('verification.pending')})
+                </span>
+              ))}
             </div>
           </div>
         </div>
-        {!editing && canEdit && (
-          <Button variant="outline" data-testid="beekeeper-edit-button" className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#f5f5f5]" onClick={startEdit}>
-            <Pencil className="h-4 w-4 mr-1" /> {t('actorProfile.edit')}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <SubmitClaimDialog
+              entityType="beekeeper"
+              entityId={bk.id}
+              currentStandards={bk.standards || []}
+              pendingStandards={pendingStandards}
+              testId="bk-submit-claim-trigger"
+            />
+          )}
+          {!editing && canEdit && (
+            <Button variant="outline" data-testid="beekeeper-edit-button" className="border-[#0f48aa] text-[#0f48aa] bg-white hover:bg-[#f5f5f5]" onClick={startEdit}>
+              <Pencil className="h-4 w-4 mr-1" /> {t('actorProfile.edit')}
+            </Button>
+          )}
+        </div>
       </div>
 
       {!editing ? (
@@ -135,17 +159,6 @@ function HeaderCard({ bk }) {
                   {actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <RequiredLabel required>{t('forms.addStandards')}</RequiredLabel>
-            <div className="flex gap-6">
-              {STANDARDS.map((std) => (
-                <label key={std} className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
-                  <Checkbox data-testid={`bk-header-edit-standard-${std}`} checked={form.standards.includes(std)} onCheckedChange={() => toggleStandard(std)} /> {std}
-                </label>
-              ))}
             </div>
           </div>
 
