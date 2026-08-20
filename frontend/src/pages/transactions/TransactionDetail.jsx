@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, Paperclip } from 'lucide-react';
 import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction } from '@/hooks/useTransactions';
 import { uploadMediaFile, supabase, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
+import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
@@ -60,7 +61,7 @@ export default function TransactionDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { supplyChainId } = useAuth();
-  const { canApprove } = usePermissions();
+  const { canApprove, canViewChangeHistory } = usePermissions();
   const { data: tx, isLoading } = useTransaction(transactionCode);
   const { data: sourceBatches = [] } = useTransactionBatchSelections(tx?.transaction_group_id);
   const approveTransaction = useApproveTransaction();
@@ -160,7 +161,12 @@ export default function TransactionDetail() {
 
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-black text-[#0f48aa]">{t('transactionDetail.title')}</h1>
-        {tx.direction !== 'Processing' && <StatusBadge status={tx.status} />}
+        <div className="flex items-center gap-3">
+          {canViewChangeHistory && (
+            <ChangeHistoryDialog tableName="transactions" groupId={tx.transaction_group_id} testId="transaction-change-history-trigger" />
+          )}
+          {tx.direction !== 'Processing' && <StatusBadge status={tx.status} />}
+        </div>
       </div>
 
       {tx.direction === 'Received' && tx.status === 'Pending' && (

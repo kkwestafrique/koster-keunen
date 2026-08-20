@@ -6,6 +6,8 @@ import DetailField from '@/components/common/DetailField';
 import StandardBadge from '@/components/common/StandardBadge';
 import { ChevronLeft } from 'lucide-react';
 import { useStock, useTransactionForStock } from '@/hooks/useStocks';
+import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
+import { usePermissions } from '@/hooks/usePermissions';
 
 // Gap 2: there was no way to click into a single stock batch to see its
 // own full detail -- lists only. Also surfaces something that was never
@@ -18,6 +20,7 @@ export default function StockDetail() {
   const { id } = useParams();
   const { data: stock, isLoading } = useStock(id);
   const { data: originTransaction } = useTransactionForStock(id);
+  const { canViewChangeHistory } = usePermissions();
 
   if (isLoading) return <AppLayout hideDefaultHeader><p className="text-[#7089b4]">{t('common.loading')}</p></AppLayout>;
   if (!stock) return <AppLayout hideDefaultHeader><p className="text-[#7089b4]">{t('common.notFound')}</p></AppLayout>;
@@ -32,9 +35,14 @@ export default function StockDetail() {
         <ChevronLeft className="h-4 w-4" /> {t('common.back')}
       </button>
 
-      <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-lg font-black text-[#0f48aa]">{stock.product}</h1>
-        <StandardBadge standard={stock.standard} />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-black text-[#0f48aa]">{stock.product}</h1>
+          <StandardBadge standard={stock.standard} />
+        </div>
+        {canViewChangeHistory && (
+          <ChangeHistoryDialog tableName="stocks" recordId={stock.id} testId="stock-change-history-trigger" />
+        )}
       </div>
 
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-2xl">

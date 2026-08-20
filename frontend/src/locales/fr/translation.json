@@ -803,5 +803,19 @@
     "allTypes": "Tous les types",
     "searchPlaceholder": "Rechercher par nom d'enregistrement...",
     "noRecords": "Aucune activité trouvée."
+  },
+  "changeHistory": {
+    "button": "Historique des modifications",
+    "title": "Historique des modifications par champ",
+    "noHistory": "Aucune modification enregistrée pour le moment.",
+    "by": "Par",
+    "field": "Champ",
+    "oldValue": "Ancienne valeur",
+    "newValue": "Nouvelle valeur",
+    "action": {
+      "created": "Créé",
+      "updated": "Modifié",
+      "deleted": "Supprimé"
+    }
   }
 }

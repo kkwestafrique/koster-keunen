@@ -16,6 +16,12 @@ export function usePermissions() {
     canDelete: canEdit,
     canApprove: canEdit, // Approve/Reject transactions, Approve connections
     canManageTeam: role === 'Admin',
+    // Gap 9: field-level change history (old value -> new value) can
+    // carry beekeeper PII and full historical row snapshots, more raw
+    // detail than the rest of the UI exposes -- Admin only, confirmed
+    // with Babs. Mirrors the real boundary: field_change_log's own RLS
+    // SELECT policy independently restricts to auth_role() = 'Admin'.
+    canViewChangeHistory: role === 'Admin',
     isFieldOfficer: role === 'Field Officer',
   };
 }

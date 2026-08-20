@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import FormattedNumberInput from '@/components/common/FormattedNumberInput';
 import { uploadMediaFile, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
+import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
@@ -308,7 +309,7 @@ export default function ContractDetail() {
   const { id: contractCode } = useParams();
   const navigate = useNavigate();
   const { data: contract, isLoading } = useContract(contractCode);
-  const { canEdit } = usePermissions();
+  const { canEdit, canViewChangeHistory } = usePermissions();
   const [updateOpen, setUpdateOpen] = useState(false);
   const { isReadOnly } = useActingActor();
 
@@ -353,6 +354,9 @@ export default function ContractDetail() {
             <span className="text-xs italic text-[#7089b4]" data-testid="contract-last-updated">
               {t('contractDetail.lastUpdatedOn')}: {String(contract.updated_at).slice(0, 10)}
             </span>
+          )}
+          {canViewChangeHistory && (
+            <ChangeHistoryDialog tableName="contracts" groupId={contract.contract_group_id} testId="contract-change-history-trigger" />
           )}
           {canEdit && (
             <Button

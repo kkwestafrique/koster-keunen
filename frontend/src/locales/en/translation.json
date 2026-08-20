@@ -803,5 +803,19 @@
     "allTypes": "All types",
     "searchPlaceholder": "Search by record name...",
     "noRecords": "No activity found."
+  },
+  "changeHistory": {
+    "button": "Change history",
+    "title": "Field-level change history",
+    "noHistory": "No changes recorded yet.",
+    "by": "By",
+    "field": "Field",
+    "oldValue": "Old value",
+    "newValue": "New value",
+    "action": {
+      "created": "Created",
+      "updated": "Updated",
+      "deleted": "Deleted"
+    }
   }
 }
