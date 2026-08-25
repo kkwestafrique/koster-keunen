@@ -97,6 +97,17 @@ export function useFindOrCreateVillage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ country, state_region, lga_municipality, name }) => {
+      // Real data-quality bug found live: raw, untrimmed input was saved
+      // exactly as typed, producing junk village records like " n"
+      // (leading space, one letter) and "koko" (lowercase, clearly a
+      // fragment) that then permanently polluted the dropdown for every
+      // future form. Trim whitespace and require a plausible minimum
+      // length before treating something as a real village name.
+      const trimmedName = (name || '').trim();
+      if (trimmedName.length < 2) {
+        throw new Error('Please enter a full village name (at least 2 characters).');
+      }
+
       const { data: existing, error: findError } = await supabase
         .from('villages')
         .select('id')
@@ -104,14 +115,14 @@ export function useFindOrCreateVillage() {
         .eq('country', country)
         .eq('state_region', state_region)
         .eq('lga_municipality', lga_municipality)
-        .ilike('name', name)
+        .ilike('name', trimmedName)
         .maybeSingle();
       if (findError) throw findError;
       if (existing) return existing.id;
 
       const { data: created, error: createError } = await supabase
         .from('villages')
-        .insert([{ country, state_region, lga_municipality, name, supply_chain_id: supplyChainId }])
+        .insert([{ country, state_region, lga_municipality, name: trimmedName, supply_chain_id: supplyChainId }])
         .select('id')
         .single();
       if (createError) throw createError;
