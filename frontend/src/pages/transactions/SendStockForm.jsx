@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
-import { useActorDirectory, useActingActor } from '@/hooks/useActors';
+import { useActors, useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction, useRecordBatchSelection, useAvailableBatches } from '@/hooks/useTransactions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
@@ -39,14 +39,22 @@ export default function SendStockForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isReadOnly, currentActor } = useActingActor();
-  const { data: rawActors = [] } = useActorDirectory();
-  // Real bug found live: this list included the current actor itself as
-  // a possible destination -- sending stock to yourself makes no sense.
-  // useActorDirectory() deliberately browses every actor in the supply
-  // chain regardless of connection status (a prior, intentional design
-  // decision, unlike Commercial Partners' connections-only list) --
-  // that broader scope is unchanged here, only self-exclusion is new.
-  const actors = rawActors.filter((a) => a.id !== currentActor?.actor_id);
+  // Real gap found live: this used to call useActorDirectory(), which
+  // deliberately browses every actor in the supply chain regardless of
+  // connection status (a prior, intentional design decision) --
+  // confirmed with Babs after real testing surfaced this as genuinely
+  // confusing: switched to the same connections-only query Commercial
+  // Partners already uses, so Send can only pick a destination you're
+  // actually connected to. This hook already excludes the current
+  // actor from its own results (it's yourself, not a "connection"), so
+  // the separate self-exclusion filter from the last fix is no longer
+  // needed here.
+  const { data: actorData } = useActors({
+    connectedOnly: true,
+    currentActorId: currentActor?.actor_id,
+    pageSize: 200,
+  });
+  const actors = actorData?.rows || [];
   const createTransaction = useCreateTransaction();
   const recordSelection = useRecordBatchSelection();
   const { role } = usePermissions();

@@ -1,0 +1,29 @@
+-- Data cleanup, confirmed explicitly with Babs: 3 real duplicate
+-- "Babamide Awoyemi" actor rows existed in the live database, created
+-- on three different dates. Verified first that nothing referenced any
+-- of them -- zero transactions, zero contracts, zero beekeepers, zero
+-- stocks -- only one stray connection row. Deleted the connection, then
+-- all 3 actor rows. If a real "Babamide Awoyemi" actor is needed going
+-- forward, it can be recreated cleanly now that actor creation
+-- auto-connects and defaults to Active (see the immediately preceding
+-- migration).
+--
+-- This file documents the cleanup for the record; the actual DELETE
+-- statements were run once, directly, and are not safely re-runnable
+-- (the specific row ids no longer exist). No schema change.
+--
+-- delete from public.connections where actor_from_id in (
+--   'e5a06421-7754-46cb-8eff-080c8b0484a5',
+--   '15f919e6-945a-4804-95fc-b095e3a9c2e2',
+--   'f8a87f17-33e7-44f5-aa81-8078d1b68d2e'
+-- ) or actor_to_id in (
+--   'e5a06421-7754-46cb-8eff-080c8b0484a5',
+--   '15f919e6-945a-4804-95fc-b095e3a9c2e2',
+--   'f8a87f17-33e7-44f5-aa81-8078d1b68d2e'
+-- );
+--
+-- delete from public.actors where id in (
+--   'e5a06421-7754-46cb-8eff-080c8b0484a5',
+--   '15f919e6-945a-4804-95fc-b095e3a9c2e2',
+--   'f8a87f17-33e7-44f5-aa81-8078d1b68d2e'
+-- );
