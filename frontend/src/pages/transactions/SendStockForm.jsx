@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useActorDirectory, useActingActor } from '@/hooks/useActors';
-import { useCreateTransaction, useConsumeStockBatch } from '@/hooks/useTransactions';
+import { useCreateTransaction, useConsumeStockBatch, useAvailableBatches } from '@/hooks/useTransactions';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -57,6 +57,15 @@ export default function SendStockForm() {
 
   const valid = form.standard && form.destination_actor_id && form.product
     && form.quantity && form.transaction_date && selectedBatches.length > 0;
+
+  // Same real dead-end found live in Process Stock, applies identically
+  // here -- surfacing the check directly on the main form rather than
+  // requiring the batch picker modal to be opened first to discover it.
+  const { data: availableForStandard = [] } = useAvailableBatches({
+    product: form.product, standard: form.standard, stockType: 'Final Product',
+  });
+  const noStockForSelection = !!form.product && !!form.standard
+    && selectedBatches.length === 0 && availableForStandard.length === 0;
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -152,6 +161,11 @@ export default function SendStockForm() {
             {selectedBatches.length > 0 && (
               <p className="text-xs text-[#7089b4]" data-testid="send-batch-summary">
                 {t('batchPicker.batchesSelected', { count: selectedBatches.length, total: selectedBatches.reduce((s, b) => s + Number(b.quantity), 0) })}
+              </p>
+            )}
+            {noStockForSelection && (
+              <p className="text-xs text-[#ba550c]" data-testid="send-no-stock-warning">
+                {t('sendForm.noStockForSelection', { standard: form.standard, product: form.product })}
               </p>
             )}
           </div>

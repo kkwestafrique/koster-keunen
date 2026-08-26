@@ -11,7 +11,9 @@ import PhoneInput from '@/components/common/PhoneInput';
 import { ACTOR_TYPES, STANDARDS } from '@/data/regions';
 import { useActorTypes } from '@/hooks/useActorTypes';
 import { useCreateActor } from '@/hooks/useActors';
+import { useCreateConnection } from '@/hooks/useConnections';
 import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
@@ -31,12 +33,13 @@ const EMPTY = {
 function ConnectIdModal({ open, onOpenChange, onAdded }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { profile, supplyChainId } = useAuth();
   const [connectId, setConnectId] = useState('');
   const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState(false);
   const [found, setFound] = useState(null);
   const [searched, setSearched] = useState(false);
-  const createActor = useCreateActor();
+  const createConnection = useCreateConnection();
 
   const reset = () => { setConnectId(''); setFound(null); setSearched(false); };
 
@@ -57,22 +60,34 @@ function ConnectIdModal({ open, onOpenChange, onAdded }) {
     }
   };
 
+  // Real bug found live: this used to call createActor with the FOUND
+  // actor's public fields copied over, silently creating a brand-new,
+  // disconnected DUPLICATE actor row instead of linking to the real,
+  // already-existing one -- lookup_actor_by_connect_id returns the real
+  // id (found.id), it just was never used. That meant a company's
+  // transaction/contract history could end up split across two
+  // different actor rows depending which "copy" got used later. Fixed
+  // to create a real connection to found.id instead of duplicating.
   const handleAdd = async () => {
     if (!found) return;
     setAdding(true);
     try {
-      await createActor.mutateAsync({
-        contact_name: found.contact_name,
-        actor_type: found.actor_type,
-        standards: found.standards || [],
-        country: found.country,
-        state_region: found.state_region,
-        lga_municipality: found.lga_municipality,
-        village: found.village,
-        contact_email: found.contact_email,
-        contact_phone: found.contact_phone,
-      });
-      toast({ title: t('forms.actorCreated'), description: t('forms.actorCreatedDescription', { name: found.contact_name }) });
+      const { data: existing } = await supabase
+        .from('connections')
+        .select('id')
+        .eq('supply_chain_id', supplyChainId)
+        .or(`and(actor_from_id.eq.${profile.current_actor_id},actor_to_id.eq.${found.id}),and(actor_from_id.eq.${found.id},actor_to_id.eq.${profile.current_actor_id})`)
+        .maybeSingle();
+      if (existing) {
+        toast({ title: t('forms.alreadyConnected'), description: t('forms.alreadyConnectedDescription', { name: found.contact_name }) });
+      } else {
+        await createConnection.mutateAsync({
+          actor_from_id: profile.current_actor_id,
+          actor_to_id: found.id,
+          status: 'Active',
+        });
+        toast({ title: t('forms.actorConnected'), description: t('forms.actorConnectedDescription', { name: found.contact_name }) });
+      }
       reset();
       onOpenChange(false);
       onAdded();
@@ -141,10 +156,12 @@ function ConnectIdModal({ open, onOpenChange, onAdded }) {
 export default function ActorFormDialog({ open, onOpenChange }) {
   const { t } = useTranslation();
   const { data: actorTypes = ACTOR_TYPES } = useActorTypes();
+  const { profile } = useAuth();
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [connectIdOpen, setConnectIdOpen] = useState(false);
   const createActor = useCreateActor();
+  const createConnection = useCreateConnection();
   const { toast } = useToast();
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
@@ -161,7 +178,7 @@ export default function ActorFormDialog({ open, onOpenChange }) {
     setSaving(true);
     try {
       const contact_phone = form.dial_code && form.contact_number ? `${form.dial_code} ${form.contact_number}` : form.contact_number;
-      await createActor.mutateAsync({
+      const newActor = await createActor.mutateAsync({
         contact_name: form.contact_name,
         actor_type: form.actor_type,
         standards: form.standards,
@@ -172,7 +189,19 @@ export default function ActorFormDialog({ open, onOpenChange }) {
         contact_email: form.contact_email,
         contact_phone,
       });
-      toast({ title: t('forms.actorCreated'), description: t('forms.actorCreatedDescription', { name: form.contact_name }) });
+      // Real gap found live: creating an actor never connected the
+      // creator to it, and the Commercial Partners list is deliberately
+      // connections-only -- so every new actor was correctly created but
+      // permanently invisible until someone separately visited Add
+      // Connection. The whole point of filling out this form is "I now
+      // work with this company", so auto-connecting here matches the
+      // obvious intent rather than adding a silent extra required step.
+      await createConnection.mutateAsync({
+        actor_from_id: profile.current_actor_id,
+        actor_to_id: newActor.id,
+        status: 'Active',
+      });
+      toast({ title: t('forms.actorCreated'), description: t('forms.actorCreatedAndConnectedDescription', { name: form.contact_name }) });
       setForm(EMPTY);
       onOpenChange(false);
     } catch (err) {

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus, Trash2 } from 'lucide-react';
 import { PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
-import { useCreateTransaction, useConsumeStockBatch } from '@/hooks/useTransactions';
+import { useCreateTransaction, useConsumeStockBatch, useAvailableBatches } from '@/hooks/useTransactions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
@@ -84,6 +84,20 @@ export default function ProcessStockForm() {
   const valid = form.standard && form.source_product && form.source_quantity
     && form.transaction_date && selectedBatches.length > 0
     && form.destinations.every((r) => r.converted_product && r.quantity);
+
+  // Real dead-end found live: picking a Standard + Product combination
+  // with zero real Raw Material stock behind it (e.g. "Sustainable" when
+  // the only real stock on hand is "Conventional") let someone fill in a
+  // plausible-looking quantity, but "Add batch details" would silently
+  // find nothing -- the submit button just stayed disabled with no
+  // visible explanation why. Surfacing that check directly on the main
+  // form, immediately, rather than requiring the modal to be opened
+  // first to discover it.
+  const { data: availableForStandard = [] } = useAvailableBatches({
+    product: form.source_product, standard: form.standard, stockType: 'Raw Material',
+  });
+  const noStockForSelection = !!form.source_product && !!form.standard
+    && selectedBatches.length === 0 && availableForStandard.length === 0;
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -187,6 +201,12 @@ export default function ProcessStockForm() {
                 )}
               </div>
             </div>
+
+            {noStockForSelection && (
+              <p className="text-xs text-[#ba550c]" data-testid="process-no-stock-warning">
+                {t('processForm.noStockForSelection', { standard: form.standard, product: form.source_product })}
+              </p>
+            )}
 
             {form.destinations.map((row, idx) => (
               <div key={idx} className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 items-end" data-testid={`process-destination-row-${idx}`}>

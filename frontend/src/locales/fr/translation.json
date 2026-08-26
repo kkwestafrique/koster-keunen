@@ -444,7 +444,12 @@
     "enterLga": "Saisir le LGA/municipalité",
     "enterVillage": "Saisir le village",
     "otherNotListed": "Autre (non répertorié)",
-    "chooseFromList": "Choisir dans la liste à la place"
+    "chooseFromList": "Choisir dans la liste à la place",
+    "actorCreatedAndConnectedDescription": "{{name}} a été ajouté et connecté à votre entreprise.",
+    "actorConnected": "Acteur connecté",
+    "actorConnectedDescription": "{{name}} est maintenant connecté à votre entreprise.",
+    "alreadyConnected": "Déjà connecté",
+    "alreadyConnectedDescription": "Vous êtes déjà connecté à {{name}}."
   },
   "contractWizard": {
     "stepDetails": "Détails du contrat",
@@ -543,7 +548,8 @@
     "importValidRows": "{{count}} ligne(s) valide(s) à importer",
     "historicalDataLabel": "Ce sont des données historiques.",
     "historicalDataNote": "Les lignes sont approuvées immédiatement (pas d'étape d'attente) et les lignes d'envoi consomment automatiquement le stock correspondant — seuls Réception et Envoi sont pris en charge ainsi, les lignes de Transformation seront rejetées.",
-    "bulkImportShortfallWarning": "{{count}} ligne(s) n'avaient pas assez de stock disponible — consultez la page de détail de la transaction"
+    "bulkImportShortfallWarning": "{{count}} ligne(s) n'avaient pas assez de stock disponible — consultez la page de détail de la transaction",
+    "noBeekeepersFound": "Aucun apiculteur trouvé pour ce village."
   },
   "batchPicker": {
     "title": "Ajouter les détails du lot",
@@ -575,7 +581,8 @@
     "mergedQuantity": "Quantité fusionnée",
     "created": "Traitement enregistré",
     "createFailed": "Échec de l'enregistrement du traitement",
-    "submit": "Traiter le stock"
+    "submit": "Traiter le stock",
+    "noStockForSelection": "Aucun stock disponible de {{product}} en norme {{standard}}. Vérifiez « Ajouter les détails du lot » ou essayez une autre norme."
   },
   "sendForm": {
     "title": "Envoyer le stock",
@@ -586,7 +593,8 @@
     "blNumber": "Numéro BL",
     "created": "Envoi enregistré",
     "createFailed": "Échec de l'enregistrement de l'envoi",
-    "submit": "Envoyer le stock"
+    "submit": "Envoyer le stock",
+    "noStockForSelection": "Aucun stock disponible de {{product}} en norme {{standard}}. Vérifiez « Ajouter les détails du lot » ou essayez une autre norme."
   },
   "companyProfile": {
     "actorName": "Nom de l'acteur",

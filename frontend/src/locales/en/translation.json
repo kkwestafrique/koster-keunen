@@ -444,7 +444,12 @@
     "enterLga": "Enter LGA/municipality",
     "enterVillage": "Enter village",
     "otherNotListed": "Other (not listed)",
-    "chooseFromList": "Choose from list instead"
+    "chooseFromList": "Choose from list instead",
+    "actorCreatedAndConnectedDescription": "{{name}} was added and connected to your company.",
+    "actorConnected": "Actor connected",
+    "actorConnectedDescription": "{{name}} is now connected to your company.",
+    "alreadyConnected": "Already connected",
+    "alreadyConnectedDescription": "You are already connected to {{name}}."
   },
   "contractWizard": {
     "stepDetails": "Contract details",
@@ -543,7 +548,8 @@
     "importValidRows": "Import {{count}} valid row(s)",
     "historicalDataLabel": "This is historical data.",
     "historicalDataNote": "Rows are approved immediately (no Pending review step) and Send rows auto-consume matching stock — only Received and Send are supported this way, Processing rows will be rejected.",
-    "bulkImportShortfallWarning": "{{count}} row(s) didn't have enough matching stock available — check the transaction detail page for details"
+    "bulkImportShortfallWarning": "{{count}} row(s) didn't have enough matching stock available — check the transaction detail page for details",
+    "noBeekeepersFound": "No beekeepers found for this village."
   },
   "batchPicker": {
     "title": "Add batch details",
@@ -575,7 +581,8 @@
     "mergedQuantity": "Merged quantity",
     "created": "Processing recorded",
     "createFailed": "Failed to record processing",
-    "submit": "Process stock"
+    "submit": "Process stock",
+    "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard."
   },
   "sendForm": {
     "title": "Send stock",
@@ -586,7 +593,8 @@
     "blNumber": "BL number",
     "created": "Send transaction recorded",
     "createFailed": "Failed to record send transaction",
-    "submit": "Send stock"
+    "submit": "Send stock",
+    "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard."
   },
   "companyProfile": {
     "actorName": "Actor name",

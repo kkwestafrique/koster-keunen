@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, Download, Upload } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
-import { useAllVillagesLite } from '@/hooks/useVillages';
 import { useBeekeepers } from '@/hooks/useBeekeepers';
 import { useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction } from '@/hooks/useTransactions';
@@ -42,13 +41,29 @@ export default function ReceiveStockForm() {
     transaction_date: '',
   });
 
-  const { data: villages = [] } = useAllVillagesLite();
-  // Village is an OPTIONAL narrowing filter, not a requirement -- without
-  // one selected, show every beekeeper so someone can search/select
-  // directly by name. The real audit is explicit that this field must
-  // never block submission; it previously did here.
-  const { data: beekeeperData } = useBeekeepers({ villageId: form.village_id, pageSize: 200 });
-  const beekeepers = beekeeperData?.rows || [];
+  // Real dead-end found live: the Village filter used to list every
+  // village in the whole supply chain (useAllVillagesLite), regardless
+  // of whether the current actor had any beekeepers there at all.
+  // Picking a real village with zero of your own beekeepers in it
+  // silently emptied the Beekeeper dropdown with no explanation why.
+  // Fixed by deriving the Village options directly from this actor's
+  // own beekeeper data -- a village can only ever appear here if it
+  // genuinely has at least one beekeeper behind it.
+  const { data: allBeekeeperData } = useBeekeepers({ pageSize: 200 });
+  const villages = React.useMemo(() => {
+    const rows = allBeekeeperData?.rows || [];
+    const seen = new Map();
+    rows.forEach((b) => {
+      if (b.village_id && !seen.has(b.village_id)) {
+        seen.set(b.village_id, { id: b.village_id, name: b.villages?.name || b.village_id });
+      }
+    });
+    return Array.from(seen.values());
+  }, [allBeekeeperData]);
+  const allBeekeepers = allBeekeeperData?.rows || [];
+  const beekeepers = form.village_id
+    ? allBeekeepers.filter((b) => b.village_id === form.village_id)
+    : allBeekeepers;
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
   const setProductRow = (idx, patch) =>
@@ -137,6 +152,9 @@ export default function ReceiveStockForm() {
                       {beekeepers.map((b) => <SelectItem key={b.id} value={b.id}>{b.full_name}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  {beekeepers.length === 0 && (
+                    <p className="text-xs text-[#ba550c]" data-testid="receive-no-beekeepers">{t('receiveForm.noBeekeepersFound')}</p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[#7089b4]">{t('contractWizard.currency')}</Label>
