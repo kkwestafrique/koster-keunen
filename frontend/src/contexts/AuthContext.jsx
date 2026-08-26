@@ -104,6 +104,15 @@ export function AuthProvider({ children }) {
     queryClient.invalidateQueries({ queryKey: ['dashboard-transaction-summary'] });
     queryClient.invalidateQueries({ queryKey: ['available-batches'] });
     queryClient.invalidateQueries({ queryKey: ['my-actors'] });
+    // Gap 8's activity_log view unions beekeepers/stocks/transactions/
+    // contracts/claims, several of which have real per-actor RLS scoping
+    // (e.g. beekeepers_select checks actor_id = auth_current_actor_id()).
+    // This query key was added in a later session than this invalidation
+    // list and was never added to it -- confirmed live: Babs reported the
+    // Activity Log showing identical results whether acting as Amina
+    // Yusuf or Chinedu Okafor, two different real actors under the same
+    // login. Same root cause as every other entry in this list.
+    queryClient.invalidateQueries({ queryKey: ['activity-log'] });
   };
 
   return (
