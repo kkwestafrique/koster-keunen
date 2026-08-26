@@ -21,7 +21,15 @@ export default function PhoneInput({ dialCode, number, onDialCodeChange, onNumbe
     <div className="flex gap-2">
       <Select value={dialCode || ''} onValueChange={onDialCodeChange}>
         <SelectTrigger data-testid={`${testIdPrefix}-dial-code`} className="w-[90px] bg-white border-[#cfd8e6] text-[#032b71] shrink-0">
-          <SelectValue placeholder="+01" />
+          {/* Real bug found live: this used to show "+01" as the
+              placeholder -- indistinguishable from a real dial code
+              selection (every real code in the list is +2xx). Someone
+              testing the app could never tell whether they'd actually
+              picked a country code or were still looking at an unset
+              placeholder, and a form's Next/Submit button staying
+              disabled with no visible reason looked exactly like a
+              broken button. "Code" can't be mistaken for a real value. */}
+          <SelectValue placeholder="Code" />
         </SelectTrigger>
         <SelectContent>
           {DIAL_CODES.map((d) => (

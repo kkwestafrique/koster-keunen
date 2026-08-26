@@ -38,10 +38,17 @@ export default function SendStockForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: actors = [] } = useActorDirectory();
+  const { isReadOnly, currentActor } = useActingActor();
+  const { data: rawActors = [] } = useActorDirectory();
+  // Real bug found live: this list included the current actor itself as
+  // a possible destination -- sending stock to yourself makes no sense.
+  // useActorDirectory() deliberately browses every actor in the supply
+  // chain regardless of connection status (a prior, intentional design
+  // decision, unlike Commercial Partners' connections-only list) --
+  // that broader scope is unchanged here, only self-exclusion is new.
+  const actors = rawActors.filter((a) => a.id !== currentActor?.actor_id);
   const createTransaction = useCreateTransaction();
   const recordSelection = useRecordBatchSelection();
-  const { isReadOnly } = useActingActor();
   const { role } = usePermissions();
   const isAdmin = role === 'Admin';
 

@@ -188,6 +188,14 @@ export default function ActorFormDialog({ open, onOpenChange }) {
         village: form.village,
         contact_email: form.contact_email,
         contact_phone,
+        // Real gap found live: this used to rely purely on the column's
+        // own default, which was 'Inactive' with zero UI anywhere to
+        // change it -- a newly created actor was permanently stuck.
+        // The database default is now 'Active' too, but setting it
+        // explicitly here as well, matching this session's established
+        // convention of not relying silently on column defaults for
+        // anything that matters.
+        status: 'Active',
       });
       // Real gap found live: creating an actor never connected the
       // creator to it, and the Commercial Partners list is deliberately
