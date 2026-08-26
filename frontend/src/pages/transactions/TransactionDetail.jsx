@@ -169,7 +169,7 @@ export default function TransactionDetail() {
         </div>
       </div>
 
-      {tx.direction === 'Received' && tx.status === 'Pending' && (
+      {(tx.direction === 'Received' || tx.direction === 'Send') && tx.status === 'Pending' && (
         <div className="bg-[#fffaec] border border-[#f2e4b3] rounded-[5px] p-4 mb-6 flex items-center justify-between" data-testid="transaction-pending-banner">
           <p className="text-sm text-[#79730a] font-bold">{t('transactionDetail.notYetApproved')}</p>
           {canApprove && (

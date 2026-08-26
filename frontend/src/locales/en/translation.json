@@ -594,7 +594,8 @@
     "created": "Send transaction recorded",
     "createFailed": "Failed to record send transaction",
     "submit": "Send stock",
-    "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard."
+    "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard.",
+    "adminOnly": "Only Admins can send stock — this now requires review before it's final."
   },
   "companyProfile": {
     "actorName": "Actor name",

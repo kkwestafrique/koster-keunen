@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useActorDirectory, useActingActor } from '@/hooks/useActors';
-import { useCreateTransaction, useConsumeStockBatch, useAvailableBatches } from '@/hooks/useTransactions';
+import { useCreateTransaction, useRecordBatchSelection, useAvailableBatches } from '@/hooks/useTransactions';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -24,14 +25,25 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 // mode; that was built from an earlier reading of the audit before this
 // finding was confirmed explicitly ("No Single/Multiple toggle for Send")
 // and removed here.
+//
+// Send used to be immediately Approved at creation with zero review --
+// confirmed live as a real gap: any authenticated user could create one,
+// and it instantly deducted real stock, for what's likely the single most
+// financially consequential action in the app (a real shipment to a real
+// buyer at a real price). Now: creation is Admin-only, starts Pending,
+// and real stock deduction is deferred until an Admin/Member approves it
+// (see approve_transaction) -- so a batch is only ever *selected* here
+// via record_batch_selection, not consumed yet.
 export default function SendStockForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: actors = [] } = useActorDirectory();
   const createTransaction = useCreateTransaction();
-  const consumeBatch = useConsumeStockBatch();
+  const recordSelection = useRecordBatchSelection();
   const { isReadOnly } = useActingActor();
+  const { role } = usePermissions();
+  const isAdmin = role === 'Admin';
 
   const [saving, setSaving] = useState(false);
   const [batchPickerOpen, setBatchPickerOpen] = useState(false);
@@ -55,7 +67,7 @@ export default function SendStockForm() {
   const handleProductChange = (v) => { setForm((f) => ({ ...f, product: v })); setSelectedBatches([]); };
   const handleStandardChange = (v) => { setForm((f) => ({ ...f, standard: v })); setSelectedBatches([]); };
 
-  const valid = form.standard && form.destination_actor_id && form.product
+  const valid = isAdmin && form.standard && form.destination_actor_id && form.product
     && form.quantity && form.transaction_date && selectedBatches.length > 0;
 
   // Same real dead-end found live in Process Stock, applies identically
@@ -73,7 +85,12 @@ export default function SendStockForm() {
       const [createdRow] = await createTransaction.mutateAsync({
         products: [{ product: form.product, quantity: form.quantity, price: form.price, unit: 'Kg' }],
         direction: 'Send',
-        status: 'Approved',
+        // Real gap found live: this used to be 'Approved' immediately,
+        // with zero review, for what's likely the single most
+        // financially consequential action in the app. Now starts
+        // Pending, same as Receive -- an Admin/Member must explicitly
+        // approve it before it's final.
+        status: 'Pending',
         standard: form.standard,
         actor_id: form.destination_actor_id,
         currency: form.currency,
@@ -81,11 +98,13 @@ export default function SendStockForm() {
         bl_number: form.bl_number,
         transaction_date: form.transaction_date,
       });
-      // Consume each selected batch against the newly created transaction
-      // group — one call per batch, matching consume_stock_batch's atomic,
-      // row-locked design.
+      // Record which batch this Send intends to use, WITHOUT touching
+      // real stock yet -- the actual deduction only happens once an
+      // Admin/Member approves it (see approve_transaction). One call
+      // per selected batch, matching the same shape consume_stock_batch
+      // already used.
       for (const b of selectedBatches) {
-        await consumeBatch.mutateAsync({
+        await recordSelection.mutateAsync({
           stockId: b.stockId,
           quantity: b.quantity,
           transactionGroupId: createdRow.transaction_group_id,
@@ -195,6 +214,12 @@ export default function SendStockForm() {
             <Input type="date" data-testid="send-date" value={form.transaction_date} onChange={(e) => set('transaction_date')(e.target.value)} />
           </div>
         </div>
+
+        {!isAdmin && (
+          <p className="text-xs text-[#ba550c] mt-2" data-testid="send-admin-only-warning">
+            {t('sendForm.adminOnly')}
+          </p>
+        )}
 
         <div className="flex justify-between mt-6">
           <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/send')}>

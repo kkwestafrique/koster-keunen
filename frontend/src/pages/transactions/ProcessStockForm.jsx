@@ -119,6 +119,20 @@ export default function ProcessStockForm() {
         standard: form.standard,
         transaction_date: form.transaction_date,
         quantity_lost,
+        // Real data-hygiene problem found live: this used to rely on the
+        // table's own column default, which is 'Pending' -- but stock is
+        // consumed/created immediately on insert for Processing
+        // regardless of status (sync_transaction_to_stock only gates on
+        // status for Received), and the UI deliberately never shows a
+        // status badge for Processing at all (direction !== 'Processing'
+        // check in TransactionDetail.jsx). So every Processing
+        // transaction sat in the database claiming to be "Pending"
+        // forever, misleading anyone who queried it directly or looked
+        // at the Activity Log later. Explicitly setting 'Approved' here
+        // makes the stored data honestly match what already happens in
+        // practice, matching the same explicit pattern Send already
+        // uses for the same reason.
+        status: 'Approved',
       });
       const groupId = createdRows[0]?.transaction_group_id;
       for (const b of selectedBatches) {
