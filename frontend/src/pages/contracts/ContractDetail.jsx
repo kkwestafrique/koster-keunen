@@ -472,7 +472,7 @@ export default function ContractDetail() {
         </TabsContent>
 
         <TabsContent value="deliveries">
-          <DeliveryNotificationTab contractGroupId={contract.contract_group_id} contractProducts={products} canAdd={canEdit && !isReadOnly} />
+          <DeliveryNotificationTab contractGroupId={contract.contract_group_id} contractProducts={products} canAdd={canActuallyEdit && !isReadOnly} />
         </TabsContent>
       </Tabs>
 
