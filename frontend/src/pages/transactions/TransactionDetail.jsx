@@ -169,7 +169,15 @@ export default function TransactionDetail() {
         </div>
       </div>
 
-      {(tx.direction === 'Received' || tx.direction === 'Send') && tx.status === 'Pending' && (
+      {/* Real design flaw found via actual user testing: Send used to
+          also show this banner, requiring the SENDER'S OWN team to
+          approve their own outgoing shipment -- confusing, and
+          backwards from real shipping logic. Reverted: Send is created
+          Approved immediately (Admin-only creation is the real
+          control), and only ever appears Pending on the RECEIVING
+          actor's side, which is a Received transaction -- already
+          covered by this same condition without needing Send at all. */}
+      {tx.direction === 'Received' && tx.status === 'Pending' && (
         <div className="bg-[#fffaec] border border-[#f2e4b3] rounded-[5px] p-4 mb-6 flex items-center justify-between" data-testid="transaction-pending-banner">
           <p className="text-sm text-[#79730a] font-bold">{t('transactionDetail.notYetApproved')}</p>
           {canApprove && (

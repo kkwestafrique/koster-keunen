@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useActors, useActingActor } from '@/hooks/useActors';
-import { useCreateTransaction, useRecordBatchSelection, useAvailableBatches } from '@/hooks/useTransactions';
+import { useCreateTransaction, useConsumeStockBatch, useAvailableBatches } from '@/hooks/useTransactions';
 import { useContractsForLinking } from '@/hooks/useContracts';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
@@ -30,11 +30,16 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 // Send used to be immediately Approved at creation with zero review --
 // confirmed live as a real gap: any authenticated user could create one,
 // and it instantly deducted real stock, for what's likely the single most
-// financially consequential action in the app (a real shipment to a real
-// buyer at a real price). Now: creation is Admin-only, starts Pending,
-// and real stock deduction is deferred until an Admin/Member approves it
-// (see approve_transaction) -- so a batch is only ever *selected* here
-// via record_batch_selection, not consumed yet.
+// financially consequential action in the app. A first fix required the
+// SENDER'S OWN team to approve their own outgoing Send before it took
+// effect -- real user testing found this genuinely backwards ("why
+// should I approve something I already decided to send"), and the
+// receiver's own separate approval of the incoming delivery was already
+// the real review point. Current, corrected design: creation is
+// Admin-only (the real control point), and takes effect immediately --
+// stock deducts right away, and the receiver gets their own Pending item
+// to review on their side, exactly like Receive already worked before
+// any of this Send work started.
 export default function SendStockForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -57,7 +62,7 @@ export default function SendStockForm() {
   });
   const actors = actorData?.rows || [];
   const createTransaction = useCreateTransaction();
-  const recordSelection = useRecordBatchSelection();
+  const consumeBatch = useConsumeStockBatch();
   const { role } = usePermissions();
   const isAdmin = role === 'Admin';
 
@@ -106,12 +111,19 @@ export default function SendStockForm() {
       const [createdRow] = await createTransaction.mutateAsync({
         products: [{ product: form.product, quantity: form.quantity, price: form.price, unit: 'Kg' }],
         direction: 'Send',
-        // Real gap found live: this used to be 'Approved' immediately,
-        // with zero review, for what's likely the single most
-        // financially consequential action in the app. Now starts
-        // Pending, same as Receive -- an Admin/Member must explicitly
-        // approve it before it's final.
-        status: 'Pending',
+        // Real design flaw found via actual user testing: the earlier
+        // version of this fix required the SENDER'S OWN team to
+        // approve their own outgoing shipment before anything happened
+        // -- confusing, and backwards from how shipping actually works
+        // ("why should I approve something I already decided to send").
+        // Admin-only creation (still enforced below) is the real
+        // control point. The moment an Admin creates a Send, it's
+        // final immediately -- stock deducts right away, and the
+        // receiver gets their own Pending item to review. Their
+        // approval of what arrived IS the real review step, matching
+        // exactly how Receive already worked before any of this Send
+        // work started.
+        status: 'Approved',
         standard: form.standard,
         actor_id: form.destination_actor_id,
         currency: form.currency,
@@ -120,13 +132,10 @@ export default function SendStockForm() {
         transaction_date: form.transaction_date,
         contract_id: form.contract_id || null,
       });
-      // Record which batch this Send intends to use, WITHOUT touching
-      // real stock yet -- the actual deduction only happens once an
-      // Admin/Member approves it (see approve_transaction). One call
-      // per selected batch, matching the same shape consume_stock_batch
-      // already used.
+      // Consume each selected batch immediately, matching Processing's
+      // pattern -- there's no more Pending window to defer this behind.
       for (const b of selectedBatches) {
-        await recordSelection.mutateAsync({
+        await consumeBatch.mutateAsync({
           stockId: b.stockId,
           quantity: b.quantity,
           transactionGroupId: createdRow.transaction_group_id,

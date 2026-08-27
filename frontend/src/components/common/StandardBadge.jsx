@@ -1,6 +1,12 @@
 import React from 'react';
 
-// Figma design system: standard label is rendered as bold colored text (no pill background)
+// Real feedback from actual testing: "The colors for the standard are
+// not highlighted enough... The background should [carry the color]
+// instead of the fonts itself." Previously rendered as plain bold
+// colored text with no background (an earlier, deliberate Figma design
+// choice) -- changed to a colored pill (background + white text) for
+// real visibility, keeping the same three colors so nothing else that
+// referenced them needs to change.
 const STANDARD_COLORS = {
   Sustainable: '#79730a',
   Organic: '#1ba441',
@@ -13,8 +19,8 @@ export default function StandardBadge({ standard, testId }) {
   return (
     <span
       data-testid={testId || `standard-badge-${standard}`}
-      className="text-sm font-bold"
-      style={{ color }}
+      className="text-xs font-bold text-white rounded-full px-2.5 py-0.5 inline-block"
+      style={{ backgroundColor: color }}
     >
       {standard}
     </span>

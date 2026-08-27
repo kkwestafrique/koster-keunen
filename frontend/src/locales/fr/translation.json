@@ -606,7 +606,7 @@
     "createFailed": "Échec de l'enregistrement de l'envoi",
     "submit": "Envoyer le stock",
     "noStockForSelection": "Aucun stock disponible de {{product}} en norme {{standard}}. Vérifiez « Ajouter les détails du lot » ou essayez une autre norme.",
-    "adminOnly": "Seuls les administrateurs peuvent envoyer du stock — cela nécessite désormais une validation avant d'être définitif."
+    "adminOnly": "Seuls les administrateurs peuvent envoyer du stock."
   },
   "companyProfile": {
     "actorName": "Nom de l'acteur",
