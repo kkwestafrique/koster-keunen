@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Pencil, Plus } from 'lucide-react';
-import { useContract, useUpdateContractGroup, useContractDeliveries, useCreateContractDelivery } from '@/hooks/useContracts';
+import { useContract, useUpdateContractGroup, useContractDeliveries, useCreateContractDelivery, useContractFulfillment } from '@/hooks/useContracts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import FormattedNumberInput from '@/components/common/FormattedNumberInput';
@@ -324,6 +324,18 @@ export default function ContractDetail() {
   // requires genuine ownership before showing anything editable.
   const isOwner = contract?.owning_actor_id === currentActor?.actor_id;
   const canActuallyEdit = canEdit && isOwner;
+  // Contract fulfillment tracking, Send-type contracts only -- Received
+  // contracts are fulfilled by an automatically-generated transaction on
+  // the receiving side, not anything created manually, so there's no
+  // clean link to show progress from yet (a separate, harder problem).
+  // Called here, before any early return, since React Hooks must run in
+  // the same order on every render -- contract can be undefined while
+  // still loading, so this tolerates that with optional chaining rather
+  // than being called conditionally after the loading/not-found guards.
+  const contractProductIds = contract?.contract_type === 'Send' && Array.isArray(contract?.products)
+    ? contract.products.map((p) => p.id)
+    : [];
+  const { data: fulfillment = {} } = useContractFulfillment(contractProductIds);
 
   if (isLoading) {
     return (
@@ -432,16 +444,29 @@ export default function ContractDetail() {
                       <th className="py-2">{t('contractWizard.product')}</th>
                       <th className="py-2">{t('contractWizard.expectedQuantity')}</th>
                       <th className="py-2">{t('contractDetail.maximumPricePerKg')}</th>
+                      {contract.contract_type === 'Send' && (
+                        <th className="py-2">{t('contractDetail.delivered')}</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((row, idx) => (
-                      <tr key={row.id || idx} className="border-b border-[#f0f0f0] text-[#032b71]">
-                        <td className="py-2">{row.product}</td>
-                        <td className="py-2">{row.expected_quantity} {row.unit}</td>
-                        <td className="py-2">{row.price != null ? `${row.price} ${contract.currency || ''}` : '—'}</td>
-                      </tr>
-                    ))}
+                    {products.map((row, idx) => {
+                      const delivered = fulfillment[row.id] || 0;
+                      const expected = Number(row.expected_quantity) || 0;
+                      const pct = expected > 0 ? Math.min(100, Math.round((delivered / expected) * 100)) : 0;
+                      return (
+                        <tr key={row.id || idx} className="border-b border-[#f0f0f0] text-[#032b71]">
+                          <td className="py-2">{row.product}</td>
+                          <td className="py-2">{row.expected_quantity} {row.unit}</td>
+                          <td className="py-2">{row.price != null ? `${row.price} ${contract.currency || ''}` : '—'}</td>
+                          {contract.contract_type === 'Send' && (
+                            <td className="py-2" data-testid={`contract-fulfillment-${row.id}`}>
+                              {delivered} / {row.expected_quantity} {row.unit} ({pct}%)
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
 

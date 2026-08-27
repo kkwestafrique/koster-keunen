@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useActors, useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction, useRecordBatchSelection, useAvailableBatches } from '@/hooks/useTransactions';
+import { useContractsForLinking } from '@/hooks/useContracts';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
@@ -73,7 +74,12 @@ export default function SendStockForm() {
     invoice_number: '',
     bl_number: '',
     transaction_date: '',
+    // Contract fulfillment tracking, optional -- most Sends won't have
+    // a contract behind them at all.
+    contract_id: '',
   });
+
+  const { data: linkableContracts = [] } = useContractsForLinking('Send');
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -112,6 +118,7 @@ export default function SendStockForm() {
         invoice_number: form.invoice_number,
         bl_number: form.bl_number,
         transaction_date: form.transaction_date,
+        contract_id: form.contract_id || null,
       });
       // Record which batch this Send intends to use, WITHOUT touching
       // real stock yet -- the actual deduction only happens once an
@@ -227,6 +234,23 @@ export default function SendStockForm() {
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('receiveForm.transactionDate')}</Label>
             <Input type="date" data-testid="send-date" value={form.transaction_date} onChange={(e) => set('transaction_date')(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[#7089b4]">{t('transactions.linkToContract')}</Label>
+            <Select
+              value={form.contract_id || 'none'}
+              onValueChange={(v) => set('contract_id')(v === 'none' ? '' : v)}
+            >
+              <SelectTrigger data-testid="send-contract"><SelectValue placeholder={t('transactions.noContract')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t('transactions.noContract')}</SelectItem>
+                {linkableContracts.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.contract_code} — {c.product} ({c.expected_quantity} {c.unit})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

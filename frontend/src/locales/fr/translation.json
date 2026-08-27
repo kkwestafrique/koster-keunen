@@ -208,7 +208,9 @@
     "actorBeekeeper": "Acteur / Apiculteur",
     "product": "Produit",
     "quantityDelivered": "Quantité livrée",
-    "totalAmount": "Montant total"
+    "totalAmount": "Montant total",
+    "linkToContract": "Lier à un contrat (facultatif)",
+    "noContract": "Aucun contrat"
   },
   "stocks": {
     "receivedTitle": "Stocks reçus",
@@ -523,7 +525,8 @@
     "expectedDeliveryDate": "Date de livraison prévue",
     "addDelivery": "Ajouter une livraison",
     "deliveryAdded": "Notification de livraison ajoutée",
-    "deliveryAddFailed": "Impossible d'ajouter la notification de livraison"
+    "deliveryAddFailed": "Impossible d'ajouter la notification de livraison",
+    "delivered": "Livré"
   },
   "receiveForm": {
     "singleTransaction": "Transaction unique",

@@ -208,7 +208,9 @@
     "actorBeekeeper": "Actor / Beekeeper",
     "product": "Product",
     "quantityDelivered": "Quantity delivered",
-    "totalAmount": "Total amount"
+    "totalAmount": "Total amount",
+    "linkToContract": "Link to contract (optional)",
+    "noContract": "No contract"
   },
   "stocks": {
     "receivedTitle": "Received stocks",
@@ -523,7 +525,8 @@
     "expectedDeliveryDate": "Expected delivery date",
     "addDelivery": "Add delivery",
     "deliveryAdded": "Delivery notification added",
-    "deliveryAddFailed": "Could not add delivery notification"
+    "deliveryAddFailed": "Could not add delivery notification",
+    "delivered": "Delivered"
   },
   "receiveForm": {
     "singleTransaction": "Single transaction",
