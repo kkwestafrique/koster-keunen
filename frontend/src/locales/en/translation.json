@@ -449,7 +449,9 @@
     "actorConnected": "Actor connected",
     "actorConnectedDescription": "{{name}} is now connected to your company.",
     "alreadyConnected": "Already connected",
-    "alreadyConnectedDescription": "You are already connected to {{name}}."
+    "alreadyConnectedDescription": "You are already connected to {{name}}.",
+    "connectionRequested": "Connection request sent",
+    "connectionRequestedDescription": "Waiting for {{name}} to approve. You can check the status in Connections."
   },
   "contractWizard": {
     "stepDetails": "Contract details",

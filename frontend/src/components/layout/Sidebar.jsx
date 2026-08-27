@@ -36,6 +36,11 @@ const NAV_ITEMS = [
     children: [
       { labelKey: 'nav.actors', to: '/actors/actual' },
       { labelKey: 'nav.beekeepers', to: '/beekeepers' },
+      // Real gap found live: /connections was a fully built, working
+      // page -- including the ONLY way to approve a pending connection
+      // request someone else sent you -- but had no link to it
+      // anywhere in the app. Completely unreachable.
+      { labelKey: 'nav.connections', to: '/connections' },
     ],
   },
   { key: 'contracts', labelKey: 'nav.contracts', icon: CreditCard, to: '/contracts' },

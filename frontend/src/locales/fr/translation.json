@@ -449,7 +449,9 @@
     "actorConnected": "Acteur connecté",
     "actorConnectedDescription": "{{name}} est maintenant connecté à votre entreprise.",
     "alreadyConnected": "Déjà connecté",
-    "alreadyConnectedDescription": "Vous êtes déjà connecté à {{name}}."
+    "alreadyConnectedDescription": "Vous êtes déjà connecté à {{name}}.",
+    "connectionRequested": "Demande de connexion envoyée",
+    "connectionRequestedDescription": "En attente de l'approbation de {{name}}. Vous pouvez suivre le statut dans Connexions."
   },
   "contractWizard": {
     "stepDetails": "Détails du contrat",

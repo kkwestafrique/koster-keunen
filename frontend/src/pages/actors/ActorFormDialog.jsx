@@ -81,12 +81,23 @@ function ConnectIdModal({ open, onOpenChange, onAdded }) {
       if (existing) {
         toast({ title: t('forms.alreadyConnected'), description: t('forms.alreadyConnectedDescription', { name: found.contact_name }) });
       } else {
+        // Real design gap found live: this used to create the connection
+        // as instantly Active, bypassing a whole deliberate, working
+        // two-sided approval system already built for connections (a
+        // guard trigger on the connections table literally blocks
+        // skipping it via a direct status update -- "Connections must
+        // be approved via approve_connection(), not updated directly").
+        // Connecting to an ALREADY-EXISTING, independent company should
+        // require their consent, not happen unilaterally the moment
+        // someone types in their code. Confirmed with Babs: back to
+        // Pending, which notifies them and lets them approve or ignore
+        // it from the (now-linked) Connections page.
         await createConnection.mutateAsync({
           actor_from_id: profile.current_actor_id,
           actor_to_id: found.id,
-          status: 'Active',
+          status: 'Pending',
         });
-        toast({ title: t('forms.actorConnected'), description: t('forms.actorConnectedDescription', { name: found.contact_name }) });
+        toast({ title: t('forms.connectionRequested'), description: t('forms.connectionRequestedDescription', { name: found.contact_name }) });
       }
       reset();
       onOpenChange(false);
