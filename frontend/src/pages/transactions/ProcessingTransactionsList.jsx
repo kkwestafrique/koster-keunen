@@ -9,6 +9,7 @@ import { Plus } from 'lucide-react';
 import { useTransactions, useTransactionLoggers } from '@/hooks/useTransactions';
 import { useConstants } from '@/hooks/useConstants';
 import { useActingActor } from '@/hooks/useActors';
+import { formatDate } from '@/lib/dateFormat';
 
 // Processing has a genuinely different list shape than Send/Received per
 // the audit (7 columns: Date, Transaction ID, Transaction type, Source
@@ -34,7 +35,7 @@ export default function ProcessingTransactionsList() {
   const { data, isLoading } = useTransactions({ direction: 'Processing', page, pageSize, search, product, loggedBy });
 
   const columns = [
-    { key: 'transaction_date', label: t('transactions.date') },
+    { key: 'transaction_date', label: t('transactions.date'), render: (row) => formatDate(row.transaction_date) },
     {
       key: 'transaction_code',
       label: t('transactions.transactionId'),

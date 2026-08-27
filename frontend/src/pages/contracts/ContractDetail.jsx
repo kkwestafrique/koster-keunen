@@ -21,6 +21,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { formatDate } from '@/lib/dateFormat';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -293,7 +294,7 @@ function DeliveryNotificationTab({ contractGroupId, contractProducts, canAdd }) 
               <tr key={d.id} className="border-b border-[#f0f0f0] text-[#032b71]">
                 <td className="py-2">{d.product}</td>
                 <td className="py-2">{d.delivering_quantity}</td>
-                <td className="py-2">{d.expected_delivery_date}</td>
+                <td className="py-2">{formatDate(d.expected_delivery_date)}</td>
                 <td className="py-2">{d.comment || '—'}</td>
               </tr>
             ))}
@@ -376,7 +377,7 @@ export default function ContractDetail() {
         <div className="flex items-center gap-3">
           {contract.updated_at && (
             <span className="text-xs italic text-[#7089b4]" data-testid="contract-last-updated">
-              {t('contractDetail.lastUpdatedOn')}: {String(contract.updated_at).slice(0, 10)}
+              {t('contractDetail.lastUpdatedOn')}: {formatDate(contract.updated_at)}
             </span>
           )}
           {canViewChangeHistory && (
@@ -407,7 +408,7 @@ export default function ContractDetail() {
 
           <DetailField label={t('contractWizard.supplier')} value={contract.actors?.contact_name || t('contractDetail.noSupplier')} />
           <DetailField label={t('contracts.country')} value={contract.actors?.country} />
-          <DetailField label={t('contracts.signatureDate')} value={contract.signature_date} />
+          <DetailField label={t('contracts.signatureDate')} value={formatDate(contract.signature_date)} />
 
           <div className="flex flex-col gap-1">
             <span className="text-xs text-[#7089b4]">{t('contracts.standard')}</span>

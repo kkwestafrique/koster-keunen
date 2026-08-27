@@ -8,6 +8,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useStock, useTransactionForStock } from '@/hooks/useStocks';
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
 import { usePermissions } from '@/hooks/usePermissions';
+import { formatDateTime } from '@/lib/dateFormat';
 
 // Gap 2: there was no way to click into a single stock batch to see its
 // own full detail -- lists only. Also surfaces something that was never
@@ -57,7 +58,7 @@ export default function StockDetail() {
           <DetailField label={t('stocks.village')} value={stock.villages?.name} testId="stock-detail-village" />
           <DetailField
             label={t('stocks.createdOn')}
-            value={stock.created_at ? new Date(stock.created_at).toLocaleString() : '-'}
+            value={stock.created_at ? formatDateTime(stock.created_at) : '-'}
             testId="stock-detail-created-on"
           />
         </div>

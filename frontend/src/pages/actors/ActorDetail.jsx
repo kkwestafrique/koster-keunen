@@ -14,6 +14,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { formatDate } from '@/lib/dateFormat';
 
 export default function ActorDetail() {
   const { t } = useTranslation();
@@ -126,7 +127,7 @@ export default function ActorDetail() {
                   <tbody>
                     {transactions.map((tx) => (
                       <tr key={tx.id} className="border-b border-[#f0f0f0] text-[#032b71]">
-                        <td className="py-2">{tx.transaction_date}</td>
+                        <td className="py-2">{formatDate(tx.transaction_date)}</td>
                         <td className="py-2">{tx.product}</td>
                         <td className="py-2">{tx.quantity} {tx.unit}</td>
                         <td className="py-2">{tx.total_amount != null ? tx.total_amount.toLocaleString() : '—'}</td>

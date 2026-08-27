@@ -19,6 +19,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { formatDate } from '@/lib/dateFormat';
 
 // NOTE: this audit was text-only (no screenshots, unlike Contracts), so
 // exact pixel layout here is less certain than elsewhere in this rebuild —
@@ -195,8 +196,8 @@ export default function TransactionDetail() {
 
       <div className="bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-6 mb-6" data-testid="transaction-detail-header">
         <div className="flex flex-wrap gap-x-12 gap-y-3 mb-4">
-          <DetailField label={t('transactions.date')} value={tx.transaction_date} />
-          <DetailField label={t('transactionDetail.loggedDate')} value={tx.created_at?.slice(0, 10)} />
+          <DetailField label={t('transactions.date')} value={formatDate(tx.transaction_date)} />
+          <DetailField label={t('transactionDetail.loggedDate')} value={formatDate(tx.created_at)} />
           <DetailField label={t('processForm.transactionType')} value={isMerging ? t('processForm.merging') : tx.direction} />
         </div>
         <div className="flex flex-col gap-1 mb-4">

@@ -12,6 +12,7 @@ import { useUpdateMyProfile, useChangePassword } from '@/hooks/useMyProfile';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { formatDate } from '@/lib/dateFormat';
 
 // Gap 3: "My Profile" in the TopBar previously just navigated to the
 // COMPANY profile -- there was no page for a person to view or manage
@@ -83,7 +84,7 @@ export default function UserProfile() {
           <DetailField label={t('userProfile.role')} value={profile?.role} testId="profile-role" />
           <DetailField
             label={t('userProfile.memberSince')}
-            value={profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : '-'}
+            value={profile?.created_at ? formatDate(profile.created_at) : '-'}
             testId="profile-member-since"
           />
         </div>

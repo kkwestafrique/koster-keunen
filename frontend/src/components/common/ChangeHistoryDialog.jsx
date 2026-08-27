@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { History } from 'lucide-react';
 import { useFieldChangeHistory } from '@/hooks/useFieldChangeHistory';
+import { formatDateTime } from '@/lib/dateFormat';
 
 const ACTION_LABELS = { INSERT: 'created', UPDATE: 'updated', DELETE: 'deleted' };
 
@@ -47,7 +48,7 @@ export default function ChangeHistoryDialog({ tableName, recordId, groupId, test
                   <span className="text-sm font-bold text-[#032b71]">
                     {t(`changeHistory.action.${ACTION_LABELS[entry.action] || entry.action}`)}
                   </span>
-                  <span className="text-xs text-[#7089b4]">{new Date(entry.changed_at).toLocaleString()}</span>
+                  <span className="text-xs text-[#7089b4]">{formatDateTime(entry.changed_at)}</span>
                 </div>
                 <p className="text-xs text-[#7089b4] mb-2">
                   {t('changeHistory.by')}: {entry.changed_by_name || t('activityLog.unknown')}

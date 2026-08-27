@@ -5,6 +5,7 @@ import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
 import { useActivityLog } from '@/hooks/useActivityLog';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { formatDateTime } from '@/lib/dateFormat';
 
 const ENTITY_TYPES = ['Actor', 'Beekeeper', 'Contract', 'Stock', 'Transaction', 'Claim'];
 const PAGE_SIZE = 15;
@@ -54,7 +55,7 @@ export default function ActivityLog() {
     {
       key: 'created_at',
       label: t('activityLog.createdAt'),
-      render: (row) => (row.created_at ? new Date(row.created_at).toLocaleString() : '—'),
+      render: (row) => (row.created_at ? formatDateTime(row.created_at) : '—'),
       sortable: true,
     },
     {
@@ -65,7 +66,7 @@ export default function ActivityLog() {
     {
       key: 'updated_at',
       label: t('activityLog.lastUpdatedAt'),
-      render: (row) => (row.updated_at ? new Date(row.updated_at).toLocaleString() : '—'),
+      render: (row) => (row.updated_at ? formatDateTime(row.updated_at) : '—'),
       sortable: true,
     },
   ];

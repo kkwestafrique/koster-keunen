@@ -12,6 +12,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { formatDate } from '@/lib/dateFormat';
 
 // Gap 12: the queue a verifier actually works from. Verify/Reject are
 // Admin/Member only (enforced server-side too, not just hidden here), and
@@ -62,7 +63,7 @@ export default function VerificationQueue() {
     {
       key: 'submitted_at',
       label: t('verification.submittedOn'),
-      render: (row) => (row.submitted_at ? new Date(row.submitted_at).toLocaleDateString() : '—'),
+      render: (row) => (row.submitted_at ? formatDate(row.submitted_at) : '—'),
     },
     ...(canApprove
       ? [{

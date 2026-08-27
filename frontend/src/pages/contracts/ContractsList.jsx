@@ -12,6 +12,7 @@ import { useActingActor } from '@/hooks/useActors';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import BulkImportContractsDialog from './BulkImportContractsDialog';
+import { formatDate } from '@/lib/dateFormat';
 
 // Matches the live site's "All contracts" filter exactly. Note there is no
 // Standard filter on the live list page — Standard is still shown as a
@@ -56,7 +57,7 @@ export default function ContractsList() {
       label: t('contracts.standard'),
       render: (row) => <StandardBadge standard={row.standard} />,
     },
-    { key: 'signature_date', label: t('contracts.signatureDate') },
+    { key: 'signature_date', label: t('contracts.signatureDate'), render: (row) => formatDate(row.signature_date) },
     {
       key: 'total_quantity_expected',
       label: t('contracts.totalQuantityExpected'),

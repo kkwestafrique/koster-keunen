@@ -10,6 +10,7 @@ import { Plus } from 'lucide-react';
 import { useTransactions, useTransactionLoggers } from '@/hooks/useTransactions';
 import { useConstants } from '@/hooks/useConstants';
 import { useActingActor } from '@/hooks/useActors';
+import { formatDate } from '@/lib/dateFormat';
 
 // Shared list for Transactions > Received / Send — confirmed by the audit
 // to genuinely share one 6-column shape (unlike Processing, which has its
@@ -41,7 +42,7 @@ export default function TransactionsList({ direction, title, actionLabel, testId
   const { data, isLoading } = useTransactions({ direction, page, pageSize, search, product, loggedBy, source, status });
 
   const columns = [
-    { key: 'transaction_date', label: t('transactions.date') },
+    { key: 'transaction_date', label: t('transactions.date'), render: (row) => formatDate(row.transaction_date) },
     {
       key: 'transaction_code',
       label: t('transactions.transactionId'),
