@@ -311,7 +311,19 @@ export default function ContractDetail() {
   const { data: contract, isLoading } = useContract(contractCode);
   const { canEdit, canViewChangeHistory } = usePermissions();
   const [updateOpen, setUpdateOpen] = useState(false);
-  const { isReadOnly } = useActingActor();
+  const { isReadOnly, currentActor } = useActingActor();
+  // Real bug found live: contracts.owning_actor_id is the only actor
+  // who can ever edit one -- confirmed directly against RLS (write
+  // policies were already correctly scoped this way). canEdit alone is
+  // purely role-based (Admin/Member) with no ownership check, so once
+  // the counterparty on a contract could finally SEE it (the fix for
+  // "sent to Wax Agg but not showing"), an Admin/Member on their side
+  // would have seen a fully-enabled Edit button that silently failed
+  // the moment they tried to save -- the same dead-end pattern found
+  // and fixed repeatedly elsewhere in the app today. canEdit now also
+  // requires genuine ownership before showing anything editable.
+  const isOwner = contract?.owning_actor_id === currentActor?.actor_id;
+  const canActuallyEdit = canEdit && isOwner;
 
   if (isLoading) {
     return (
@@ -358,7 +370,7 @@ export default function ContractDetail() {
           {canViewChangeHistory && (
             <ChangeHistoryDialog tableName="contracts" groupId={contract.contract_group_id} testId="contract-change-history-trigger" />
           )}
-          {canEdit && (
+          {canActuallyEdit && (
             <Button
               data-testid="update-contract-button"
               className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50 disabled:cursor-not-allowed"
