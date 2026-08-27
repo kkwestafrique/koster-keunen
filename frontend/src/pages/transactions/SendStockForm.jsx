@@ -104,6 +104,7 @@ export default function SendStockForm() {
   });
   const noStockForSelection = !!form.product && !!form.standard
     && selectedBatches.length === 0 && availableForStandard.length === 0;
+  const totalAvailableForStandard = availableForStandard.reduce((sum, b) => sum + Number(b.quantity_available || 0), 0);
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -197,6 +198,11 @@ export default function SendStockForm() {
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('sendForm.quantityRequired')}</Label>
             <Input type="number" min="0" data-testid="send-quantity" value={form.quantity} onChange={(e) => { set('quantity')(e.target.value); setSelectedBatches([]); }} />
+            {form.standard && form.product && (
+              <p className="text-xs text-[#7089b4]" data-testid="send-available-hint">
+                {t('sendForm.availableHint', { quantity: totalAvailableForStandard })}
+              </p>
+            )}
             <Button
               type="button"
               variant="outline"

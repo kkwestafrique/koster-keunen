@@ -98,6 +98,7 @@ export default function ProcessStockForm() {
   });
   const noStockForSelection = !!form.source_product && !!form.standard
     && selectedBatches.length === 0 && availableForStandard.length === 0;
+  const totalAvailableForStandard = availableForStandard.reduce((sum, b) => sum + Number(b.quantity_available || 0), 0);
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -197,6 +198,18 @@ export default function ProcessStockForm() {
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('processForm.sourceQuantity')}</Label>
                 <Input type="number" min="0" data-testid="process-source-quantity" value={form.source_quantity} onChange={(e) => handleSourceQuantityChange(e.target.value)} />
+                {/* Real UX gap found via live testing feedback: someone
+                    could type any quantity here with no idea whether
+                    real stock actually backed it up, only discovering a
+                    mismatch after opening a separate modal. Showing the
+                    real total live, the moment Standard + Product are
+                    both chosen, so this is visible before typing a
+                    number at all. */}
+                {form.standard && form.source_product && (
+                  <p className="text-xs text-[#7089b4]" data-testid="process-available-hint">
+                    {t('processForm.availableHint', { quantity: totalAvailableForStandard })}
+                  </p>
+                )}
                 <Button
                   type="button"
                   variant="outline"

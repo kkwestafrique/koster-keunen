@@ -593,7 +593,8 @@
     "created": "Processing recorded",
     "createFailed": "Failed to record processing",
     "submit": "Process stock",
-    "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard."
+    "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard.",
+    "availableHint": "You have {{quantity}} Kg available for this standard and product."
   },
   "sendForm": {
     "title": "Send stock",
@@ -606,7 +607,8 @@
     "createFailed": "Failed to record send transaction",
     "submit": "Send stock",
     "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard.",
-    "adminOnly": "Only Admins can send stock."
+    "adminOnly": "Only Admins can send stock.",
+    "availableHint": "You have {{quantity}} Kg available for this standard and product."
   },
   "companyProfile": {
     "actorName": "Actor name",
