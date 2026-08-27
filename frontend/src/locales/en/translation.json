@@ -142,7 +142,8 @@
     "actorName": "Actor name",
     "actorType": "Actor type",
     "country": "Country",
-    "status": "Status"
+    "status": "Status",
+    "statusTooltip": "Only \"Disabled\" actually restricts anything (locks the actor to read-only). Active and Inactive currently work the same way."
   },
   "beekeepersList": {
     "title": "Beekeeper List",
@@ -252,7 +253,9 @@
     "contactNumber": "Contact number",
     "enableDisableConnection": "Enable/Disable connection",
     "statusActive": "Status: Active",
-    "back": "Back"
+    "back": "Back",
+    "copyConnectId": "Copy Connect ID",
+    "connectIdCopied": "Connect ID copied"
   },
   "common": {
     "note": "Note",
@@ -451,7 +454,10 @@
     "alreadyConnected": "Already connected",
     "alreadyConnectedDescription": "You are already connected to {{name}}.",
     "connectionRequested": "Connection request sent",
-    "connectionRequestedDescription": "Waiting for {{name}} to approve. You can check the status in Connections."
+    "connectionRequestedDescription": "Waiting for {{name}} to approve. You can check the status in Connections.",
+    "totalHivesByType": "Total hives by type",
+    "totalHivesByCrop": "Total hives by crop",
+    "hiveTotalsMustMatch": "these two totals must match to save"
   },
   "contractWizard": {
     "stepDetails": "Contract details",

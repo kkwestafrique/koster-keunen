@@ -142,7 +142,8 @@
     "actorName": "Nom de l'acteur",
     "actorType": "Type d'acteur",
     "country": "Pays",
-    "status": "Statut"
+    "status": "Statut",
+    "statusTooltip": "Seul le statut « Désactivé » restreint réellement quelque chose (verrouille l'acteur en lecture seule). Actif et Inactif fonctionnent actuellement de la même façon."
   },
   "beekeepersList": {
     "title": "Liste des apiculteurs",
@@ -252,7 +253,9 @@
     "contactNumber": "Numéro de contact",
     "enableDisableConnection": "Activer/Désactiver la connexion",
     "statusActive": "Statut : Actif",
-    "back": "Retour"
+    "back": "Retour",
+    "copyConnectId": "Copier l'ID de connexion",
+    "connectIdCopied": "ID de connexion copié"
   },
   "common": {
     "note": "Remarque",
@@ -451,7 +454,10 @@
     "alreadyConnected": "Déjà connecté",
     "alreadyConnectedDescription": "Vous êtes déjà connecté à {{name}}.",
     "connectionRequested": "Demande de connexion envoyée",
-    "connectionRequestedDescription": "En attente de l'approbation de {{name}}. Vous pouvez suivre le statut dans Connexions."
+    "connectionRequestedDescription": "En attente de l'approbation de {{name}}. Vous pouvez suivre le statut dans Connexions.",
+    "totalHivesByType": "Total des ruches par type",
+    "totalHivesByCrop": "Total des ruches par culture",
+    "hiveTotalsMustMatch": "ces deux totaux doivent correspondre pour enregistrer"
   },
   "contractWizard": {
     "stepDetails": "Détails du contrat",

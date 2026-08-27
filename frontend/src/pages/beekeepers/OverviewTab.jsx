@@ -115,6 +115,29 @@ export default function OverviewTab({ bk }) {
           </div>
         </div>
 
+        {/* Same live-totals fix as the Add Beekeeper wizard -- the
+            underlying database rule (these two totals must match, or
+            the crop total must be zero) is kept exactly as Babs
+            confirmed; this just shows both running totals before
+            submission instead of only failing after. */}
+        {(() => {
+          const hiveTypeTotal = ['hives_traditional_single', 'hives_traditional_double', 'hives_modern', 'hives_other']
+            .reduce((sum, k) => sum + (Number(form[k]) || 0), 0);
+          const cropTotal = HIVE_SPREAD_CROPS
+            .map((crop) => `hive_${crop.toLowerCase().replace(' ', '_')}`)
+            .reduce((sum, k) => sum + (Number(form[k]) || 0), 0);
+          const matches = cropTotal === 0 || hiveTypeTotal === cropTotal;
+          return (
+            <p
+              className={`text-xs ${matches ? 'text-[#7089b4]' : 'text-[#ba550c] font-medium'}`}
+              data-testid="bk-overview-edit-hive-totals"
+            >
+              {t('forms.totalHivesByType')}: {hiveTypeTotal} · {t('forms.totalHivesByCrop')}: {cropTotal}
+              {!matches && ` — ${t('forms.hiveTotalsMustMatch')}`}
+            </p>
+          );
+        })()}
+
         <div className="flex gap-3">
           <Button type="button" variant="outline" data-testid="bk-overview-edit-discard" className="border-[#0f48aa] text-[#0f48aa] bg-white" onClick={() => setEditing(false)}>
             {t('companyProfile.discard')}

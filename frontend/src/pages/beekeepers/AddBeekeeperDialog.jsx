@@ -444,6 +444,32 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
                         })}
                       </div>
                     </div>
+
+                    {/* Real UX gap found live: the database requires these
+                        two totals to match exactly (or the crop total to
+                        be zero), but the only feedback was a cryptic
+                        "one of the values entered is not valid" error
+                        AFTER submitting. Babs explicitly wants the
+                        underlying rule kept as-is -- this just shows both
+                        running totals live, so a mismatch is visible
+                        before someone hits submit instead of after. */}
+                    {(() => {
+                      const hiveTypeTotal = ['hives_traditional_single', 'hives_traditional_double', 'hives_modern', 'hives_other']
+                        .reduce((sum, k) => sum + (Number(form[k]) || 0), 0);
+                      const cropTotal = HIVE_SPREAD_CROPS
+                        .map((crop) => `hive_${crop.toLowerCase().replace(' ', '_')}`)
+                        .reduce((sum, k) => sum + (Number(form[k]) || 0), 0);
+                      const matches = cropTotal === 0 || hiveTypeTotal === cropTotal;
+                      return (
+                        <p
+                          className={`text-xs mt-1 ${matches ? 'text-[#7089b4]' : 'text-[#ba550c] font-medium'}`}
+                          data-testid="bk-wizard-hive-totals"
+                        >
+                          {t('forms.totalHivesByType')}: {hiveTypeTotal} · {t('forms.totalHivesByCrop')}: {cropTotal}
+                          {!matches && ` — ${t('forms.hiveTotalsMustMatch')}`}
+                        </p>
+                      );
+                    })()}
                   </>
                 )}
               </>

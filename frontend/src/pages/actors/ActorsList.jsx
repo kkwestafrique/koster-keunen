@@ -60,7 +60,18 @@ export default function ActorsList({ title, testId }) {
     { key: 'contact_name', sortable: true, label: t('actorsList.actorName') },
     { key: 'actor_type', label: t('actorsList.actorType') },
     { key: 'country', label: t('actorsList.country') },
-    { key: 'status', label: t('actorsList.status'), render: (row) => <StatusBadge status={row.status} /> },
+    {
+      key: 'status',
+      // Real gap found live: this column showed a status with zero
+      // explanation of what it means. Turned out to be worth being
+      // honest about, not just adding a plausible-sounding tooltip --
+      // checked the actual code and confirmed Active and Inactive have
+      // NO functional difference anywhere in the app today. Only
+      // Disabled actually restricts anything (locks the actor into
+      // read-only mode). The tooltip says exactly that, not more.
+      label: <span title={t('actorsList.statusTooltip')}>{t('actorsList.status')}</span>,
+      render: (row) => <StatusBadge status={row.status} />,
+    },
   ];
 
   return (

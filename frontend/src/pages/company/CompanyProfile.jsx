@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Pencil, MoreVertical, Plus } from 'lucide-react';
+import { Pencil, MoreVertical, Plus, Copy } from 'lucide-react';
 import { ACTOR_TYPES, TEAM_ROLES } from '@/data/regions';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -294,7 +294,33 @@ export default function CompanyProfile() {
                 <DetailField label={t('actorProfile.actorType')} value={actor.actor_type} />
                 <DetailField label={t('actorProfile.traceabilityCode')} value={actor.traceability_code} />
                 <DetailField label={t('actorProfile.charterSigned')} value={actor.charter_signed ? 'Yes' : 'No'} />
-                <DetailField label={t('actorProfile.connectId')} value={actor.connect_id} />
+                {/* Real gap found live: the Connect ID is the actual
+                    piece of information someone needs to give a real
+                    business partner to connect ("Connect via ID"), but
+                    it only ever showed as plain text -- had to be
+                    manually selected and copied by hand. A one-click
+                    copy button removes the one bit of friction in the
+                    single feature that had reported real trouble. */}
+                <div className="flex flex-col gap-1" data-testid="company-connect-id-field">
+                  <span className="text-xs font-medium text-[#7089b4]">{t('actorProfile.connectId')}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-[#032b71] font-medium">{actor.connect_id ?? '—'}</span>
+                    {actor.connect_id && (
+                      <button
+                        type="button"
+                        data-testid="copy-connect-id"
+                        title={t('actorProfile.copyConnectId')}
+                        onClick={() => {
+                          navigator.clipboard.writeText(actor.connect_id);
+                          toast({ title: t('actorProfile.connectIdCopied') });
+                        }}
+                        className="text-[#7089b4] hover:text-[#0f48aa]"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>

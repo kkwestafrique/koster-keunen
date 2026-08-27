@@ -8,6 +8,14 @@ const STATUS_COLORS = {
   Potential: '#79730a',
   Revoked: '#ba550c',
   Pending: '#79730a',
+  // Real gap found live: Disabled had no color of its own, so it fell
+  // through to the same default gray as Inactive -- visually
+  // indistinguishable even though Disabled is the only status value
+  // that actually restricts anything anywhere in the app (locks the
+  // acting actor into read-only mode, checked in every write RLS
+  // policy via auth_acting_actor_disabled()). Inactive and Active have
+  // no functional difference at all currently.
+  Disabled: '#ba550c',
 };
 
 export default function StatusBadge({ status, testId }) {
