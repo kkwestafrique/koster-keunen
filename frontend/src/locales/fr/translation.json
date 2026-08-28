@@ -717,7 +717,10 @@
     "quantityLost": "Quantité perdue lors de la transaction : {{quantity}} Kg",
     "attachFile": "Joindre un fichier",
     "fileAttached": "Fichier joint",
-    "attachFailed": "Échec de la jonction du fichier"
+    "attachFailed": "Échec de la jonction du fichier",
+    "sentAwaitingReceiver": "Envoyé — En attente de confirmation du destinataire",
+    "sentReceived": "Envoyé — Reçu",
+    "sentRejectedReturned": "Envoyé — Rejeté, retourné"
   },
   "lossList": {
     "title": "Perte",

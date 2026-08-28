@@ -251,6 +251,32 @@ export function useTransaction(transactionCode) {
   });
 }
 
+// Powers the "smarter" status label on a Send transaction's own detail
+// page. Real feedback: a bare "Approved" on the sender's own copy reads
+// as "this is fully done and settled" even when the receiver hasn't
+// confirmed yet, or has since rejected it -- confusing in both
+// directions. The underlying status column stays 'Approved' immediately
+// (that's still correct -- Admin-only creation is the real control, and
+// stock genuinely deducts right away), this only looks up the real,
+// current state of the linked Received transaction so the DISPLAYED
+// label can reflect it honestly without touching the workflow itself.
+export function useLinkedTransactionStatus(linkedGroupId) {
+  return useQuery({
+    queryKey: ['linked-transaction-status', linkedGroupId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('status')
+        .eq('transaction_group_id', linkedGroupId)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.status || null;
+    },
+    enabled: !!linkedGroupId,
+  });
+}
+
 // Transaction creation: one row per product line (Received/Processing both
 // support "Add more product"), sharing a transaction_group_id so the detail
 // page can reconstruct the full multi-product set — matches the

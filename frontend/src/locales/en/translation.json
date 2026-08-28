@@ -717,7 +717,10 @@
     "quantityLost": "Quantity lost while doing transaction: {{quantity}} Kg",
     "attachFile": "Attach file",
     "fileAttached": "File attached",
-    "attachFailed": "Failed to attach file"
+    "attachFailed": "Failed to attach file",
+    "sentAwaitingReceiver": "Sent — Awaiting receiver confirmation",
+    "sentReceived": "Sent — Received",
+    "sentRejectedReturned": "Sent — Rejected, returned to you"
   },
   "lossList": {
     "title": "Loss",

@@ -13,7 +13,7 @@ const STATUS_COLORS = {
   Returned: { bg: '#ebf6ff', border: '#cfd8e6', text: '#0f48aa' },
 };
 
-export default function TransactionStatusBadge({ status, testId = 'transaction-status-badge' }) {
+export default function TransactionStatusBadge({ status, label, testId = 'transaction-status-badge' }) {
   const c = STATUS_COLORS[status] || STATUS_COLORS.Pending;
   return (
     <span
@@ -21,7 +21,7 @@ export default function TransactionStatusBadge({ status, testId = 'transaction-s
       style={{ backgroundColor: c.bg, borderColor: c.border, color: c.text }}
       data-testid={testId}
     >
-      {status}
+      {label || status}
     </span>
   );
 }

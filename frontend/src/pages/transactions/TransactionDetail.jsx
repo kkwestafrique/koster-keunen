@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, Paperclip } from 'lucide-react';
-import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction } from '@/hooks/useTransactions';
+import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction, useLinkedTransactionStatus } from '@/hooks/useTransactions';
 import { uploadMediaFile, supabase, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,6 +74,22 @@ export default function TransactionDetail() {
   const [rejectReason, setRejectReason] = useState('');
   const [rejectComment, setRejectComment] = useState('');
   const [rejecting, setRejecting] = useState(false);
+
+  // Real feedback: a bare "Approved" on a Send transaction's own detail
+  // page read as "fully done and settled" even when the receiver hadn't
+  // confirmed yet, or had since rejected it. The underlying workflow is
+  // unchanged (creation is still immediately final, Admin-only) -- this
+  // only computes what to DISPLAY, by checking the real, current status
+  // of the linked Received transaction on the other side.
+  const { data: linkedStatus } = useLinkedTransactionStatus(
+    tx?.direction === 'Send' ? tx?.linked_transaction_group_id : null
+  );
+  let sendStatusOverride = null;
+  if (tx?.direction === 'Send') {
+    if (linkedStatus === 'Pending') sendStatusOverride = { color: 'Pending', text: t('transactionDetail.sentAwaitingReceiver') };
+    else if (linkedStatus === 'Approved') sendStatusOverride = { color: 'Approved', text: t('transactionDetail.sentReceived') };
+    else if (linkedStatus === 'Rejected') sendStatusOverride = { color: 'Rejected', text: t('transactionDetail.sentRejectedReturned') };
+  }
 
   if (isLoading) {
     return (
@@ -166,7 +182,9 @@ export default function TransactionDetail() {
           {canViewChangeHistory && (
             <ChangeHistoryDialog tableName="transactions" groupId={tx.transaction_group_id} testId="transaction-change-history-trigger" />
           )}
-          {tx.direction !== 'Processing' && <StatusBadge status={tx.status} />}
+          {tx.direction !== 'Processing' && (
+            <StatusBadge status={sendStatusOverride?.color || tx.status} label={sendStatusOverride?.text} />
+          )}
         </div>
       </div>
 
