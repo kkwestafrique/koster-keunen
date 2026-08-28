@@ -13,6 +13,8 @@ import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useCountries } from '@/hooks/useReferenceData';
 import { useActorDirectory, useActingActor } from '@/hooks/useActors';
 import { useCreateContract } from '@/hooks/useContracts';
+import { useCreateConnection } from '@/hooks/useConnections';
+import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
 import { uploadMediaFile, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +33,7 @@ export default function ContractWizard() {
   const { data: actors = [] } = useActorDirectory();
   const { data: countries = [] } = useCountries();
   const createContract = useCreateContract();
+  const createConnection = useCreateConnection();
   const { isReadOnly } = useActingActor();
 
   const [step, setStep] = useState(1);
@@ -144,6 +147,36 @@ export default function ContractWizard() {
         country: supplier?.country || null,
         attachment_url,
       });
+      // Real gap found live: Contracts used the same unscoped
+      // useActorDirectory() Send Stock used to use before being
+      // restricted to real connections -- meaning you could create a
+      // contract with someone you'd never actually connected to,
+      // producing exactly the confusion reported ("actors here that
+      // are no longer in the system" -- they were never really
+      // connected in the first place). Rather than require connecting
+      // first as a separate step (confirmed with Babs as too much
+      // friction), creating a contract with someone new now also
+      // connects you to them automatically, in this one action --
+      // instantly Active, matching the same reasoning already used for
+      // brand-new-actor creation: formalizing a contract is an even
+      // stronger, clearer signal of an already-real relationship than
+      // "Connect via ID" (which still requires the other side's
+      // separate approval, since that's just browsing the directory).
+      if (form.supplier_actor_id) {
+        const { data: existing } = await supabase
+          .from('connections')
+          .select('id')
+          .eq('supply_chain_id', supplyChainId)
+          .or(`and(actor_from_id.eq.${profile.current_actor_id},actor_to_id.eq.${form.supplier_actor_id}),and(actor_from_id.eq.${form.supplier_actor_id},actor_to_id.eq.${profile.current_actor_id})`)
+          .maybeSingle();
+        if (!existing) {
+          await createConnection.mutateAsync({
+            actor_from_id: profile.current_actor_id,
+            actor_to_id: form.supplier_actor_id,
+            status: 'Active',
+          });
+        }
+      }
       toast({ title: t('contractWizard.created') });
       navigate('/contracts');
     } catch (err) {
