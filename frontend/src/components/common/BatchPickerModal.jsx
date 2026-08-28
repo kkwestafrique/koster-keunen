@@ -44,6 +44,30 @@ export default function BatchPickerModal({ open, onOpenChange, product, standard
   const setQuantity = (stockId, value) => setSelections((s) => ({ ...s, [stockId]: value }));
   const removeSelection = (stockId) => setSelections((s) => { const next = { ...s }; delete next[stockId]; return next; });
 
+  // "Use oldest batch first" -- from the Stock review: batches here are
+  // often heavily fragmented (many small entries for the same product),
+  // making manual selection tedious. useAvailableBatches already orders
+  // by created_at ascending, so walking that existing order and taking
+  // from each batch until the required quantity is covered is a genuine
+  // FIFO auto-select, not an approximation. Doesn't touch the required
+  // quantity itself or auto-confirm -- just fills the selection, so the
+  // person can still review and adjust before confirming.
+  const autoSelectOldestFirst = () => {
+    const required = Number(requiredQuantity) || 0;
+    if (required <= 0) return;
+    const next = {};
+    let remaining = required;
+    for (const b of batches) {
+      if (remaining <= 0) break;
+      const take = Math.min(Number(b.quantity_available), remaining);
+      if (take > 0) {
+        next[b.id] = take;
+        remaining -= take;
+      }
+    }
+    setSelections(next);
+  };
+
   const totalSelected = Object.values(selections).reduce((sum, q) => sum + (Number(q) || 0), 0);
   const required = Number(requiredQuantity) || 0;
   const progressPct = required > 0 ? Math.min((totalSelected / required) * 100, 100) : 0;
@@ -71,7 +95,22 @@ export default function BatchPickerModal({ open, onOpenChange, product, standard
         ) : batches.length === 0 ? (
           <p className="text-sm text-[#7089b4]" data-testid={`${testIdPrefix}-empty`}>{t('batchPicker.noBatchesFound')}</p>
         ) : (
-          <table className="w-full text-sm">
+          <>
+            {Number(requiredQuantity) > 0 && (
+              <div className="flex justify-end mb-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-[#0f48aa] text-[#0f48aa]"
+                  data-testid={`${testIdPrefix}-auto-select`}
+                  onClick={autoSelectOldestFirst}
+                >
+                  {t('batchPicker.useOldestFirst')}
+                </Button>
+              </div>
+            )}
+            <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
                 <th className="py-2 w-10"></th>
@@ -117,6 +156,7 @@ export default function BatchPickerModal({ open, onOpenChange, product, standard
               })}
             </tbody>
           </table>
+          </>
         )}
 
         <div className="bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4 mt-2" data-testid={`${testIdPrefix}-summary`}>

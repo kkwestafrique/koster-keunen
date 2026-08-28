@@ -574,7 +574,8 @@
     "confirmSelection": "Ajouter les détails du lot",
     "pleaseSelectAtLeastOneBatch": "Veuillez sélectionner au moins un lot",
     "editSelection": "Modifier la sélection de lots",
-    "batchesSelected": "{{count}} lot(s) sélectionné(s), {{total}} Kg au total"
+    "batchesSelected": "{{count}} lot(s) sélectionné(s), {{total}} Kg au total",
+    "useOldestFirst": "Utiliser d'abord les lots les plus anciens"
   },
   "processForm": {
     "title": "Traiter le stock",

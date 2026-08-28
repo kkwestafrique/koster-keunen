@@ -574,7 +574,8 @@
     "confirmSelection": "Add batch details",
     "pleaseSelectAtLeastOneBatch": "Please select atleast one batch",
     "editSelection": "Edit batch selection",
-    "batchesSelected": "{{count}} batch(es) selected, {{total}} Kg total"
+    "batchesSelected": "{{count}} batch(es) selected, {{total}} Kg total",
+    "useOldestFirst": "Use oldest batches first"
   },
   "processForm": {
     "title": "Process stock",
