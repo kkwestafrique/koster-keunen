@@ -51,7 +51,11 @@ export function useStocks({ stockType, page = 1, search = '', product = '', stan
         .select('*, villages(name)', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
         .eq('stock_type', stockType)
-        .order('created_at', { ascending: false });
+        // Real feedback: batches should sort by how much stock is
+        // actually there, highest first, rather than by when they were
+        // created -- easier to see what's actually available at a
+        // glance instead of hunting through creation-date order.
+        .order('quantity_available', { ascending: false });
 
       if (product) query = query.eq('product', product);
       if (standard) query = query.eq('standard', standard);

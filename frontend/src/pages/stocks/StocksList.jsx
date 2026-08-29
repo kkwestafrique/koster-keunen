@@ -101,22 +101,34 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
             },
           ]}
         />
-        <Input
-          type="date"
-          data-testid={`${testId}-date-from-filter`}
-          value={dateFrom}
-          onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-          placeholder={t('stocks.dateFrom')}
-          className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
-        />
-        <Input
-          type="date"
-          data-testid={`${testId}-date-to-filter`}
-          value={dateTo}
-          onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-          placeholder={t('stocks.dateTo')}
-          className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
-        />
+        {/* Real feedback: "What dates are here?" -- these two fields
+            used placeholder text to explain themselves, but native
+            date-picker inputs largely ignore placeholder text (the
+            same root cause as the "+01" phone code bug found earlier
+            today). A real, always-visible label fixes this regardless
+            of what the browser does with placeholders. */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-[#7089b4]" htmlFor={`${testId}-date-from-filter`}>{t('stocks.dateFrom')}</label>
+          <Input
+            id={`${testId}-date-from-filter`}
+            type="date"
+            data-testid={`${testId}-date-from-filter`}
+            value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+            className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-[#7089b4]" htmlFor={`${testId}-date-to-filter`}>{t('stocks.dateTo')}</label>
+          <Input
+            id={`${testId}-date-to-filter`}
+            type="date"
+            data-testid={`${testId}-date-to-filter`}
+            value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+            className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
+          />
+        </div>
       </div>
 
       <DataTable

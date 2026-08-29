@@ -7,10 +7,14 @@ import React from 'react';
 // choice) -- changed to a colored pill (background + white text) for
 // real visibility, keeping the same three colors so nothing else that
 // referenced them needs to change.
+// Real feedback: Sustainable felt too dark/heavy, Conventional wasn't
+// red/rose enough to read clearly as its own distinct category.
+// Sustainable moved to a lighter olive-yellow; Conventional moved to a
+// genuine rose-red rather than the previous burnt-orange tone.
 const STANDARD_COLORS = {
-  Sustainable: '#79730a',
+  Sustainable: '#a39b3a',
   Organic: '#1ba441',
-  Conventional: '#ba550c',
+  Conventional: '#c94a4a',
 };
 
 export default function StandardBadge({ standard, testId }) {
