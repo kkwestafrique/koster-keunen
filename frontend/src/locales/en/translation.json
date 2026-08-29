@@ -461,7 +461,9 @@
     "connectionRequestedDescription": "Waiting for {{name}} to approve. You can check the status in Connections.",
     "totalHivesByType": "Total hives by type",
     "totalHivesByCrop": "Total hives by crop",
-    "hiveTotalsMustMatch": "these two totals must match to save"
+    "hiveTotalsMustMatch": "these two totals must match to save",
+    "otherTypeManually": "Other (type manually)",
+    "organisationNamePlaceholder": "Enter organisation name"
   },
   "contractWizard": {
     "stepDetails": "Contract details",

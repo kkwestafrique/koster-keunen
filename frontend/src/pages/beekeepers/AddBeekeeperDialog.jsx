@@ -28,6 +28,7 @@ const YEAR_OF_BIRTH_OPTIONS = Array.from({ length: 80 }, (_, i) => CURRENT_YEAR 
 
 const EMPTY = {
   linked_producer_organisation_id: '',
+  linked_producer_organisation: '',
   full_name: '',
   country: '', state_region: '', lga_municipality: '', village: '',
   contact_email: '',
@@ -253,6 +254,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
       await createBeekeeper.mutateAsync({
         full_name: form.full_name,
         linked_producer_organisation_id: form.linked_producer_organisation_id || null,
+        linked_producer_organisation: form.linked_producer_organisation || null,
         contact_email: form.contact_email || null,
         contact_phone,
         national_id: form.national_id || null,
@@ -303,12 +305,52 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
                     <h3 className="text-sm font-black text-[#032b71]">{t('forms.basicDetails')}</h3>
                     <div className="flex flex-col gap-1.5">
                       <RequiredLabel required={false}>{t('forms.linkedProducerOrganisation')}</RequiredLabel>
-                      <Select value={form.linked_producer_organisation_id} onValueChange={(v) => set('linked_producer_organisation_id')(v)}>
-                        <SelectTrigger data-testid="bk-wizard-linked-org"><SelectValue placeholder={t('forms.linkedProducerOrganisation')} /></SelectTrigger>
-                        <SelectContent>
-                          {actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      {(() => {
+                        const selectValue = form.linked_producer_organisation_id || (form.linked_producer_organisation ? 'other' : '');
+                        return (
+                          <>
+                            <Select
+                              value={selectValue}
+                              onValueChange={(v) => {
+                                if (v === 'other') {
+                                  setForm((f) => ({ ...f, linked_producer_organisation_id: '' }));
+                                } else {
+                                  setForm((f) => ({ ...f, linked_producer_organisation_id: v, linked_producer_organisation: '' }));
+                                }
+                              }}
+                            >
+                              <SelectTrigger data-testid="bk-wizard-linked-org"><SelectValue placeholder={t('forms.linkedProducerOrganisation')} /></SelectTrigger>
+                              <SelectContent>
+                                {actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name}</SelectItem>)}
+                                {/* Real gap closed: this dropdown only
+                                    ever linked to an organisation that
+                                    already exists as a formal actor
+                                    record. A Field Officer describing a
+                                    real cooperative that hasn't been
+                                    formally onboarded yet had no way to
+                                    record that. The free-text fallback
+                                    writes to linked_producer_organisation
+                                    -- a column that already existed and
+                                    was already used by bulk upload and
+                                    correctly displayed on the beekeeper
+                                    detail page (actor_name ||
+                                    linked_producer_organisation) -- this
+                                    was the one gap left to close. */}
+                                <SelectItem value="other">{t('forms.otherTypeManually')}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {selectValue === 'other' && (
+                              <Input
+                                data-testid="bk-wizard-linked-org-freetext"
+                                value={form.linked_producer_organisation}
+                                onChange={(e) => set('linked_producer_organisation')(e.target.value)}
+                                placeholder={t('forms.organisationNamePlaceholder')}
+                                className="mt-1.5"
+                              />
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <RequiredLabel required>{t('forms.beekeeperFullName')}</RequiredLabel>

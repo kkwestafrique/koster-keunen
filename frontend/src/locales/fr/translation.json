@@ -461,7 +461,9 @@
     "connectionRequestedDescription": "En attente de l'approbation de {{name}}. Vous pouvez suivre le statut dans Connexions.",
     "totalHivesByType": "Total des ruches par type",
     "totalHivesByCrop": "Total des ruches par culture",
-    "hiveTotalsMustMatch": "ces deux totaux doivent correspondre pour enregistrer"
+    "hiveTotalsMustMatch": "ces deux totaux doivent correspondre pour enregistrer",
+    "otherTypeManually": "Autre (saisir manuellement)",
+    "organisationNamePlaceholder": "Saisir le nom de l'organisation"
   },
   "contractWizard": {
     "stepDetails": "Détails du contrat",
