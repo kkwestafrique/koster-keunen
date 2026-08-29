@@ -236,21 +236,39 @@ export function useUpdateContractGroup() {
 // Received-type contract (or vice versa) wouldn't make sense regardless
 // of anything else. Confirmed with Babs: no further filtering by actor
 // or product beyond that.
-export function useContractsForLinking(contractType) {
+// Contract fulfillment tracking: the "Link to contract" dropdown on
+// Send/Receive needs the raw per-product-line contracts table (one row
+// per product), not the aggregated contract_groups view -- linking has
+// to point at a specific line's own id and expected_quantity, not a
+// whole multi-product contract. RLS already scopes this to the current
+// actor's own contracts; no extra owner filter needed here.
+//
+// Filters by destination actor (actorId), not product -- confirmed as
+// the right choice after real feedback flagged the earlier "no
+// filtering at all" version as unsafe (could link a Honey shipment to
+// a Beeswax contract for a totally different buyer with zero warning).
+// Filtering by actor alone, not also product, matches how contracts
+// actually work here: one contract can cover multiple products, so a
+// strict double-match on both fields could hide the very contract line
+// you want. Direction (Send transactions only see Send-type contracts)
+// is still a baseline correctness constraint, not optional filtering.
+export function useContractsForLinking(contractType, actorId) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['contracts-for-linking', contractType, supplyChainId],
+    queryKey: ['contracts-for-linking', contractType, actorId, supplyChainId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('contracts')
         .select('id, contract_code, product, expected_quantity, unit')
         .eq('supply_chain_id', supplyChainId)
         .eq('contract_type', contractType)
         .order('created_at', { ascending: false });
+      if (actorId) query = query.eq('actor_id', actorId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
-    enabled: !!supplyChainId && !!contractType,
+    enabled: !!supplyChainId && !!contractType && !!actorId,
   });
 }
 

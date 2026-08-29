@@ -210,7 +210,9 @@
     "quantityDelivered": "Quantity delivered",
     "totalAmount": "Total amount",
     "linkToContract": "Link to contract (optional)",
-    "noContract": "No contract"
+    "noContract": "No contract",
+    "selectActorFirst": "Select a destination actor first to see their contracts.",
+    "noContractsForActor": "No contracts found with this actor."
   },
   "stocks": {
     "receivedTitle": "Received stocks",

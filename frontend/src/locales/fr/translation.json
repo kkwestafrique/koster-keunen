@@ -210,7 +210,9 @@
     "quantityDelivered": "Quantité livrée",
     "totalAmount": "Montant total",
     "linkToContract": "Lier à un contrat (facultatif)",
-    "noContract": "Aucun contrat"
+    "noContract": "Aucun contrat",
+    "selectActorFirst": "Sélectionnez d'abord un acteur de destination pour voir ses contrats.",
+    "noContractsForActor": "Aucun contrat trouvé avec cet acteur."
   },
   "stocks": {
     "receivedTitle": "Stocks reçus",

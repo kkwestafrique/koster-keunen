@@ -84,7 +84,7 @@ export default function SendStockForm() {
     contract_id: '',
   });
 
-  const { data: linkableContracts = [] } = useContractsForLinking('Send');
+  const { data: linkableContracts = [] } = useContractsForLinking('Send', form.destination_actor_id);
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -178,7 +178,7 @@ export default function SendStockForm() {
             <Label className="text-[#7089b4]">{t('sendForm.destinationActor')}</Label>
             <Select
               value={form.destination_actor_id}
-              onValueChange={(v) => setForm((f) => ({ ...f, destination_actor_id: v, currency: f.currency || 'NGN' }))}
+              onValueChange={(v) => setForm((f) => ({ ...f, destination_actor_id: v, currency: f.currency || 'NGN', contract_id: '' }))}
             >
               <SelectTrigger data-testid="send-actor"><SelectValue placeholder={t('forms.selectActor')} /></SelectTrigger>
               <SelectContent>
@@ -255,6 +255,7 @@ export default function SendStockForm() {
             <Select
               value={form.contract_id || 'none'}
               onValueChange={(v) => set('contract_id')(v === 'none' ? '' : v)}
+              disabled={!form.destination_actor_id}
             >
               <SelectTrigger data-testid="send-contract"><SelectValue placeholder={t('transactions.noContract')} /></SelectTrigger>
               <SelectContent>
@@ -266,6 +267,24 @@ export default function SendStockForm() {
                 ))}
               </SelectContent>
             </Select>
+            {/* Real gap fixed after direct feedback: the dropdown used
+                to show every Send contract regardless of who it was
+                with, meaning a shipment could be linked to a contract
+                for a completely different buyer with zero warning. Now
+                filtered to contracts with the chosen destination actor
+                specifically -- these two messages explain the two ways
+                that can come up empty, rather than a silent, confusing
+                blank list. */}
+            {!form.destination_actor_id && (
+              <p className="text-xs text-[#7089b4]" data-testid="send-contract-select-actor-first">
+                {t('transactions.selectActorFirst')}
+              </p>
+            )}
+            {form.destination_actor_id && linkableContracts.length === 0 && (
+              <p className="text-xs text-[#7089b4]" data-testid="send-contract-none-for-actor">
+                {t('transactions.noContractsForActor')}
+              </p>
+            )}
           </div>
         </div>
 
