@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 5;
 
 export function useStock(id) {
   return useQuery({
@@ -41,10 +41,10 @@ export function useTransactionForStock(stockId) {
   });
 }
 
-export function useStocks({ stockType, page = 1, search = '', product = '', standard = '', village = '', dateFrom = '', dateTo = '' } = {}) {
+export function useStocks({ stockType, page = 1, pageSize = DEFAULT_PAGE_SIZE, search = '', product = '', standard = '', village = '', dateFrom = '', dateTo = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['stocks', { stockType, page, search, product, standard, village, dateFrom, dateTo, supplyChainId }],
+    queryKey: ['stocks', { stockType, page, pageSize, search, product, standard, village, dateFrom, dateTo, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('stocks')
@@ -74,8 +74,19 @@ export function useStocks({ stockType, page = 1, search = '', product = '', stan
       // correctly-scoped dataset and paginates the real results.
       if (search) query = query.ilike('batch_reference', `%${search}%`);
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      // CRITICAL fix (BUG-02, independent audit): this used to calculate
+      // the range using a hardcoded PAGE_SIZE=25 constant completely
+      // disconnected from what the UI actually showed and let someone
+      // select (DataTable's own "Items per page" control, defaulting to
+      // 5). If there were fewer than 25 real rows, clicking to a page
+      // number the UI itself calculated as valid would request a range
+      // starting beyond the real data -- Postgres/PostgREST correctly
+      // returns HTTP 416 for that, which surfaced as a permanent
+      // "Loading..." state with no error shown. Now pageSize is a real
+      // parameter, the same value driving both the UI's page-count math
+      // and the actual database range.
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       const { data, error, count } = await query;

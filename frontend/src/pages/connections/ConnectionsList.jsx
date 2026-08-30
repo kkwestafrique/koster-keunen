@@ -23,12 +23,13 @@ export default function ConnectionsList() {
   const { t } = useTranslation();
   usePageTitle(t('connectionsList.title'));
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [year, setYear] = useState('');
   const [formOpen, setFormOpen] = useState(false);
 
-  const { data, isLoading } = useConnections({ page, search, status, year });
+  const { data, isLoading } = useConnections({ page, pageSize, search, status, year });
   const { profile } = useAuth();
   const { canApprove } = usePermissions();
   const { toast } = useToast();
@@ -123,6 +124,8 @@ export default function ConnectionsList() {
         rows={data?.rows || []}
         total={data?.total || 0}
         page={page}
+        pageSize={pageSize}
+        onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onPageChange={setPage}
         loading={isLoading}
       />

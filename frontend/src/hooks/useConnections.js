@@ -2,10 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 5;
 
 export function useConnections({
   page = 1,
+  pageSize = DEFAULT_PAGE_SIZE,
   search = '',
   status = '',
   connectionType = '',
@@ -13,7 +14,7 @@ export function useConnections({
 } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['connections', { page, search, status, connectionType, year, supplyChainId }],
+    queryKey: ['connections', { page, pageSize, search, status, connectionType, year, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('connections')
@@ -28,8 +29,12 @@ export function useConnections({
       if (connectionType) query = query.eq('connection_type', connectionType);
       if (year) query = query.eq('year', year);
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      // CRITICAL fix (BUG-02, independent audit): same root cause as
+      // Stocks -- a hardcoded PAGE_SIZE=25 disconnected from what the UI
+      // actually showed, causing an HTTP 416 the moment fewer than 25
+      // real rows existed and a valid-looking page number was clicked.
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       const { data, error, count } = await query;

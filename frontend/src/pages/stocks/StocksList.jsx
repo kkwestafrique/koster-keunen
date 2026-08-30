@@ -23,12 +23,13 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   const { data: products = [] } = useConstants('product_type');
   const { data: standards = [] } = useConstants('standard');
   const { data: villages = [] } = useAllVillagesLite();
 
-  const { data, isLoading } = useStocks({ stockType, page, search, product, standard, village, dateFrom, dateTo });
+  const { data, isLoading } = useStocks({ stockType, page, pageSize, search, product, standard, village, dateFrom, dateTo });
   const rows = data?.rows || [];
 
   // Per the live-site audit: only Raw material supports Receive stock.
@@ -137,6 +138,8 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
         rows={rows}
         total={data?.total || 0}
         page={page}
+        pageSize={pageSize}
+        onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onRowClick={(row) => navigate(`/stocks/detail/${row.id}`)}
         onPageChange={setPage}
         loading={isLoading}

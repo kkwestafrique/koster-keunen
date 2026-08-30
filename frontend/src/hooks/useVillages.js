@@ -2,12 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 5;
 
-export function useVillages({ page = 1, search = '' } = {}) {
+export function useVillages({ page = 1, pageSize = DEFAULT_PAGE_SIZE, search = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
-    queryKey: ['villages', { page, search, supplyChainId }],
+    queryKey: ['villages', { page, pageSize, search, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('villages')
@@ -17,8 +17,12 @@ export function useVillages({ page = 1, search = '' } = {}) {
 
       if (search) query = query.ilike('name', `%${search}%`);
 
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      // Same root cause found and fixed in Stocks/Connections (BUG-02,
+      // independent audit) -- not explicitly named in that report, but
+      // identical hardcoded PAGE_SIZE=25 pattern found here while fixing
+      // the audited instances. Fixed for consistency.
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       const { data, error, count } = await query;
