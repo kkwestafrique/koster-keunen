@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus, Trash2 } from 'lucide-react';
 import { PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
-import { useCreateTransaction, useConsumeStockBatch, useAvailableBatches } from '@/hooks/useTransactions';
+import { useAvailableBatches, useProcessStock } from '@/hooks/useTransactions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
@@ -39,8 +39,7 @@ export default function ProcessStockForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const createTransaction = useCreateTransaction();
-  const consumeBatch = useConsumeStockBatch();
+  const processStock = useProcessStock();
   const { isReadOnly } = useActingActor();
 
   const [mode, setMode] = useState('Processing'); // 'Processing' | 'Merging'
@@ -81,9 +80,19 @@ export default function ProcessStockForm() {
   };
   const handleSourceQuantityChange = (v) => { setForm((f) => ({ ...f, source_quantity: v })); setSelectedBatches([]); };
 
+  // UX-layer check, ahead of the real enforcement: the database now
+  // rejects (atomically, unconditionally) any attempt to claim more
+  // output than was actually consumed -- this just surfaces that same
+  // problem immediately in the form, instead of only after a round
+  // trip to the server.
+  const totalSelectedForValidation = selectedBatches.reduce((s, b) => s + Number(b.quantity || 0), 0);
+  const totalDestinationForValidation = form.destinations.reduce((s, r) => s + (Number(r.quantity) || 0), 0);
+  const outputExceedsConsumption = selectedBatches.length > 0 && totalDestinationForValidation > totalSelectedForValidation;
+
   const valid = form.standard && form.source_product && form.source_quantity
     && form.transaction_date && selectedBatches.length > 0
-    && form.destinations.every((r) => r.converted_product && r.quantity);
+    && form.destinations.every((r) => r.converted_product && r.quantity)
+    && !outputExceedsConsumption;
 
   // Real dead-end found live: picking a Standard + Product combination
   // with zero real Raw Material stock behind it (e.g. "Sustainable" when
@@ -103,42 +112,23 @@ export default function ProcessStockForm() {
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      const totalSourceSelected = selectedBatches.reduce((s, b) => s + Number(b.quantity), 0);
-      const totalDestination = form.destinations.reduce((s, r) => s + (Number(r.quantity) || 0), 0);
-      const quantity_lost = totalSourceSelected - totalDestination;
-
-      const createdRows = await createTransaction.mutateAsync({
-        products: form.destinations.map((r) => ({
-          product: r.converted_product,
-          quantity: r.quantity,
-          unit: r.unit,
-          source_product: form.source_product,
-          source_quantity: form.source_quantity,
-        })),
-        direction: 'Processing',
-        transaction_type: mode,
+      // CRITICAL fix (BUG-01): this used to create the transaction row
+      // first, then consume batches in a separate loop afterward --
+      // meaning source_quantity/quantity_lost were whatever the form
+      // happened to send, with no real verification against what was
+      // actually available or actually consumed. Now a single atomic
+      // database call does consumption, mass-balance verification, and
+      // transaction creation together -- if the claimed output would
+      // exceed what was genuinely consumed, the whole operation is
+      // rejected before anything is created or deducted.
+      await processStock.mutateAsync({
+        sourceProduct: form.source_product,
         standard: form.standard,
-        transaction_date: form.transaction_date,
-        quantity_lost,
-        // Real data-hygiene problem found live: this used to rely on the
-        // table's own column default, which is 'Pending' -- but stock is
-        // consumed/created immediately on insert for Processing
-        // regardless of status (sync_transaction_to_stock only gates on
-        // status for Received), and the UI deliberately never shows a
-        // status badge for Processing at all (direction !== 'Processing'
-        // check in TransactionDetail.jsx). So every Processing
-        // transaction sat in the database claiming to be "Pending"
-        // forever, misleading anyone who queried it directly or looked
-        // at the Activity Log later. Explicitly setting 'Approved' here
-        // makes the stored data honestly match what already happens in
-        // practice, matching the same explicit pattern Send already
-        // uses for the same reason.
-        status: 'Approved',
+        sourceBatches: selectedBatches,
+        destinations: form.destinations.map((r) => ({ product: r.converted_product, quantity: r.quantity, unit: r.unit })),
+        transactionType: mode,
+        transactionDate: form.transaction_date,
       });
-      const groupId = createdRows[0]?.transaction_group_id;
-      for (const b of selectedBatches) {
-        await consumeBatch.mutateAsync({ stockId: b.stockId, quantity: b.quantity, transactionGroupId: groupId });
-      }
       toast({ title: t('processForm.created') });
       navigate('/process');
     } catch (err) {
@@ -232,6 +222,12 @@ export default function ProcessStockForm() {
             {noStockForSelection && (
               <p className="text-xs text-[#ba550c]" data-testid="process-no-stock-warning">
                 {t('processForm.noStockForSelection', { standard: form.standard, product: form.source_product })}
+              </p>
+            )}
+
+            {outputExceedsConsumption && (
+              <p className="text-xs text-[#ba550c]" data-testid="process-output-exceeds-warning">
+                {t('processForm.outputExceedsConsumption', { consumed: totalSelectedForValidation, output: totalDestinationForValidation })}
               </p>
             )}
 

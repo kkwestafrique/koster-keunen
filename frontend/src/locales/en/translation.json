@@ -599,7 +599,8 @@
     "createFailed": "Failed to record processing",
     "submit": "Process stock",
     "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard.",
-    "availableHint": "You have {{quantity}} Kg available for this standard and product."
+    "availableHint": "You have {{quantity}} Kg available for this standard and product.",
+    "outputExceedsConsumption": "You selected {{consumed}} Kg of raw material but are trying to produce {{output}} Kg — output cannot exceed what you actually consumed."
   },
   "sendForm": {
     "title": "Send stock",

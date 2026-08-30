@@ -318,6 +318,42 @@ export function useAvailableBatches({ product, standard, stockType }) {
 // Postgres function (row-locked, validates availability, decrements, and
 // records the selection) — called once per selected batch after the
 // transaction row(s) exist.
+// CRITICAL fix from the independent BeezTrace QA audit (BUG-01):
+// Processing used to create the transaction row and consume batches as
+// two separate, sequential steps -- output stock creation fired the
+// instant the transaction row existed, with no way to check it against
+// what was actually consumed, since consumption happened afterward.
+// The audit demonstrated this let a person "process" 5 Kg of real
+// stock into 900 Kg of real, sellable output. This hook replaces that
+// two-step flow with a single atomic database call: consumption,
+// mass-balance verification, and transaction creation all happen
+// together, all-or-nothing. source_quantity and quantity_lost are
+// computed from real, verified numbers inside the function -- never
+// accepted as trusted input from the form.
+export function useProcessStock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ sourceProduct, standard, sourceBatches, destinations, transactionType, transactionDate, currency }) => {
+      const { data, error } = await supabase.rpc('process_stock', {
+        p_source_product: sourceProduct,
+        p_standard: standard,
+        p_source_batches: sourceBatches.map((b) => ({ stock_id: b.stockId, quantity: Number(b.quantity) })),
+        p_destinations: destinations.map((d) => ({ product: d.product, quantity: Number(d.quantity), unit: d.unit || 'Kg' })),
+        p_transaction_type: transactionType,
+        p_transaction_date: transactionDate,
+        p_currency: currency || null,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      queryClient.invalidateQueries({ queryKey: ['available-batches'] });
+    },
+  });
+}
+
 export function useConsumeStockBatch() {
   const queryClient = useQueryClient();
   return useMutation({
