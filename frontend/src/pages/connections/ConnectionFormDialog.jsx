@@ -43,6 +43,16 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
   const actorsForFrom = actors.filter((a) => a.id !== form.actor_to_id);
   const actorsForTo = actors.filter((a) => a.id !== form.actor_from_id);
 
+  // Real bug found via independent audit (BUG-18): nothing gated
+  // submission on the two actors actually being selected. connections
+  // has no NOT NULL constraint on these columns, but they're real uuid
+  // columns -- an empty string sent to a uuid column is invalid at the
+  // type level, producing exactly the kind of raw, unfriendly database
+  // error the audit flagged (the actual message differs from a plain
+  // "required field" violation, but the user-facing effect is
+  // identical: an unhelpful crash instead of a clear message).
+  const isFormValid = !!form.actor_from_id && !!form.actor_to_id;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -128,7 +138,7 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
 
           <DialogFooter className="col-span-2 mt-2">
             <Button type="button" variant="outline" className="border-[#0f48aa] text-[#0f48aa]" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-            <Button type="submit" data-testid="conn-form-submit" disabled={saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
+            <Button type="submit" data-testid="conn-form-submit" disabled={saving || !isFormValid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
               {saving ? t('forms.saving') : t('forms.saveConnection')}
             </Button>
           </DialogFooter>

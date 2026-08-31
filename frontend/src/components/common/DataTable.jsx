@@ -151,22 +151,35 @@ export default function DataTable({
       </Table>
 
       <div className="flex items-center justify-between px-4 py-3 border-t border-[#cfd8e6]">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-[#7089b4]">{t('common.itemsPerPage')}</span>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => onPageSizeChange && onPageSizeChange(Number(v))}
-          >
-            <SelectTrigger data-testid={`${testId}-page-size`} className="w-[70px] h-8 bg-white border-[#cfd8e6] text-[#032b71]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZE_OPTIONS.map((n) => (
-                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Real bug found via independent audit (BUG-20): on Products
+            (and the same applies to Verifications), pageSize is
+            intentionally set to match the full row count -- a
+            deliberate, correct choice for a small, fixed list, not a
+            bug in itself. But since that computed value never matches
+            one of this selector's fixed options ([5, 15, 30]), the
+            control rendered with no visible selection at all, and
+            picking a value did nothing since these pages never pass a
+            real onPageSizeChange handler. Hiding the selector entirely
+            when there's no real handler to call is more honest than
+            showing one that looks broken. */}
+        {onPageSizeChange && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-[#7089b4]">{t('common.itemsPerPage')}</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => onPageSizeChange(Number(v))}
+            >
+              <SelectTrigger data-testid={`${testId}-page-size`} className="w-[70px] h-8 bg-white border-[#cfd8e6] text-[#032b71]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((n) => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
           <span className="text-sm text-[#7089b4]" data-testid={`${testId}-summary`}>

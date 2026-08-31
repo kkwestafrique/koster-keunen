@@ -90,6 +90,24 @@ export default function Report() {
     setActiveReport(report);
   };
 
+  // Real bug found via independent audit (BUG-19): "Generate report"
+  // proceeded with the required Year field left empty -- confirmed
+  // exactly: nothing gated the button on any of the fields actually
+  // marked required (*) in each modal type below. Matches each modal's
+  // own required fields precisely; dateProducts has none marked
+  // required, so it's correctly left unrestricted.
+  const filtersValid = (() => {
+    if (!activeReport) return false;
+    if (activeReport.modal === 'yearOnly') return !!filters.year;
+    // Standards deliberately not checked for non-empty here: an empty
+    // array is the legitimate, default "All standards" state (see
+    // MultiCheck's own allSelected = value.length === 0), not a missing
+    // value -- confirmed by reading that component directly before
+    // trusting the "*" label as a literal non-empty requirement.
+    if (activeReport.modal === 'yearRange') return !!filters.startYear && !!filters.endYear;
+    return true;
+  })();
+
   const generate = async () => {
     setGenerating(true);
     const fileName = `${activeReport.key}-report-${new Date().toISOString().slice(0, 10)}.csv`;
@@ -329,7 +347,7 @@ export default function Report() {
             </Button>
             <Button
               data-testid="report-generate"
-              disabled={generating || !canEdit}
+              disabled={generating || !canEdit || !filtersValid}
               title={!canEdit ? t('report.exportRestricted') : undefined}
               className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] disabled:opacity-50"
               onClick={generate}
