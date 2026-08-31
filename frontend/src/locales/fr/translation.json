@@ -647,7 +647,8 @@
     "update": "Mettre à jour",
     "roleUpdated": "Rôle du membre mis à jour",
     "roleUpdateFailed": "Échec de la mise à jour du rôle",
-    "title": "Profil de l'entreprise"
+    "title": "Profil de l'entreprise",
+    "invalidEmail": "Veuillez saisir une adresse e-mail valide."
   },
   "report": {
     "commercialPartners": "Partenaires commerciaux",

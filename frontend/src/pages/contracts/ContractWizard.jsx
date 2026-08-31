@@ -123,8 +123,22 @@ export default function ContractWizard() {
   // The live totals box only appears once at least one row has both
   // quantity and price filled in (audit finding).
   const showTotalsSummary = form.products.some((p) => p.expected_quantity && p.price);
+  // Real bug found via independent audit (BUG-15): "-50" is truthy in
+  // JS, so the old check (`p.expected_quantity` alone) let a negative
+  // quantity pass all the way through to a real created contract --
+  // confirmed exactly, reproducing the audit's own example (-50 Kg
+  // reaching Create, producing a nonsense negative total and a
+  // silently-zeroed advance percent). The native <input type="number"
+  // min="0"> only affects the spinner arrows, not direct typing, so it
+  // never actually blocked this. Now requires a genuinely positive
+  // number. Price stays optional (an intentionally nullable "TBD"
+  // value elsewhere in this flow), but if one is entered, it can't be
+  // negative either.
   const detailsValid = form.year && form.standard && form.currency && form.signature_date
-    && form.products.every((p) => p.product && p.expected_quantity);
+    && form.products.every((p) =>
+      p.product && Number(p.expected_quantity) > 0
+      && (p.price === '' || p.price == null || Number(p.price) >= 0)
+    );
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -405,7 +419,7 @@ export default function ContractWizard() {
                 <Button
                   type="button"
                   data-testid="contract-submit"
-                  disabled={saving}
+                  disabled={saving || !detailsValid}
                   className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
                   onClick={handleSubmit}
                 >

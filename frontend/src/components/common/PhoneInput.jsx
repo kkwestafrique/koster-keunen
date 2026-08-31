@@ -40,7 +40,15 @@ export default function PhoneInput({ dialCode, number, onDialCodeChange, onNumbe
       <Input
         data-testid={`${testIdPrefix}-number`}
         value={number || ''}
-        onChange={(e) => onNumberChange(e.target.value)}
+        // Real bug found via independent audit (BUG-16): this passed
+        // through raw, unfiltered keystrokes -- typing "abcxyz" got
+        // saved verbatim as "+234 abcxyz". Stripped to digits only as
+        // the user types, matching every real phone number this app
+        // actually stores. Fixed once here since this is the one
+        // shared component used everywhere a contact number is entered
+        // (actors, beekeepers, profile).
+        onChange={(e) => onNumberChange(e.target.value.replace(/[^0-9]/g, ''))}
+        inputMode="numeric"
         placeholder="Contact number"
         className="bg-white border-[#cfd8e6] text-[#032b71]"
       />

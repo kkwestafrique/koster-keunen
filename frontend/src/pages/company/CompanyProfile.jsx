@@ -118,6 +118,12 @@ export default function CompanyProfile() {
     }
   };
 
+  // Real bug found via independent audit (BUG-17): "Send invite" enabled
+  // with "not-an-email" typed into the email field -- type="email" alone
+  // gives no real enforcement without a native <form> submit event, and
+  // the disabled check only tested for a non-empty string. A real
+  // format check, not just presence.
+  const inviteEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteForm.email);
   const submitRoleEdit = async () => {
     try {
       await updateRole.mutateAsync({ id: editRoleFor.id, actorId, role: roleValue });
@@ -471,6 +477,9 @@ export default function CompanyProfile() {
             <div className="flex flex-col gap-1.5">
               <Label className="text-[#7089b4]">{t('companyProfile.memberEmail')}</Label>
               <Input type="email" data-testid="invite-email" value={inviteForm.email} onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))} />
+              {inviteForm.email && !inviteEmailValid && (
+                <p className="text-xs text-[#ba550c]" data-testid="invite-email-invalid">{t('companyProfile.invalidEmail')}</p>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-[#7089b4]">{t('companyProfile.memberRole')}</Label>
@@ -486,7 +495,7 @@ export default function CompanyProfile() {
             <Button variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => setInviteOpen(false)}>{t('common.cancel')}</Button>
             <Button
               data-testid="invite-submit"
-              disabled={!inviteForm.name || !inviteForm.email || !inviteForm.role || inviteMember.isPending}
+              disabled={!inviteForm.name || !inviteEmailValid || !inviteForm.role || inviteMember.isPending}
               className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
               onClick={submitInvite}
             >

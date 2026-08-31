@@ -647,7 +647,8 @@
     "update": "Update",
     "roleUpdated": "Member role updated",
     "roleUpdateFailed": "Failed to update role",
-    "title": "Company Profile"
+    "title": "Company Profile",
+    "invalidEmail": "Please enter a valid email address."
   },
   "report": {
     "commercialPartners": "Commercial partners",
