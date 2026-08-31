@@ -530,7 +530,8 @@
     "addDelivery": "Ajouter une livraison",
     "deliveryAdded": "Notification de livraison ajoutée",
     "deliveryAddFailed": "Impossible d'ajouter la notification de livraison",
-    "delivered": "Livré"
+    "delivered": "Livré",
+    "belowDelivered": "Ne peut pas être inférieur à {{delivered}} Kg déjà livrés pour ce contrat."
   },
   "receiveForm": {
     "singleTransaction": "Transaction unique",

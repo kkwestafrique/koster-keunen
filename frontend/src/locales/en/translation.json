@@ -530,7 +530,8 @@
     "addDelivery": "Add delivery",
     "deliveryAdded": "Delivery notification added",
     "deliveryAddFailed": "Could not add delivery notification",
-    "delivered": "Delivered"
+    "delivered": "Delivered",
+    "belowDelivered": "Cannot be less than {{delivered}} Kg already delivered against this contract."
   },
   "receiveForm": {
     "singleTransaction": "Single transaction",

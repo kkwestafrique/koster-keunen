@@ -29,7 +29,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 // Standard are read-only (greyed), only per-line-item Expected quantity/
 // Maximum price, the attached file, Advance amount paid, and Updated on
 // can change. This is a MODAL overlay, not the wizard reopened.
-function UpdateContractModal({ open, onOpenChange, contract }) {
+function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { supplyChainId } = useAuth();
@@ -44,10 +44,26 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
   const setProductField = (idx, key, val) =>
     setProducts((rows) => rows.map((r, i) => (i === idx ? { ...r, [key]: val } : r)));
 
+  // Real gap found via independent audit: "Contracts editable below
+  // already-delivered quantity" -- this only ever checked that the new
+  // value was a positive number, never checked it against what had
+  // genuinely already been delivered (the fulfillment tracking built
+  // earlier this session). Someone could set Expected quantity to 5 Kg
+  // even after 50 Kg had already been recorded delivered against that
+  // same line, producing an obviously broken "50/5 Kg (1000%)" display.
+  // fulfillment is keyed by contract row id (see useContractFulfillment)
+  // and only ever populated for Send-type contracts -- Received-type
+  // fulfillment isn't tracked yet, so this correctly never blocks
+  // editing those, matching what's actually trackable today.
+  const belowDelivered = products.some((r) => {
+    const delivered = fulfillment[r.id] || 0;
+    return delivered > 0 && Number(r.expected_quantity) < delivered;
+  });
+
   const hasInvalidFields = products.some(
     (r) => r.expected_quantity === '' || Number(r.expected_quantity) <= 0 || isNaN(Number(r.expected_quantity))
       || r.price === '' || Number(r.price) <= 0 || isNaN(Number(r.price))
-  );
+  ) || belowDelivered;
 
   const handleSave = async () => {
     setSaving(true);
@@ -100,6 +116,14 @@ function UpdateContractModal({ open, onOpenChange, contract }) {
                   onChange={(v) => setProductField(idx, 'expected_quantity', v)}
                   errorMessage={t('contractDetail.invalidQuantity')}
                 />
+                {(() => {
+                  const delivered = fulfillment[row.id] || 0;
+                  return delivered > 0 && Number(row.expected_quantity) < delivered && (
+                    <p className="text-xs text-[#ba550c]" data-testid={`update-contract-below-delivered-${idx}`}>
+                      {t('contractDetail.belowDelivered', { delivered })}
+                    </p>
+                  );
+                })()}
               </div>
               <div className="flex flex-col gap-1.5">
                 <RequiredLabel required>{t('contractDetail.maximumPricePerKg')}</RequiredLabel>
@@ -502,7 +526,7 @@ export default function ContractDetail() {
         </TabsContent>
       </Tabs>
 
-      <UpdateContractModal open={updateOpen} onOpenChange={setUpdateOpen} contract={contract} />
+      <UpdateContractModal open={updateOpen} onOpenChange={setUpdateOpen} contract={contract} fulfillment={fulfillment} />
     </AppLayout>
   );
 }

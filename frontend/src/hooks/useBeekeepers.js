@@ -172,7 +172,18 @@ export function useBeekeeperAggregates({ country = '' } = {}) {
             ? 'gender, hives_traditional_single, hives_traditional_double, hives_modern, hives_other, villages!inner(country)'
             : 'gender, hives_traditional_single, hives_traditional_double, hives_modern, hives_other'
         )
-        .eq('supply_chain_id', supplyChainId);
+        .eq('supply_chain_id', supplyChainId)
+        // Real bug found via independent audit: "beekeeper count
+        // disagreement across dashboard/list/export". Confirmed
+        // directly against live data (11 total, 1 with no owning actor
+        // at all) -- the List query already correctly excludes these
+        // orphaned records, but this Dashboard count never did, so an
+        // Admin account (the only role able to see actor_id-null rows
+        // at all, per RLS) would see a different, inflated total here
+        // than on the List. Matched to the List's already-correct
+        // behavior rather than the other way around, since a beekeeper
+        // record with no owning actor isn't a complete, real one.
+        .not('actor_id', 'is', null);
       if (country) query = query.eq('villages.country', country);
       const { data, error } = await query;
       if (error) throw error;

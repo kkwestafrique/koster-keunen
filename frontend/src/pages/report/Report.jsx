@@ -107,6 +107,13 @@ export default function Report() {
       if (activeReport.status) query = query.eq('status', activeReport.status);
       if (activeReport.direction) query = query.eq('direction', activeReport.direction);
       if (activeReport.counterpart) query = query.not(activeReport.counterpart, 'is', null);
+      // Real bug found via independent audit: "beekeeper count
+      // disagreement across dashboard/list/export" -- this was the
+      // third of three places with the same gap. The List and (now
+      // fixed) Dashboard both correctly exclude beekeeper records with
+      // no owning actor at all; this export never did, so a beekeeper
+      // count report could disagree with what both screens showed.
+      if (activeReport.table === 'beekeepers') query = query.not('actor_id', 'is', null);
 
       // beekeepers/actors have no `year` column — "year" here means the
       // year the record was created.
