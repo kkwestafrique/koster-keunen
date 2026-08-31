@@ -22,6 +22,28 @@ export function useContracts({ page = 1, pageSize = 5, search = '', year = '', s
       if (contractType) query = query.eq('contract_type', contractType);
       if (country) query = query.eq('country', country);
 
+      // CRITICAL fix (BUG-03, independent audit): this used to fetch one
+      // page's worth of rows first (.range() already applied), THEN
+      // filter that small, already-limited subset client-side -- so a
+      // real match sitting on any OTHER page returned nothing at all,
+      // indistinguishable from search being completely broken. Moved to
+      // a real, server-side filter applied before .range(). Matches by
+      // supplier name via a reliable two-step actor lookup rather than
+      // PostgREST's embedded-resource dot-notation filtering (uncertain
+      // through the JS client for a joined/embedded table), plus a
+      // direct match on the contract's own code.
+      if (search) {
+        const { data: matchingActors } = await supabase
+          .from('actors')
+          .select('id')
+          .eq('supply_chain_id', supplyChainId)
+          .or(`contact_name.ilike.%${search}%,traceability_code.ilike.%${search}%`);
+        const actorIds = (matchingActors || []).map((a) => a.id);
+        const orParts = [`contract_code.ilike.%${search}%`];
+        if (actorIds.length > 0) orParts.push(`actor_id.in.(${actorIds.join(',')})`);
+        query = query.or(orParts.join(','));
+      }
+
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       query = query.range(from, to);
@@ -29,16 +51,7 @@ export function useContracts({ page = 1, pageSize = 5, search = '', year = '', s
       const { data, error, count } = await query;
       if (error) throw error;
 
-      let rows = data;
-      if (search) {
-        const s = search.toLowerCase();
-        rows = rows.filter(
-          (r) =>
-            r.actors?.contact_name?.toLowerCase().includes(s) ||
-            r.actors?.traceability_code?.toLowerCase().includes(s)
-        );
-      }
-      return { rows, total: count };
+      return { rows: data, total: count };
     },
     enabled: !!supplyChainId,
     staleTime: 30_000,

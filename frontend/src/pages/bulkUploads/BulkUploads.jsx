@@ -34,11 +34,12 @@ function UploadHistoryTable({ uploadType, showProgress, testId }) {
   usePageTitle(t('bulkUploads.title'));
   const { supplyChainId } = useAuth();
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['bulk_uploads', { uploadType, page, search, status, supplyChainId }],
+    queryKey: ['bulk_uploads', { uploadType, page, pageSize, search, status, supplyChainId }],
     queryFn: async () => {
       let query = supabase
         .from('bulk_uploads')
@@ -48,8 +49,12 @@ function UploadHistoryTable({ uploadType, showProgress, testId }) {
         .order('created_at', { ascending: false });
       if (search) query = query.ilike('file_name', `%${search}%`);
       if (status) query = query.eq('status', status);
-      const from = (page - 1) * 25;
-      query = query.range(from, from + 24);
+      // Same root cause as Stocks/Connections/Villages (BUG-02,
+      // independent audit) -- not named in that report, but the
+      // identical hardcoded-page-size pattern found here while fixing
+      // the audited instances. Fixed for consistency.
+      const from = (page - 1) * pageSize;
+      query = query.range(from, from + pageSize - 1);
       const { data: rows, error, count } = await query;
       if (error) throw error;
       return { rows, total: count };
@@ -94,6 +99,8 @@ function UploadHistoryTable({ uploadType, showProgress, testId }) {
         rows={data?.rows || []}
         total={data?.total || 0}
         page={page}
+        pageSize={pageSize}
+        onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onPageChange={setPage}
         loading={isLoading}
       />

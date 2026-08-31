@@ -29,6 +29,30 @@ export function useConnections({
       if (connectionType) query = query.eq('connection_type', connectionType);
       if (year) query = query.eq('year', year);
 
+      // CRITICAL fix (BUG-03, independent audit): same broken pattern as
+      // Contracts -- this used to filter client-side after .range() had
+      // already limited the fetch to one page, so a real match outside
+      // that page returned nothing. connections has no text column of
+      // its own (purely a relationship between two actor ids), so this
+      // matches via a real server-side lookup of actors by name/code
+      // first, then filters connections where either side matches.
+      if (search) {
+        const { data: matchingActors } = await supabase
+          .from('actors')
+          .select('id')
+          .eq('supply_chain_id', supplyChainId)
+          .or(`contact_name.ilike.%${search}%,traceability_code.ilike.%${search}%`);
+        const actorIds = (matchingActors || []).map((a) => a.id);
+        if (actorIds.length > 0) {
+          query = query.or(`actor_from_id.in.(${actorIds.join(',')}),actor_to_id.in.(${actorIds.join(',')})`);
+        } else {
+          // No real actor matches this search at all -- force an empty
+          // result rather than silently falling through to "no filter",
+          // which would have wrongly shown every connection.
+          query = query.eq('id', '00000000-0000-0000-0000-000000000000');
+        }
+      }
+
       // CRITICAL fix (BUG-02, independent audit): same root cause as
       // Stocks -- a hardcoded PAGE_SIZE=25 disconnected from what the UI
       // actually showed, causing an HTTP 416 the moment fewer than 25
@@ -40,17 +64,7 @@ export function useConnections({
       const { data, error, count } = await query;
       if (error) throw error;
 
-      let rows = data;
-      if (search) {
-        const s = search.toLowerCase();
-        rows = rows.filter(
-          (r) =>
-            r.actor_from?.contact_name?.toLowerCase().includes(s) ||
-            r.actor_to?.contact_name?.toLowerCase().includes(s) ||
-            r.actor_from?.traceability_code?.toLowerCase().includes(s) ||
-            r.actor_to?.traceability_code?.toLowerCase().includes(s)
-        );
-      }
+      const rows = data;
 
       return { rows, total: count };
     },

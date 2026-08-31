@@ -24,6 +24,16 @@ export function useLossRecords({ page = 1, pageSize = 15, product = '', search =
 
       if (product) query = query.eq('product', product);
 
+      // CRITICAL fix (BUG-03, independent audit): this used to filter
+      // client-side after .range() had already limited the fetch to one
+      // page -- a real match sitting on any other page returned nothing.
+      // Both fields searched here are real, direct columns on
+      // transaction_groups, so this is a plain server-side filter, no
+      // join lookup needed.
+      if (search) {
+        query = query.or(`transaction_code.ilike.%${search}%,product.ilike.%${search}%,source_product.ilike.%${search}%`);
+      }
+
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       query = query.range(from, to);
@@ -31,16 +41,7 @@ export function useLossRecords({ page = 1, pageSize = 15, product = '', search =
       const { data, error, count } = await query;
       if (error) throw error;
 
-      let rows = data;
-      if (search) {
-        const s = search.toLowerCase();
-        rows = rows.filter(
-          (r) =>
-            r.transaction_code?.toLowerCase().includes(s) ||
-            r.product?.toLowerCase().includes(s) ||
-            r.source_product?.toLowerCase().includes(s)
-        );
-      }
+      const rows = data;
       return { rows, total: count };
     },
     enabled: !!supplyChainId,
@@ -71,6 +72,29 @@ export function useTransactions({ direction, page = 1, pageSize = 5, search = ''
       if (source === 'beekeeper') query = query.not('beekeeper_id', 'is', null);
       if (status) query = query.eq('status', status);
 
+      // CRITICAL fix (BUG-03, independent audit): this used to filter
+      // client-side after .range() had already limited the fetch to one
+      // page -- a real match sitting on any other page returned nothing,
+      // indistinguishable from search being completely broken. Matches
+      // by transaction's own code/product directly, plus actor and
+      // beekeeper name/code via reliable two-step lookups (rather than
+      // PostgREST's embedded-resource dot-notation filtering, uncertain
+      // through the JS client for a joined/embedded table).
+      if (search) {
+        const orParts = [`transaction_code.ilike.%${search}%`, `product.ilike.%${search}%`];
+        const [{ data: matchingActors }, { data: matchingBeekeepers }] = await Promise.all([
+          supabase.from('actors').select('id').eq('supply_chain_id', supplyChainId)
+            .or(`contact_name.ilike.%${search}%,traceability_code.ilike.%${search}%`),
+          supabase.from('beekeepers').select('id').eq('supply_chain_id', supplyChainId)
+            .or(`full_name.ilike.%${search}%,traceability_code.ilike.%${search}%`),
+        ]);
+        const actorIds = (matchingActors || []).map((a) => a.id);
+        const beekeeperIds = (matchingBeekeepers || []).map((b) => b.id);
+        if (actorIds.length > 0) orParts.push(`actor_id.in.(${actorIds.join(',')})`);
+        if (beekeeperIds.length > 0) orParts.push(`beekeeper_id.in.(${beekeeperIds.join(',')})`);
+        query = query.or(orParts.join(','));
+      }
+
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       query = query.range(from, to);
@@ -78,17 +102,7 @@ export function useTransactions({ direction, page = 1, pageSize = 5, search = ''
       const { data, error, count } = await query;
       if (error) throw error;
 
-      let rows = data;
-      if (search) {
-        const s = search.toLowerCase();
-        rows = rows.filter(
-          (r) =>
-            r.actors?.contact_name?.toLowerCase().includes(s) ||
-            r.beekeepers?.full_name?.toLowerCase().includes(s) ||
-            r.transaction_code?.toLowerCase().includes(s) ||
-            r.product?.toLowerCase().includes(s)
-        );
-      }
+      const rows = data;
       return { rows, total: count };
     },
     enabled: !!supplyChainId && !!direction,
