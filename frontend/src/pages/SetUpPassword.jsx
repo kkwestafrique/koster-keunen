@@ -1,3 +1,4 @@
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -82,7 +83,7 @@ export default function SetUpPassword() {
       }
       navigate('/');
     } catch (err) {
-      setError(err.message || t('setUpPassword.setupFailed'));
+      setError(getFriendlyErrorMessage(err) || t('setUpPassword.setupFailed'));
     } finally {
       setSaving(false);
     }

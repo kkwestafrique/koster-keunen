@@ -88,6 +88,17 @@ export function useCreateConnection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
+      // Real bug found via independent audit: "new actor doesn't appear
+      // without refresh". Traced to the auto-connect-on-creation flow
+      // (Add Actor, Connect via ID) -- actor creation invalidates the
+      // actors list correctly, but it fires BEFORE the connection that
+      // actually makes the new actor visible (the list is connections-
+      // scoped) has been created. None of the three real ways a
+      // connection's status changes (create, approve, revoke) told the
+      // actors list to refetch, so it stayed stale until something else
+      // happened to trigger a refresh. Fixed on all three below.
+      queryClient.invalidateQueries({ queryKey: ['actors'] });
+      queryClient.invalidateQueries({ queryKey: ['actors-lite'] });
     },
   });
 }
@@ -130,6 +141,8 @@ export function useApproveConnection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
       queryClient.invalidateQueries({ queryKey: ['connection-between'] });
+      queryClient.invalidateQueries({ queryKey: ['actors'] });
+      queryClient.invalidateQueries({ queryKey: ['actors-lite'] });
     },
   });
 }
@@ -150,6 +163,8 @@ export function useUpdateConnectionStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connection-between'] });
       queryClient.invalidateQueries({ queryKey: ['connections'] });
+      queryClient.invalidateQueries({ queryKey: ['actors'] });
+      queryClient.invalidateQueries({ queryKey: ['actors-lite'] });
     },
   });
 }

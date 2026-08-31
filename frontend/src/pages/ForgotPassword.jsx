@@ -1,3 +1,4 @@
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -40,7 +41,7 @@ export default function ForgotPassword() {
       if (err) throw err;
       setSent(true);
     } catch (err) {
-      setError(err.message || t('forgotPassword.sendFailed'));
+      setError(getFriendlyErrorMessage(err) || t('forgotPassword.sendFailed'));
     } finally {
       setSending(false);
     }

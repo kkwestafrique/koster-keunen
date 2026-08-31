@@ -1,3 +1,4 @@
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -64,7 +65,7 @@ export default function ResetPassword() {
       toast({ title: t('resetPassword.title') });
       navigate('/login');
     } catch (err) {
-      setError(err.message || t('resetPassword.resetFailed'));
+      setError(getFriendlyErrorMessage(err) || t('resetPassword.resetFailed'));
     } finally {
       setSaving(false);
     }
