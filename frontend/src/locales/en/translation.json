@@ -780,7 +780,10 @@
     "passwordTooShort": "Password must be at least 6 characters",
     "passwordsDontMatch": "Passwords do not match",
     "passwordChanged": "Password changed",
-    "passwordChangeFailed": "Could not change password"
+    "passwordChangeFailed": "Could not change password",
+    "currentPassword": "Current password",
+    "currentPasswordRequired": "Enter your current password to continue.",
+    "currentPasswordWrong": "Current password is incorrect."
   },
   "verification": {
     "title": "Verification queue",

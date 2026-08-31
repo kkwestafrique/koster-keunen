@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 import { useUpdateMyProfile, useChangePassword } from '@/hooks/useMyProfile';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -33,6 +34,7 @@ export default function UserProfile() {
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
 
   const handleSaveProfile = async () => {
@@ -51,6 +53,19 @@ export default function UserProfile() {
   };
 
   const handleChangePassword = async () => {
+    // Real gap found via independent audit: this form only ever asked
+    // for a new password and its confirmation -- anyone with access to
+    // an already-open, unattended session (a shared device, a stolen
+    // session token) could change the account's password without ever
+    // needing to know the original one, a real account-takeover path.
+    // Verifying the current password first, via a real re-
+    // authentication call (the same signInWithPassword used at login),
+    // closes that -- if it's wrong, the change is refused before
+    // anything happens.
+    if (!currentPassword) {
+      toast({ title: t('userProfile.currentPasswordRequired'), variant: 'destructive' });
+      return;
+    }
     if (newPassword.length < 6) {
       toast({ title: t('userProfile.passwordTooShort'), variant: 'destructive' });
       return;
@@ -61,7 +76,16 @@ export default function UserProfile() {
     }
     setChangingPassword(true);
     try {
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+      if (reauthError) {
+        toast({ title: t('userProfile.currentPasswordWrong'), variant: 'destructive' });
+        return;
+      }
       await changePassword.mutateAsync(newPassword);
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       toast({ title: t('userProfile.passwordChanged') });
@@ -121,6 +145,18 @@ export default function UserProfile() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
+            <RequiredLabel required>{t('userProfile.currentPassword')}</RequiredLabel>
+            <Input
+              type="password"
+              data-testid="profile-current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="flex flex-col gap-1.5">
             <RequiredLabel required>{t('userProfile.newPassword')}</RequiredLabel>
             <Input
               type="password"
@@ -142,7 +178,7 @@ export default function UserProfile() {
 
         <Button
           data-testid="profile-change-password"
-          disabled={changingPassword || !newPassword || !confirmPassword}
+          disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
           onClick={handleChangePassword}
           className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] mt-5"
         >

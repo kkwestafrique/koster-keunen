@@ -104,6 +104,18 @@ export function AuthProvider({ children }) {
     queryClient.invalidateQueries({ queryKey: ['dashboard-transaction-summary'] });
     queryClient.invalidateQueries({ queryKey: ['available-batches'] });
     queryClient.invalidateQueries({ queryKey: ['my-actors'] });
+    // Real gap found via independent audit: "stale views after actor
+    // switch". Checked every query key against this list and confirmed
+    // three genuinely per-actor-scoped ones were missing -- notifications
+    // even has the actor id embedded directly in its own query key, so
+    // switching actors was showing stale notifications (and Commercial
+    // Partners / Connections lists, both connections-scoped by the
+    // current actor) left over from whichever actor was active before,
+    // until something else happened to trigger a refetch.
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['actors'] });
+    queryClient.invalidateQueries({ queryKey: ['actors-lite'] });
+    queryClient.invalidateQueries({ queryKey: ['connections'] });
     // Gap 8's activity_log view unions beekeepers/stocks/transactions/
     // contracts/claims, several of which have real per-actor RLS scoping
     // (e.g. beekeepers_select checks actor_id = auth_current_actor_id()).

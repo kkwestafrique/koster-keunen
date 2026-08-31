@@ -780,7 +780,10 @@
     "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
     "passwordsDontMatch": "Les mots de passe ne correspondent pas",
     "passwordChanged": "Mot de passe modifié",
-    "passwordChangeFailed": "Impossible de modifier le mot de passe"
+    "passwordChangeFailed": "Impossible de modifier le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "currentPasswordRequired": "Saisissez votre mot de passe actuel pour continuer.",
+    "currentPasswordWrong": "Le mot de passe actuel est incorrect."
   },
   "verification": {
     "title": "File de vérification",
