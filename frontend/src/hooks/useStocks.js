@@ -17,6 +17,16 @@ export function useStock(id) {
       return data;
     },
     enabled: !!id,
+    // Real bug found via independent audit (BUG-43): "A record
+    // belonging to another actor shows 'Loading...' for 10-15s before
+    // resolving to 'Not found.'" Traced to the global QueryClient
+    // default (no retry override anywhere), meaning React Query's own
+    // default of 3 retries with exponential backoff applied here too.
+    // A record genuinely not accessible (RLS-denied, or truly
+    // nonexistent) will fail the exact same way every single retry --
+    // the retries were only ever wasting real time before reaching the
+    // same, accurate "not found" conclusion sooner.
+    retry: false,
   });
 }
 

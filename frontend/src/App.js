@@ -8,6 +8,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import SetUpPassword from '@/pages/SetUpPassword';
 import Dashboard from '@/pages/Dashboard';
+import NotFound from '@/pages/NotFound';
 import ActorsList from '@/pages/actors/ActorsList';
 import ActorDetail from '@/pages/actors/ActorDetail';
 import BeekeepersList from '@/pages/beekeepers/BeekeepersList';
@@ -139,7 +140,7 @@ function AppRoutes() {
       <Route path="/beekeeper-charter" element={<ProtectedRoute><BeekeeperCharter /></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><ProductsList /></ProtectedRoute>} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
     </Routes>
   );
 }

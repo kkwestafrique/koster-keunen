@@ -78,6 +78,10 @@ export function useActor(id) {
       return data;
     },
     enabled: !!id,
+    // Same fix as useStock (BUG-43): a record genuinely not accessible
+    // fails the exact same way every retry, so the default retry
+    // behavior only delays reaching the same, accurate result.
+    retry: false,
   });
 }
 
