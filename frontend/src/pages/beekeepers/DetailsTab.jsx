@@ -170,7 +170,7 @@ export default function DetailsTab({ bk }) {
         </div>
         <div className="flex flex-col gap-1.5">
           <RequiredLabel required>{t('actorProfile.contactNumber')}</RequiredLabel>
-          <PhoneInput testIdPrefix="bk-details-edit-phone" dialCode={form.dial_code} number={form.contact_number} onDialCodeChange={set('dial_code')} onNumberChange={set('contact_number')} />
+          <PhoneInput testIdPrefix="bk-details-edit-phone" dialCode={form.dial_code} number={form.contact_number} onDialCodeChange={set('dial_code')} onNumberChange={set('contact_number')} country={form.country} />
         </div>
       </div>
 

@@ -16,11 +16,26 @@ export const DIAL_CODES = [
   { code: '+228', country: 'Togo' },
 ];
 
-export default function PhoneInput({ dialCode, number, onDialCodeChange, onNumberChange, testIdPrefix = 'phone' }) {
+export default function PhoneInput({ dialCode, number, onDialCodeChange, onNumberChange, testIdPrefix = 'phone', country }) {
+  // Real gap found via independent audit (BUG-38): "doesn't preselect
+  // from the country already chosen" -- when the form already has a
+  // real Country selected elsewhere, someone still had to manually
+  // pick the matching dial code again, redundant data entry for
+  // information the form already had. Auto-fills it the moment a
+  // country is chosen, only when no dial code has been picked yet (so
+  // this never overwrites a deliberate choice).
+  React.useEffect(() => {
+    if (country && !dialCode) {
+      const match = DIAL_CODES.find((d) => d.country === country);
+      if (match) onDialCodeChange(match.code);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country]);
+
   return (
     <div className="flex gap-2">
       <Select value={dialCode || ''} onValueChange={onDialCodeChange}>
-        <SelectTrigger data-testid={`${testIdPrefix}-dial-code`} className="w-[90px] bg-white border-[#cfd8e6] text-[#032b71] shrink-0">
+        <SelectTrigger data-testid={`${testIdPrefix}-dial-code`} className="w-[150px] bg-white border-[#cfd8e6] text-[#032b71] shrink-0">
           {/* Real bug found live: this used to show "+01" as the
               placeholder -- indistinguishable from a real dial code
               selection (every real code in the list is +2xx). Someone
@@ -33,7 +48,7 @@ export default function PhoneInput({ dialCode, number, onDialCodeChange, onNumbe
         </SelectTrigger>
         <SelectContent>
           {DIAL_CODES.map((d) => (
-            <SelectItem key={d.code} value={d.code}>{d.code}</SelectItem>
+            <SelectItem key={d.code} value={d.code}>{d.code} ({d.country})</SelectItem>
           ))}
         </SelectContent>
       </Select>

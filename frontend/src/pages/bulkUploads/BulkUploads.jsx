@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { formatDateTime } from '@/lib/dateFormat';
 
 const STATUS_OPTIONS = ['Cancelled', 'Inprogress', 'Completed', 'Failed'];
 const STATUS_COLORS = {
@@ -72,7 +73,7 @@ function UploadHistoryTable({ uploadType, showProgress, testId }) {
   const columns = [
     { key: 'id', label: t('bulkUploads.id'), render: (row) => String(row.id).slice(0, 8) },
     { key: 'file_name', label: t('bulkUploads.fileName') },
-    { key: 'created_at', label: t('bulkUploads.uploadedOn'), render: (row) => row.created_at?.slice(0, 10) },
+    { key: 'created_at', label: t('bulkUploads.uploadedOn'), render: (row) => formatDateTime(row.created_at) },
     ...(showProgress
       ? [{ key: 'progress', label: t('bulkUploads.progress'), render: (row) => (row.progress != null ? `${row.progress}%` : '—') }]
       : [

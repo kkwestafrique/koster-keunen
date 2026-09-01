@@ -7,6 +7,7 @@ import DataTable from '@/components/common/DataTable';
 import { useLossRecords } from '@/hooks/useTransactions';
 import { useConstants } from '@/hooks/useConstants';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { formatDate } from '@/lib/dateFormat';
 
 // Real browsable Loss list, replacing the previous /stocks/loss page,
 // which queried stocks where stock_type='Loss' — a data shape nothing in
@@ -26,7 +27,7 @@ export default function LossList() {
   const { data, isLoading } = useLossRecords({ page, pageSize, product, search });
 
   const columns = [
-    { key: 'transaction_date', label: t('transactions.date') },
+    { key: 'transaction_date', label: t('transactions.date'), render: (row) => formatDate(row.transaction_date) },
     { key: 'transaction_code', label: t('transactions.transactionId') },
     { key: 'source_product', label: t('processForm.sourceProduct') },
     {

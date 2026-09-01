@@ -320,6 +320,7 @@ export default function ActorFormDialog({ open, onOpenChange }) {
                 number={form.contact_number}
                 onDialCodeChange={set('dial_code')}
                 onNumberChange={set('contact_number')}
+                country={form.country}
               />
             </div>
           </div>
