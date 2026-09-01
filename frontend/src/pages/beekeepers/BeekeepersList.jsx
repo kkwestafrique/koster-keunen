@@ -82,7 +82,7 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
             label: t('beekeepersList.allVillages'),
             value: villageId,
             onChange: (v) => { setVillageId(v); setPage(1); },
-            options: villages.map((v) => ({ value: v.id, label: v.name })),
+            options: villages.map((v) => ({ value: v.id, label: v.country ? `${v.name} (${v.country})` : v.name })),
             searchable: true,
           },
           {

@@ -45,11 +45,19 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
       label: t('stocks.standard'),
       render: (row) => <StandardBadge standard={row.standard} />,
     },
-    {
+    // Real bug found via independent audit (BUG-27): "final-product
+    // stock rows show Village as '—'". Confirmed the real cause: this
+    // column was shown unconditionally for both stock types, but
+    // Final Product is a manufactured/processed batch, not tied to a
+    // geographic collection point the way Raw Material genuinely is --
+    // every single Final Product row would always show "—" here,
+    // making it a permanently-empty column rather than a display bug
+    // in the data itself. Only shown where it's actually meaningful.
+    ...(stockType === 'Raw Material' ? [{
       key: 'village',
       label: t('receiveForm.village'),
       render: (row) => row.villages?.name || '—',
-    },
+    }] : []),
     {
       key: 'quantity_available',
       label: t('stocks.quantityAvailable'),
@@ -98,7 +106,7 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
               label: t('stocks.allVillages'),
               value: village,
               onChange: (v) => { setVillage(v); setPage(1); },
-              options: villages.map((v) => ({ value: v.id, label: v.name })),
+              options: villages.map((v) => ({ value: v.id, label: v.country ? `${v.name} (${v.country})` : v.name })),
             },
           ]}
         />

@@ -58,7 +58,7 @@ export function useAllVillagesLite() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('villages')
-        .select('id, name')
+        .select('id, name, country')
         .eq('supply_chain_id', supplyChainId)
         .order('name', { ascending: true });
       if (error) throw error;
