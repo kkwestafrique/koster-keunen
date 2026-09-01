@@ -105,6 +105,7 @@ function MultiUploadBody({ onDone }) {
   const handleDownload = () => {
     downloadTemplate('beekeepers', 'beekeepers-template.xlsx');
     setDownloaded(true);
+    toast({ title: t('common.templateDownloaded') });
   };
 
   const handleFileChange = async (e) => {

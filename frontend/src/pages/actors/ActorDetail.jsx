@@ -32,8 +32,18 @@ export default function ActorDetail() {
 
   const handleToggle = async (checked) => {
     if (!connection) return; // nothing to toggle if there's no connection record linking the two actors
+    // Real bug found via independent audit (BUG-49): "Revoking a
+    // connection via the actor-detail toggle happens instantly with no
+    // confirmation and no toast." Revoking is the consequential
+    // direction (breaks the ability to send stock to/from this actor,
+    // hides them from various lists) -- confirmation is only asked
+    // before that, not before re-activating.
+    if (!checked && !window.confirm(t('actorProfile.confirmRevokeConnection'))) {
+      return;
+    }
     try {
       await updateConnectionStatus.mutateAsync({ id: connection.id, status: checked ? 'Active' : 'Revoked' });
+      toast({ title: checked ? t('actorProfile.connectionActivated') : t('actorProfile.connectionRevoked') });
     } catch (err) {
       toast({ title: t('actorProfile.connectionUpdateFailed') || 'Failed to update connection', description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }

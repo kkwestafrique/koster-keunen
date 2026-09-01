@@ -245,7 +245,7 @@ export default function ReceiveStockForm() {
                     variant="outline"
                     className="w-fit border-[#0f48aa] text-[#0f48aa]"
                     data-testid="receive-download-template"
-                    onClick={() => downloadTemplate('transactions', 'received-transactions-template.xlsx')}
+                    onClick={() => { downloadTemplate('transactions', 'received-transactions-template.xlsx'); toast({ title: t('common.templateDownloaded') }); }}
                   >
                     <Download className="h-4 w-4 mr-1" /> {t('receiveForm.downloadTemplate')}
                   </Button>

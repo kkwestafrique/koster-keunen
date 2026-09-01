@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RequiredLabel from '@/components/common/RequiredLabel';
 import { Plus, X } from 'lucide-react';
@@ -67,6 +67,7 @@ function ShareAccessDialog({ open, onOpenChange }) {
       <DialogContent className="max-w-md bg-white">
         <DialogHeader>
           <DialogTitle className="text-[#032b71] font-black">{t('sharing.shareAccess')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('sharing.shareAccess')}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">

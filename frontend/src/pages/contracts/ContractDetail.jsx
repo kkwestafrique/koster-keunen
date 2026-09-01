@@ -5,7 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import DetailField from '@/components/common/DetailField';
 import RequiredLabel from '@/components/common/RequiredLabel';
 import StandardBadge from '@/components/common/StandardBadge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -93,6 +93,7 @@ function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} })
       <DialogContent className="max-w-lg bg-white max-h-[90vh] overflow-y-auto" data-testid="update-contract-modal">
         <DialogHeader>
           <DialogTitle className="text-[#032b71] font-black">{t('contractDetail.updateContract')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('contractDetail.updateContract')}</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-3 gap-4 mb-2">
@@ -262,6 +263,7 @@ function DeliveryNotificationTab({ contractGroupId, contractProducts, canAdd }) 
             <DialogContent>
               <DialogHeader>
                 <DialogTitle className="text-[#032b71] font-black">{t('contractDetail.addDelivery')}</DialogTitle>
+                <DialogDescription className="sr-only">{t('contractDetail.addDelivery')}</DialogDescription>
               </DialogHeader>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">

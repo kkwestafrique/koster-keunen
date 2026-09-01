@@ -51,7 +51,7 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
             variant="outline"
             className="w-fit border-[#0f48aa] text-[#0f48aa]"
             data-testid="contracts-download-template"
-            onClick={() => downloadTemplate('contracts', 'historical-contracts-template.xlsx')}
+            onClick={() => { downloadTemplate('contracts', 'historical-contracts-template.xlsx'); toast({ title: t('common.templateDownloaded') }); }}
           >
             <Download className="h-4 w-4 mr-1" /> {t('receiveForm.downloadTemplate')}
           </Button>

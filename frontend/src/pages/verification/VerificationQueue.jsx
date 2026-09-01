@@ -4,7 +4,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import DataTable from '@/components/common/DataTable';
 import StandardBadge from '@/components/common/StandardBadge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { usePendingClaims, useVerifyClaim, useRejectClaim } from '@/hooks/useClaims';
@@ -116,6 +116,7 @@ export default function VerificationQueue() {
         <DialogContent className="max-w-md bg-white">
           <DialogHeader>
             <DialogTitle className="text-[#032b71] font-black">{t('verification.rejectClaim')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('verification.rejectClaim')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('verification.rejectionReason')}</Label>

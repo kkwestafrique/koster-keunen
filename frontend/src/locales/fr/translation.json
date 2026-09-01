@@ -260,7 +260,10 @@
     "statusActive": "Statut : Actif",
     "back": "Retour",
     "copyConnectId": "Copier l'ID de connexion",
-    "connectIdCopied": "ID de connexion copié"
+    "connectIdCopied": "ID de connexion copié",
+    "confirmRevokeConnection": "Révoquer cette connexion ? Vous ne pourrez plus envoyer ni recevoir de stock avec cet acteur tant que la connexion n'est pas rétablie.",
+    "connectionActivated": "Connexion activée.",
+    "connectionRevoked": "Connexion révoquée."
   },
   "common": {
     "note": "Remarque",
@@ -287,7 +290,8 @@
     "page": "Page",
     "records": "enregistrements",
     "noDataAvailable": "Aucune donnée disponible.",
-    "back": "Retour"
+    "back": "Retour",
+    "templateDownloaded": "Modèle téléchargé."
   },
   "beekeeperDetail": {
     "title": "Profil de l'apiculteur",

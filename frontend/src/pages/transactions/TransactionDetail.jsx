@@ -6,7 +6,7 @@ import DetailField from '@/components/common/DetailField';
 import StandardBadge from '@/components/common/StandardBadge';
 import StatusBadge from '@/components/common/TransactionStatusBadge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -311,6 +311,7 @@ export default function TransactionDetail() {
         <DialogContent className="max-w-md bg-white">
           <DialogHeader>
             <DialogTitle className="text-[#032b71] font-black">{t('transactionDetail.rejectTransaction')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('transactionDetail.rejectTransaction')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">

@@ -260,7 +260,10 @@
     "statusActive": "Status: Active",
     "back": "Back",
     "copyConnectId": "Copy Connect ID",
-    "connectIdCopied": "Connect ID copied"
+    "connectIdCopied": "Connect ID copied",
+    "confirmRevokeConnection": "Revoke this connection? You will no longer be able to send or receive stock with this actor until reconnected.",
+    "connectionActivated": "Connection activated.",
+    "connectionRevoked": "Connection revoked."
   },
   "common": {
     "note": "Note",
@@ -287,7 +290,8 @@
     "page": "Page",
     "records": "records",
     "noDataAvailable": "No data available.",
-    "back": "Back"
+    "back": "Back",
+    "templateDownloaded": "Template downloaded."
   },
   "beekeeperDetail": {
     "title": "Beekeeper profile",

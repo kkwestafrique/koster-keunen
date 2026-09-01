@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SharingPanel from './SharingPanel';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -468,6 +468,7 @@ export default function CompanyProfile() {
         <DialogContent className="max-w-md bg-white" data-testid="invite-member-dialog">
           <DialogHeader>
             <DialogTitle className="text-[#032b71] font-black">{t('companyProfile.inviteMember')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('companyProfile.inviteMember')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
@@ -510,6 +511,7 @@ export default function CompanyProfile() {
         <DialogContent className="max-w-sm bg-white" data-testid="edit-member-dialog">
           <DialogHeader>
             <DialogTitle className="text-[#032b71] font-black">{t('companyProfile.editMember')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('companyProfile.editMember')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('companyProfile.memberRole')}</Label>
