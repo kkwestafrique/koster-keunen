@@ -311,11 +311,11 @@ export default function Report() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[#7089b4]">{t('report.dateFrom')}</Label>
-                  <Input type="date" data-testid="report-date-from" value={filters.dateFrom} onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))} />
+                  <Input type="date" data-testid="report-date-from" min="1900-01-01" max="2100-12-31" value={filters.dateFrom} onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[#7089b4]">{t('report.dateTo')}</Label>
-                  <Input type="date" data-testid="report-date-to" value={filters.dateTo} onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))} />
+                  <Input type="date" data-testid="report-date-to" min="1900-01-01" max="2100-12-31" value={filters.dateTo} onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))} />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">

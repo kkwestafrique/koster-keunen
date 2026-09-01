@@ -248,7 +248,7 @@ export default function SendStockForm() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('receiveForm.transactionDate')}</Label>
-            <Input type="date" data-testid="send-date" value={form.transaction_date} onChange={(e) => set('transaction_date')(e.target.value)} />
+            <Input type="date" data-testid="send-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => set('transaction_date')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#7089b4]">{t('transactions.linkToContract')}</Label>

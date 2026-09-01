@@ -286,7 +286,7 @@ export default function ProcessStockForm() {
 
             <div className="flex flex-col gap-1.5 max-w-sm">
               <Label className="text-[#7089b4]">{t('receiveForm.transactionDate')}</Label>
-              <Input type="date" data-testid="process-date" value={form.transaction_date} onChange={(e) => setForm((f) => ({ ...f, transaction_date: e.target.value }))} />
+              <Input type="date" data-testid="process-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => setForm((f) => ({ ...f, transaction_date: e.target.value }))} />
             </div>
 
             <div className="flex justify-between mt-2">

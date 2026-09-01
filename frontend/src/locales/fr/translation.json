@@ -129,7 +129,8 @@
     "categoryProducerOrganisation": "Organisation de producteurs",
     "categoryAggregator": "Agrégateur",
     "categoryLocalPartner": "Partenaire local",
-    "categoryBuyer": "Acheteur"
+    "categoryBuyer": "Acheteur",
+    "filterHintTransactions": "Filtrez par année pour afficher votre aperçu des transactions."
   },
   "actorsList": {
     "title": "Acteurs",

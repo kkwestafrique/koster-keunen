@@ -2,6 +2,28 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Real bug found via independent audit (BUG-36): the Dashboard's Year
+// filter offered a hardcoded ['2026', '2025', '2024'] list, while real
+// 2027 contracts already existed and were completely invisible to it.
+// Derives the real, current set of years directly from the data
+// instead of a list that goes stale the moment a new year of contracts
+// exists.
+export function useContractYears() {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['contract-years', supplyChainId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('year')
+        .eq('supply_chain_id', supplyChainId);
+      if (error) throw error;
+      return [...new Set((data || []).map((r) => r.year))].sort((a, b) => b - a);
+    },
+    enabled: !!supplyChainId,
+  });
+}
+
 export function useContracts({ page = 1, pageSize = 5, search = '', year = '', standard = '', contractType = '', country = '' } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({

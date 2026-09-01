@@ -338,7 +338,7 @@ export default function ContractWizard() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('contractWizard.signatureDate')}</Label>
-                <Input type="date" data-testid="contract-signature-date" value={form.signature_date} onChange={(e) => set('signature_date')(e.target.value)} />
+                <Input type="date" data-testid="contract-signature-date" min="1900-01-01" max="2100-12-31" value={form.signature_date} onChange={(e) => set('signature_date')(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5 col-span-full">
                 <Label className="text-[#7089b4]">{t('contractWizard.comments')}</Label>

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useContractYears } from '@/hooks/useContracts';
 
 function StatCard({ label, value, testId }) {
   return (
@@ -85,6 +86,10 @@ export default function Dashboard() {
   const [country, setCountry] = useState('');
   const [actorFilter, setActorFilter] = useState('');
   const [year, setYear] = useState('2026');
+  const { data: contractYears = [] } = useContractYears();
+  // Always include the current default even before the query resolves,
+  // and even if there happen to be zero contracts yet for some year.
+  const yearOptions = [...new Set([2026, 2025, 2024, ...contractYears])].sort((a, b) => b - a);
 
   const { data: actorCounts } = useActorTypeCounts({ country });
   const { data: bkAgg } = useBeekeeperAggregates({ country });
@@ -182,7 +187,7 @@ export default function Dashboard() {
           {/* Filter bar */}
           <div className="bg-white border border-[#cfd8e6] rounded-b-[5px] px-8 py-4 flex flex-col gap-2">
             <span className="text-[13px] text-[#7089b4]">
-              {t('dashboard.filterHint')}
+              {tab === 'transactions' ? t('dashboard.filterHintTransactions') : t('dashboard.filterHint')}
             </span>
             <div className="flex gap-4">
               <div className="flex flex-col gap-1">
@@ -223,8 +228,8 @@ export default function Dashboard() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {['2026', '2025', '2024'].map((y) => (
-                      <SelectItem key={y} value={y}>{y}</SelectItem>
+                    {yearOptions.map((y) => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

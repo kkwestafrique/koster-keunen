@@ -129,7 +129,8 @@
     "categoryProducerOrganisation": "Producer Organisation",
     "categoryAggregator": "Aggregator",
     "categoryLocalPartner": "Local Partner",
-    "categoryBuyer": "Buyer"
+    "categoryBuyer": "Buyer",
+    "filterHintTransactions": "Filter by year to view your transaction overview."
   },
   "actorsList": {
     "title": "Actors",

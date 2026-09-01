@@ -125,6 +125,8 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
             value={dateFrom}
             onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
             className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
+            min="1900-01-01"
+            max="2100-12-31"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -136,6 +138,8 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
             value={dateTo}
             onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
             className="w-[160px] bg-white border-[#cfd8e6] text-[#032b71]"
+            min="1900-01-01"
+            max="2100-12-31"
           />
         </div>
       </div>

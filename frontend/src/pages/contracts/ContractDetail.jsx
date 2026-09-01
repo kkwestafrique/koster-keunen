@@ -170,6 +170,8 @@ function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} })
               data-testid="update-contract-updated-on"
               value={updatedOn}
               onChange={(e) => setUpdatedOn(e.target.value)}
+              min="1900-01-01"
+              max="2100-12-31"
             />
           </div>
         </div>
@@ -284,7 +286,7 @@ function DeliveryNotificationTab({ contractGroupId, contractProducts, canAdd }) 
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <RequiredLabel required>{t('contractDetail.expectedDeliveryDate')}</RequiredLabel>
-                  <Input type="date" className="bg-white" data-testid="delivery-date" value={form.expected_delivery_date} onChange={(e) => set('expected_delivery_date')(e.target.value)} />
+                  <Input type="date" className="bg-white" data-testid="delivery-date" min="1900-01-01" max="2100-12-31" value={form.expected_delivery_date} onChange={(e) => set('expected_delivery_date')(e.target.value)} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <RequiredLabel required={false}>{t('contractWizard.comments')}</RequiredLabel>
