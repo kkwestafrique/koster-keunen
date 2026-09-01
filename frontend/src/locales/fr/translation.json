@@ -285,7 +285,8 @@
     "cancel": "Annuler",
     "page": "Page",
     "records": "enregistrements",
-    "noDataAvailable": "Aucune donnée disponible."
+    "noDataAvailable": "Aucune donnée disponible.",
+    "back": "Retour"
   },
   "beekeeperDetail": {
     "title": "Profil de l'apiculteur",
@@ -826,7 +827,7 @@
   },
   "productsList": {
     "title": "Produits",
-    "description": "Le catalogue de produits réel et modifiable utilisé par les formulaires et listes de ce système.",
+    "description": "La liste réelle des produits utilisée par les formulaires et listes de ce système.",
     "name": "Nom du produit"
   },
   "activityLog": {

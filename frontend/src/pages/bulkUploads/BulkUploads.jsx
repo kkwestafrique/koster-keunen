@@ -21,10 +21,16 @@ const STATUS_COLORS = {
 // Transactions) showing upload HISTORY only. There is deliberately no
 // upload button here — file uploads happen inside the Multiple-transaction
 // flows under Transactions > Received / Send.
-function UploadStatus({ status }) {
+function UploadStatus({ status, errorDetail }) {
   return (
-    <span className="text-sm font-bold" style={{ color: STATUS_COLORS[status] || '#7089b4' }}>
+    <span
+      className="text-sm font-bold"
+      style={{ color: STATUS_COLORS[status] || '#7089b4' }}
+      title={status === 'Failed' && errorDetail ? errorDetail : undefined}
+      data-testid={status === 'Failed' && errorDetail ? 'upload-error-detail' : undefined}
+    >
       {status}
+      {status === 'Failed' && errorDetail && <span className="ml-1 text-xs font-normal underline decoration-dotted cursor-help">{'(?)'}</span>}
     </span>
   );
 }
@@ -73,7 +79,7 @@ function UploadHistoryTable({ uploadType, showProgress, testId }) {
           { key: 'updated_beekeepers', label: t('bulkUploads.updatedBeekeepers') },
           { key: 'new_beekeepers', label: t('bulkUploads.newBeekeepers') },
         ]),
-    { key: 'status', label: t('bulkUploads.status'), render: (row) => <UploadStatus status={row.status} /> },
+    { key: 'status', label: t('bulkUploads.status'), render: (row) => <UploadStatus status={row.status} errorDetail={row.error_detail} /> },
   ];
 
   return (

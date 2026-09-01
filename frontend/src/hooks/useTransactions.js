@@ -19,7 +19,17 @@ export function useLossRecords({ page = 1, pageSize = 15, product = '', search =
         .select('*', { count: 'exact' })
         .eq('supply_chain_id', supplyChainId)
         .eq('direction', 'Processing')
-        .gt('quantity_lost', 0)
+        // Real bug found via independent audit (BUG-22): "Loss report
+        // lists only 2 of the processing transactions, missing the
+        // BUG-01 example". Traced precisely: the two real, pre-existing
+        // corrupted records from before the BUG-01 mass-balance fix
+        // have NEGATIVE quantity_lost (-22, -85 -- output exceeded
+        // input, so this "loss" is actually a phantom gain). The old
+        // .gt('quantity_lost', 0) filter silently excluded exactly the
+        // records a loss report should be flagging loudest. Changed to
+        // .neq(0) so both real loss and impossible negative anomalies
+        // both surface; the render below visually distinguishes them.
+        .neq('quantity_lost', 0)
         .order('transaction_date', { ascending: false });
 
       if (product) query = query.eq('product', product);

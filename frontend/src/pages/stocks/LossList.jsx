@@ -43,7 +43,19 @@ export default function LossList() {
     {
       key: 'quantity_lost',
       label: t('lossList.quantityLost'),
-      render: (row) => <span className="text-[#ba550c] font-bold">{row.quantity_lost} Kg</span>,
+      // Real fix alongside BUG-22: a negative value here means output
+      // exceeded verified input -- an impossible, corrupted historical
+      // record (from before the BUG-01 mass-balance fix), not ordinary
+      // loss. Flagged distinctly so it reads as an anomaly needing
+      // review, not a normal (if unusually large) loss figure.
+      render: (row) => {
+        const isAnomaly = Number(row.quantity_lost) < 0;
+        return (
+          <span className={isAnomaly ? 'text-white bg-[#ba550c] font-bold px-2 py-0.5 rounded-full text-xs' : 'text-[#ba550c] font-bold'}>
+            {isAnomaly ? `⚠ ${row.quantity_lost} Kg` : `${row.quantity_lost} Kg`}
+          </span>
+        );
+      },
     },
   ];
 

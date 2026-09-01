@@ -285,7 +285,8 @@
     "cancel": "Cancel",
     "page": "Page",
     "records": "records",
-    "noDataAvailable": "No data available."
+    "noDataAvailable": "No data available.",
+    "back": "Back"
   },
   "beekeeperDetail": {
     "title": "Beekeeper profile",
@@ -826,7 +827,7 @@
   },
   "productsList": {
     "title": "Products",
-    "description": "The real, editable product catalogue this system's forms and lists draw from.",
+    "description": "The real product list this system's forms and lists draw from.",
     "name": "Product name"
   },
   "activityLog": {

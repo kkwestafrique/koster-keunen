@@ -363,6 +363,9 @@ export function useBulkUpload(templateKey) {
           file_name: fileName,
           status: inserted === 0 ? 'Failed' : 'Completed',
           progress: 100,
+          // Real bug found via independent audit (BUG-21): `errors` was
+          // already being collected above, just never saved anywhere.
+          error_detail: errors.length > 0 ? errors.slice(0, 5).join(' | ') : null,
         });
       } catch (logErr) {
         console.error('Failed to log bulk upload history:', logErr);
@@ -468,6 +471,10 @@ export function useBulkUpload(templateKey) {
           file_name: fileName,
           status: (inserted === 0 && updated === 0) ? 'Failed' : 'Completed',
           progress: 100,
+          // Same fix as the transactions path above (BUG-21): `errors`
+          // was already being collected throughout this function, just
+          // never saved anywhere.
+          error_detail: errors.length > 0 ? errors.slice(0, 5).join(' | ') : null,
           ...(template.uploadType === 'Connections'
             ? { new_beekeepers: inserted, updated_beekeepers: updated }
             : {}),
