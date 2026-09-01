@@ -1,0 +1,14 @@
+-- Real data-quality bug found via independent audit (BUG-47): this
+-- contract's country was blank despite its supplier actor (Niakara
+-- SARLU) having a real country (Mali). Confirmed this is a historical
+-- snapshot mismatch, not a current code bug -- ContractWizard's own
+-- country: supplier?.country || null logic is correct and copies
+-- whatever the actor's country is at creation time; this contract was
+-- simply created before that value was corrected on the actor's own
+-- record (likely via a direct data fix earlier in this project's
+-- life, which wouldn't have retroactively updated already-created
+-- contracts). Safe, low-risk one-off correction: Country is a
+-- display/categorization field, not a business commitment like
+-- quantity or price. Verified: zero contracts remain with a blank
+-- country after this fix.
+update public.contracts set country = 'Mali' where contract_code = 'O8GMKN3GQW' and country is null;
