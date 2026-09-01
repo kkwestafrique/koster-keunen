@@ -16,7 +16,17 @@ const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      // Real bug found via independent audit (BUG-34): "first click
+      // after closing a modal is swallowed". The overlay fades out over
+      // a brief animation but stayed mounted and still capturing
+      // pointer events for that entire window -- a click landing while
+      // it was visually fading got intercepted by the invisible-but-
+      // still-there overlay instead of reaching whatever was
+      // underneath. Standard fix for this known Radix Dialog pattern:
+      // stop capturing pointer events the instant the closed state is
+      // applied, independent of how long the fade-out animation itself
+      // takes to finish.
+      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:pointer-events-none",
       className
     )}
     {...props} />

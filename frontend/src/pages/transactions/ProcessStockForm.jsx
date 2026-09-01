@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus, Trash2 } from 'lucide-react';
 import { PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
-import { useAvailableBatches, useProcessStock } from '@/hooks/useTransactions';
+import { useAvailableBatches, useProcessStock, useProductsWithStock } from '@/hooks/useTransactions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
@@ -102,6 +102,7 @@ export default function ProcessStockForm() {
   // visible explanation why. Surfacing that check directly on the main
   // form, immediately, rather than requiring the modal to be opened
   // first to discover it.
+  const { data: sourceProductsWithStock = [] } = useProductsWithStock({ stockType: 'Raw Material' });
   const { data: availableForStandard = [] } = useAvailableBatches({
     product: form.source_product, standard: form.standard, stockType: 'Raw Material',
   });
@@ -181,9 +182,14 @@ export default function ProcessStockForm() {
                 <Select value={form.source_product} onValueChange={handleSourceProductChange}>
                   <SelectTrigger data-testid="process-source-product"><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
                   <SelectContent>
-                    {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    {sourceProductsWithStock.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                {sourceProductsWithStock.length === 0 && (
+                  <p className="text-xs text-[#7089b4]" data-testid="process-no-source-products">
+                    {t('processForm.noSourceProductsAvailable')}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[#7089b4]">{t('processForm.sourceQuantity')}</Label>

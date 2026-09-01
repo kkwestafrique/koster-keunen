@@ -306,6 +306,35 @@ export function useLinkedTransactionStatus(linkedGroupId) {
 // Batch-picker: available batches for a given product/standard/stock type,
 // oldest first (FIFO-friendly default ordering — selection itself is
 // manual, not auto-picked, per the audit's "Add batch details" modal).
+// Real bug found via independent audit (BUG-29): the Source product
+// dropdown in Process Stock pulled from a static, hardcoded list of
+// every possible product in the system, completely unfiltered by
+// whether the current actor actually has any real stock of it --
+// guaranteed to lead to the exact dead-end the "you have X Kg
+// available" hint (built earlier this session) was meant to catch,
+// just one step later than necessary. Returns the distinct list of
+// products with genuinely available stock for the given stock type;
+// RLS on stocks already scopes this to the current actor, matching
+// useAvailableBatches' own convention of relying on RLS rather than an
+// explicit actor filter.
+export function useProductsWithStock({ stockType }) {
+  const { supplyChainId } = useAuth();
+  return useQuery({
+    queryKey: ['products-with-stock', { stockType, supplyChainId }],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stocks')
+        .select('product')
+        .eq('supply_chain_id', supplyChainId)
+        .eq('stock_type', stockType)
+        .gt('quantity_available', 0);
+      if (error) throw error;
+      return [...new Set((data || []).map((r) => r.product))].sort();
+    },
+    enabled: !!supplyChainId && !!stockType,
+  });
+}
+
 export function useAvailableBatches({ product, standard, stockType }) {
   const { supplyChainId } = useAuth();
   return useQuery({

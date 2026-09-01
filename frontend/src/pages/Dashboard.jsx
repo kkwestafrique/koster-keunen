@@ -29,7 +29,8 @@ function StatCard({ label, value, testId }) {
   );
 }
 
-function ChartCard({ title, controls, children, testId }) {
+function ChartCard({ title, controls, children, testId, isEmpty }) {
+  const { t } = useTranslation();
   return (
     <div
       data-testid={testId}
@@ -39,7 +40,16 @@ function ChartCard({ title, controls, children, testId }) {
         <h3 className="text-sm font-bold text-[#032b71]">{title}</h3>
         {controls}
       </div>
-      {children}
+      {/* Real bug found via independent audit (BUG-33): a chart with
+          zero real data rendered as a blank card with no visible
+          content and no explanation -- indistinguishable from a
+          loading state or a genuine bug. Fixed once here, shared by
+          every chart on this page. */}
+      {isEmpty ? (
+        <div className="flex items-center justify-center h-[260px] text-sm text-[#7089b4]" data-testid={`${testId}-empty`}>
+          {t('common.noDataAvailable')}
+        </div>
+      ) : children}
     </div>
   );
 }
@@ -227,7 +237,11 @@ export default function Dashboard() {
         <div className="px-8 pt-6">
           {tab === 'supply' ? (
             <div className="flex flex-wrap gap-6" data-testid="dashboard-charts-supply">
-              <ChartCard title={t("dashboard.actorTypeDistribution")} testId="chart-actor-types">
+              <ChartCard
+                title={t("dashboard.actorTypeDistribution")}
+                testId="chart-actor-types"
+                isEmpty={actorTypeData.length === 0 || actorTypeData.every((d) => !d.value)}
+              >
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie data={actorTypeData} dataKey="value" nameKey="translatedName" innerRadius={55} outerRadius={90} isAnimationActive={false}>
@@ -241,7 +255,11 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title={t("dashboard.totalHivesInstalled")} testId="chart-hives">
+              <ChartCard
+                title={t("dashboard.totalHivesInstalled")}
+                testId="chart-hives"
+                isEmpty={hiveData.length === 0 || hiveData.every((d) => !d.value)}
+              >
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie data={hiveData} dataKey="value" nameKey="translatedName" innerRadius={55} outerRadius={90} isAnimationActive={false}>
@@ -255,7 +273,11 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title={t("dashboard.beekeepersOverview")} testId="chart-gender">
+              <ChartCard
+                title={t("dashboard.beekeepersOverview")}
+                testId="chart-gender"
+                isEmpty={genderData.length === 0 || genderData.every((d) => !d.value)}
+              >
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie data={genderData} dataKey="value" nameKey="translatedName" innerRadius={55} outerRadius={90} isAnimationActive={false}>

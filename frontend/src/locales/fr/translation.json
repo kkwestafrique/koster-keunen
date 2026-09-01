@@ -284,7 +284,8 @@
     "save": "Enregistrer",
     "cancel": "Annuler",
     "page": "Page",
-    "records": "enregistrements"
+    "records": "enregistrements",
+    "noDataAvailable": "Aucune donnée disponible."
   },
   "beekeeperDetail": {
     "title": "Profil de l'apiculteur",
@@ -601,7 +602,8 @@
     "submit": "Traiter le stock",
     "noStockForSelection": "Aucun stock disponible de {{product}} en norme {{standard}}. Vérifiez « Ajouter les détails du lot » ou essayez une autre norme.",
     "availableHint": "Vous disposez de {{quantity}} Kg disponibles pour cette norme et ce produit.",
-    "outputExceedsConsumption": "Vous avez sélectionné {{consumed}} Kg de matière première mais essayez de produire {{output}} Kg — la production ne peut pas dépasser ce qui a été réellement consommé."
+    "outputExceedsConsumption": "Vous avez sélectionné {{consumed}} Kg de matière première mais essayez de produire {{output}} Kg — la production ne peut pas dépasser ce qui a été réellement consommé.",
+    "noSourceProductsAvailable": "Aucun produit avec du stock disponible à traiter."
   },
   "sendForm": {
     "title": "Envoyer le stock",

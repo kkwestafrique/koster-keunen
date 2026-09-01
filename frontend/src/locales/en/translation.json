@@ -284,7 +284,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "page": "Page",
-    "records": "records"
+    "records": "records",
+    "noDataAvailable": "No data available."
   },
   "beekeeperDetail": {
     "title": "Beekeeper profile",
@@ -601,7 +602,8 @@
     "submit": "Process stock",
     "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard.",
     "availableHint": "You have {{quantity}} Kg available for this standard and product.",
-    "outputExceedsConsumption": "You selected {{consumed}} Kg of raw material but are trying to produce {{output}} Kg — output cannot exceed what you actually consumed."
+    "outputExceedsConsumption": "You selected {{consumed}} Kg of raw material but are trying to produce {{output}} Kg — output cannot exceed what you actually consumed.",
+    "noSourceProductsAvailable": "No products with available stock to process."
   },
   "sendForm": {
     "title": "Send stock",
