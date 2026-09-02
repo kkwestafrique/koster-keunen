@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StandardBadge from '@/components/common/StandardBadge';
+import SummaryField from '@/components/common/SummaryField';
 import { Plus, Trash2 } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useCountries } from '@/hooks/useReferenceData';
@@ -439,15 +440,6 @@ export default function ContractWizard() {
       </>
       )}
     </AppLayout>
-  );
-}
-
-function SummaryField({ label, value }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-[#7089b4]">{label}</span>
-      <span className="text-sm text-[#032b71] font-medium">{value || '—'}</span>
-    </div>
   );
 }
 

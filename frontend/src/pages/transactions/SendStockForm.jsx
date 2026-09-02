@@ -13,6 +13,7 @@ import { useContractsForLinking } from '@/hooks/useContracts';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
+import SummaryField from '@/components/common/SummaryField';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 // Send stock form (Transactions > Send). Per the live-site audit, Send has
@@ -67,6 +68,7 @@ export default function SendStockForm() {
   const isAdmin = role === 'Admin';
 
   const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming
   const [batchPickerOpen, setBatchPickerOpen] = useState(false);
   const [selectedBatches, setSelectedBatches] = useState([]);
   const [form, setForm] = useState({
@@ -162,7 +164,7 @@ export default function SendStockForm() {
             {t('contractWizard.back')}
           </Button>
         </div>
-      ) : (
+      ) : step === 1 ? (
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
@@ -298,8 +300,8 @@ export default function SendStockForm() {
           <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/send')}>
             {t('contractWizard.back')}
           </Button>
-          <Button type="button" data-testid="send-submit" disabled={!valid || saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={handleSubmit}>
-            {saving ? t('forms.saving') : t('sendForm.submit')}
+          <Button type="button" data-testid="send-review" disabled={!valid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={() => setStep(2)}>
+            {t('contractWizard.reviewAndConfirm')}
           </Button>
         </div>
 
@@ -314,6 +316,43 @@ export default function SendStockForm() {
           onConfirm={(selections) => setSelectedBatches(selections)}
         />
       </div>
+      ) : (
+        <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl flex flex-col gap-4" data-testid="send-review-step">
+          <h2 className="text-base font-black text-[#032b71] mb-2">{t('contractWizard.reviewTitle')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+            <SummaryField label={t('contractWizard.standard')} value={form.standard} />
+            <SummaryField label={t('sendForm.destinationActor')} value={actors.find((a) => a.id === form.destination_actor_id)?.contact_name} />
+            <SummaryField label={t('contractWizard.product')} value={form.product} />
+            <SummaryField label={t('sendForm.quantityRequired')} value={`${form.quantity} Kg`} />
+            <SummaryField label={t('contractWizard.price')} value={form.price || '0'} />
+            <SummaryField label={t('sendForm.totalAmount')} value={`${(Number(form.quantity) * Number(form.price || 0)).toLocaleString()} ${form.currency || ''}`} />
+            <SummaryField label={t('sendForm.invoiceNumber')} value={form.invoice_number} />
+            <SummaryField label={t('sendForm.blNumber')} value={form.bl_number} />
+            <SummaryField label={t('receiveForm.transactionDate')} value={form.transaction_date} />
+            <SummaryField
+              label={t('transactions.linkToContract')}
+              value={form.contract_id ? linkableContracts.find((c) => c.id === form.contract_id)?.contract_code : t('transactions.noContract')}
+            />
+          </div>
+
+          <div>
+            <span className="text-xs text-[#7089b4]">{t('batchPicker.title')}</span>
+            <ul className="text-sm text-[#032b71] mt-1">
+              {selectedBatches.map((b) => (
+                <li key={b.stockId}>{b.batchReference || b.stockId}: {b.quantity} Kg</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex justify-between mt-2">
+            <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" data-testid="send-review-back" onClick={() => setStep(1)}>
+              {t('contractWizard.back')}
+            </Button>
+            <Button type="button" data-testid="send-submit" disabled={saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={handleSubmit}>
+              {saving ? t('forms.saving') : t('sendForm.submit')}
+            </Button>
+          </div>
+        </div>
       )}
     </AppLayout>
   );

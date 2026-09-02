@@ -513,7 +513,9 @@
     "advanceAmountPaid": "Advance amount paid",
     "noSupplierFound": "No Name of Supplier found",
     "noSupplierMatchesStandard": "No suppliers are certified for this standard yet",
-    "totalQuantityExpected": "Total quantity expected"
+    "totalQuantityExpected": "Total quantity expected",
+    "reviewAndConfirm": "Review & Confirm",
+    "reviewTitle": "Review before confirming"
   },
   "contractDetail": {
     "title": "Contract details",
@@ -609,7 +611,8 @@
     "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard.",
     "availableHint": "You have {{quantity}} Kg available for this standard and product.",
     "outputExceedsConsumption": "You selected {{consumed}} Kg of raw material but are trying to produce {{output}} Kg — output cannot exceed what you actually consumed.",
-    "noSourceProductsAvailable": "No products with available stock to process."
+    "noSourceProductsAvailable": "No products with available stock to process.",
+    "computedLoss": "Computed loss (source consumed − output produced)"
   },
   "sendForm": {
     "title": "Send stock",
@@ -623,7 +626,8 @@
     "submit": "Send stock",
     "noStockForSelection": "No available {{standard}} {{product}} stock found. Check \"Add batch details\" or try a different standard.",
     "adminOnly": "Only Admins can send stock.",
-    "availableHint": "You have {{quantity}} Kg available for this standard and product."
+    "availableHint": "You have {{quantity}} Kg available for this standard and product.",
+    "totalAmount": "Total amount"
   },
   "companyProfile": {
     "actorName": "Actor name",

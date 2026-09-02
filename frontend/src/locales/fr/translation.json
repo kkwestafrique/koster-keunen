@@ -513,7 +513,9 @@
     "advanceAmountPaid": "Montant de l'avance payée",
     "noSupplierFound": "Aucun fournisseur trouvé",
     "noSupplierMatchesStandard": "Aucun fournisseur n'est encore certifié pour cette norme",
-    "totalQuantityExpected": "Quantité totale attendue"
+    "totalQuantityExpected": "Quantité totale attendue",
+    "reviewAndConfirm": "Vérifier et confirmer",
+    "reviewTitle": "Vérifier avant de confirmer"
   },
   "contractDetail": {
     "title": "Détails du contrat",
@@ -609,7 +611,8 @@
     "noStockForSelection": "Aucun stock disponible de {{product}} en norme {{standard}}. Vérifiez « Ajouter les détails du lot » ou essayez une autre norme.",
     "availableHint": "Vous disposez de {{quantity}} Kg disponibles pour cette norme et ce produit.",
     "outputExceedsConsumption": "Vous avez sélectionné {{consumed}} Kg de matière première mais essayez de produire {{output}} Kg — la production ne peut pas dépasser ce qui a été réellement consommé.",
-    "noSourceProductsAvailable": "Aucun produit avec du stock disponible à traiter."
+    "noSourceProductsAvailable": "Aucun produit avec du stock disponible à traiter.",
+    "computedLoss": "Perte calculée (source consommée − sortie produite)"
   },
   "sendForm": {
     "title": "Envoyer le stock",
@@ -623,7 +626,8 @@
     "submit": "Envoyer le stock",
     "noStockForSelection": "Aucun stock disponible de {{product}} en norme {{standard}}. Vérifiez « Ajouter les détails du lot » ou essayez une autre norme.",
     "adminOnly": "Seuls les administrateurs peuvent envoyer du stock.",
-    "availableHint": "Vous disposez de {{quantity}} Kg disponibles pour cette norme et ce produit."
+    "availableHint": "Vous disposez de {{quantity}} Kg disponibles pour cette norme et ce produit.",
+    "totalAmount": "Montant total"
   },
   "companyProfile": {
     "actorName": "Nom de l'acteur",

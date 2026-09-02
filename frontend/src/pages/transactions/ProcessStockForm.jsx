@@ -13,6 +13,7 @@ import { useAvailableBatches, useProcessStock, useProductsWithStock } from '@/ho
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
+import SummaryField from '@/components/common/SummaryField';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const EMPTY_DESTINATION_ROW = { converted_product: '', quantity: '', unit: 'Kg' };
@@ -43,6 +44,7 @@ export default function ProcessStockForm() {
   const { isReadOnly } = useActingActor();
 
   const [mode, setMode] = useState('Processing'); // 'Processing' | 'Merging'
+  const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming
   const [saving, setSaving] = useState(false);
   const [batchPickerOpen, setBatchPickerOpen] = useState(false);
   const [selectedBatches, setSelectedBatches] = useState([]);
@@ -150,7 +152,7 @@ export default function ProcessStockForm() {
             {t('contractWizard.back')}
           </Button>
         </div>
-      ) : (
+      ) : step === 1 ? (
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label className="text-[#7089b4]">{t('processForm.mode')}</Label>
@@ -293,8 +295,14 @@ export default function ProcessStockForm() {
               <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/process')}>
                 {t('contractWizard.back')}
               </Button>
-              <Button type="button" data-testid="process-submit" disabled={!valid || saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={handleSubmit}>
-                {saving ? t('forms.saving') : t('processForm.submit')}
+              {/* Direct request: a preview/review step before the real
+                  submission, matching the pattern the Contract Wizard
+                  already uses (Details -> Summary -> Create). This
+                  button now only advances to that review step -- the
+                  real processStock.mutateAsync() call moves to the
+                  Confirm button on step 2, below. */}
+              <Button type="button" data-testid="process-review" disabled={!valid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={() => setStep(2)}>
+                {t('contractWizard.reviewAndConfirm')}
               </Button>
             </div>
 
@@ -311,6 +319,67 @@ export default function ProcessStockForm() {
           </>
         )}
       </div>
+      ) : (
+        <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl flex flex-col gap-4" data-testid="process-review-step">
+          <h2 className="text-base font-black text-[#032b71] mb-2">{t('contractWizard.reviewTitle')}</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4 mb-2">
+            <SummaryField label={t('processForm.mode')} value={mode === 'Merging' ? t('processForm.merging') : t('processForm.title')} />
+            <SummaryField label={t('contractWizard.standard')} value={form.standard} />
+            <SummaryField label={t('processForm.sourceProduct')} value={form.source_product} />
+            <SummaryField label={t('processForm.sourceQuantity')} value={`${totalSelectedForValidation} Kg`} />
+            <SummaryField label={t('receiveForm.transactionDate')} value={form.transaction_date} />
+          </div>
+
+          <div>
+            <span className="text-xs text-[#7089b4]">{t('batchPicker.title')}</span>
+            <ul className="text-sm text-[#032b71] mt-1">
+              {selectedBatches.map((b) => (
+                <li key={b.stockId}>{b.batchReference || b.stockId}: {b.quantity} Kg</li>
+              ))}
+            </ul>
+          </div>
+
+          <table className="w-full text-sm mb-2">
+            <thead>
+              <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                <th className="py-2">{mode === 'Merging' ? t('processForm.product') : t('processForm.convertedProduct')}</th>
+                <th className="py-2">{t('receiveForm.quantity')}</th>
+                <th className="py-2">{t('contractWizard.unit')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {form.destinations.map((row, idx) => (
+                <tr key={idx} className="border-b border-[#f0f0f0] text-[#032b71]">
+                  <td className="py-2">{row.converted_product}</td>
+                  <td className="py-2">{row.quantity}</td>
+                  <td className="py-2">{row.unit}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Direct request: show the computed loss clearly on the
+              review step, before confirming -- not just after. Same
+              math the database itself will independently verify and
+              enforce (quantity_lost = consumed - produced), shown here
+              so a real mistake is visible while it can still be fixed. */}
+          <div
+            className={`rounded-[5px] p-4 border ${totalSelectedForValidation - totalDestinationForValidation > 0 ? 'bg-[#fff8e6] border-[#e6c34d]' : 'bg-[#ebf6ff] border-[#cfd8e6]'}`}
+            data-testid="process-review-loss"
+          >
+            <span className="text-xs text-[#7089b4]">{t('processForm.computedLoss')}</span>
+            <p className="text-lg font-black text-[#032b71]">{totalSelectedForValidation - totalDestinationForValidation} Kg</p>
+          </div>
+
+          <div className="flex justify-between mt-2">
+            <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" data-testid="process-review-back" onClick={() => setStep(1)}>
+              {t('contractWizard.back')}
+            </Button>
+            <Button type="button" data-testid="process-submit" disabled={saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={handleSubmit}>
+              {saving ? t('forms.saving') : t('processForm.submit')}
+            </Button>
+          </div>
+        </div>
       )}
     </AppLayout>
   );

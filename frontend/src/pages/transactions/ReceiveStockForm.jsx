@@ -16,6 +16,7 @@ import { useCreateTransaction } from '@/hooks/useTransactions';
 import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import SummaryField from '@/components/common/SummaryField';
 
 const EMPTY_PRODUCT_ROW = { product: '', quantity: '', unit: 'Kg', price: '' };
 
@@ -31,6 +32,7 @@ export default function ReceiveStockForm() {
   const { isReadOnly } = useActingActor();
 
   const [mode, setMode] = useState('single');
+  const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming (single mode only -- multiple/bulk mode already has its own review table before import)
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     standard: '',
@@ -110,7 +112,7 @@ export default function ReceiveStockForm() {
         </div>
       ) : (
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl">
-        <RadioGroup value={mode} onValueChange={setMode} className="flex gap-8 mb-6" data-testid="receive-mode">
+        <RadioGroup value={mode} onValueChange={(v) => { setMode(v); setStep(1); }} className="flex gap-8 mb-6" data-testid="receive-mode">
           <label className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
             <RadioGroupItem value="single" data-testid="receive-mode-single" /> {t('receiveForm.singleTransaction')}
           </label>
@@ -130,7 +132,7 @@ export default function ReceiveStockForm() {
             </Select>
           </div>
 
-          {mode === 'single' && form.standard && (
+          {mode === 'single' && form.standard && step === 1 && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
@@ -221,11 +223,54 @@ export default function ReceiveStockForm() {
                 <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/transactions')}>
                   {t('contractWizard.back')}
                 </Button>
-                <Button type="button" data-testid="receive-submit" disabled={!singleValid || saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={handleSubmit}>
-                  {saving ? t('forms.saving') : t('receiveForm.submit')}
+                <Button type="button" data-testid="receive-review" disabled={!singleValid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={() => setStep(2)}>
+                  {t('contractWizard.reviewAndConfirm')}
                 </Button>
               </div>
             </>
+          )}
+
+          {mode === 'single' && form.standard && step === 2 && (
+            <div className="flex flex-col gap-4" data-testid="receive-review-step">
+              <h2 className="text-base font-black text-[#032b71] mb-2">{t('contractWizard.reviewTitle')}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+                <SummaryField label={t('contractWizard.standard')} value={form.standard} />
+                <SummaryField label={t('receiveForm.village')} value={villages.find((v) => v.id === form.village_id)?.name} />
+                <SummaryField label={t('receiveForm.beekeeperFullName')} value={beekeepers.find((b) => b.id === form.beekeeper_id)?.full_name} />
+                <SummaryField label={t('contractWizard.currency')} value={form.currency} />
+                <SummaryField label={t('receiveForm.transactionDate')} value={form.transaction_date} />
+              </div>
+
+              <table className="w-full text-sm mb-2">
+                <thead>
+                  <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                    <th className="py-2">{t('contractWizard.product')}</th>
+                    <th className="py-2">{t('receiveForm.quantity')}</th>
+                    <th className="py-2">{t('contractWizard.unit')}</th>
+                    <th className="py-2">{t('contractWizard.price')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {form.products.map((row, idx) => (
+                    <tr key={idx} className="border-b border-[#f0f0f0] text-[#032b71]">
+                      <td className="py-2">{row.product}</td>
+                      <td className="py-2">{row.quantity}</td>
+                      <td className="py-2">{row.unit}</td>
+                      <td className="py-2">{row.price || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="flex justify-between mt-2">
+                <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" data-testid="receive-review-back" onClick={() => setStep(1)}>
+                  {t('contractWizard.back')}
+                </Button>
+                <Button type="button" data-testid="receive-submit" disabled={saving} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={handleSubmit}>
+                  {saving ? t('forms.saving') : t('receiveForm.submit')}
+                </Button>
+              </div>
+            </div>
           )}
 
           {mode === 'multiple' && form.standard && (
