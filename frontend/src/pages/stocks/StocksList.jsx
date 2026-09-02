@@ -80,7 +80,7 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-end gap-3 mb-4">
         <FilterBar
           testId={testId}
           search={search}
