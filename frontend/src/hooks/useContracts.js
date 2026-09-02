@@ -288,9 +288,10 @@ export function useUpdateContractGroup() {
 // you want. Direction (Send transactions only see Send-type contracts)
 // is still a baseline correctness constraint, not optional filtering.
 export function useContractsForLinking(contractType, actorId) {
-  const { supplyChainId } = useAuth();
+  const { supplyChainId, profile } = useAuth();
+  const myActorId = profile?.current_actor_id;
   return useQuery({
-    queryKey: ['contracts-for-linking', contractType, actorId, supplyChainId],
+    queryKey: ['contracts-for-linking', contractType, actorId, myActorId, supplyChainId],
     queryFn: async () => {
       let query = supabase
         .from('contracts')
@@ -298,12 +299,28 @@ export function useContractsForLinking(contractType, actorId) {
         .eq('supply_chain_id', supplyChainId)
         .eq('contract_type', contractType)
         .order('created_at', { ascending: false });
-      if (actorId) query = query.eq('actor_id', actorId);
+      // Real gap found via direct feedback: a contract has two actor
+      // references -- owning_actor_id (who created it) and actor_id
+      // (the counterparty). The previous version only checked
+      // actor_id = the buyer, which correctly caught the case where I
+      // created the contract and named them as counterparty, but
+      // completely missed the reverse: a contract THEY created,
+      // naming ME as counterparty, is just as real a "contract I have
+      // with this buyer" -- just from the other direction. Now checks
+      // both directions explicitly, so this shows contracts between me
+      // and this specific buyer regardless of who actually created it,
+      // not contracts that merely happen to reference the buyer's id
+      // in one particular field.
+      if (actorId && myActorId) {
+        query = query.or(
+          `and(owning_actor_id.eq.${myActorId},actor_id.eq.${actorId}),and(owning_actor_id.eq.${actorId},actor_id.eq.${myActorId})`
+        );
+      }
       const { data, error } = await query;
       if (error) throw error;
       return data;
     },
-    enabled: !!supplyChainId && !!contractType && !!actorId,
+    enabled: !!supplyChainId && !!contractType && !!actorId && !!myActorId,
   });
 }
 
