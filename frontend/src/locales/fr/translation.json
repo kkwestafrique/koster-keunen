@@ -344,7 +344,13 @@
     "status": "Statut",
     "year": "Année",
     "supplier": "Fournisseur",
-    "buyer": "Acheteur"
+    "buyer": "Acheteur",
+    "deleteSuccess": "Connexion supprimée.",
+    "deleteFailed": "Impossible de supprimer la connexion",
+    "deleteConfirmTitle": "Supprimer cette connexion ?",
+    "deleteConfirmDescription": "Cette action supprimera définitivement cet enregistrement de connexion.",
+    "deleteConfirmDescriptionActive": "Cette connexion est actuellement active. La supprimer retire définitivement tout l’enregistrement de la relation -- ceci est différent de Révoquer, qui la conserve comme enregistrement historique marqué inactif. Les contrats ou transactions réels entre ces deux acteurs ne sont affectés dans aucun des cas.",
+    "deleteConfirmAction": "Supprimer"
   },
   "forms": {
     "addActor": "Ajouter un acteur",

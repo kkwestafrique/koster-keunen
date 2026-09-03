@@ -344,7 +344,13 @@
     "status": "Status",
     "year": "Year",
     "supplier": "Supplier",
-    "buyer": "Buyer"
+    "buyer": "Buyer",
+    "deleteSuccess": "Connection deleted.",
+    "deleteFailed": "Could not delete connection",
+    "deleteConfirmTitle": "Delete this connection?",
+    "deleteConfirmDescription": "This will permanently delete this connection record.",
+    "deleteConfirmDescriptionActive": "This connection is currently Active. Deleting it permanently removes the relationship record entirely -- this is different from Revoke, which keeps it as a historical record marked inactive. Any real contracts or transactions between these two actors are not affected either way.",
+    "deleteConfirmAction": "Delete"
   },
   "forms": {
     "addActor": "Add Actor",

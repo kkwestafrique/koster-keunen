@@ -5,8 +5,8 @@ import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
 import StatusBadge from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { Plus, Check, X } from 'lucide-react';
-import { useConnections, useApproveConnection } from '@/hooks/useConnections';
+import { Plus, Check, X, Trash2 } from 'lucide-react';
+import { useConnections, useApproveConnection, useDeleteConnection } from '@/hooks/useConnections';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,16 @@ import ConnectionFormDialog from '@/pages/connections/ConnectionFormDialog';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const YEAR_OPTIONS = Array.from({ length: 8 }, (_, i) => {
   const y = new Date().getFullYear() - i;
@@ -36,9 +46,11 @@ export default function ConnectionsList() {
 
   const { data, isLoading } = useConnections({ page, pageSize, search, status, year });
   const { profile } = useAuth();
-  const { canApprove } = usePermissions();
+  const { canApprove, canDelete } = usePermissions();
   const { toast } = useToast();
   const approveConnection = useApproveConnection();
+  const deleteConnection = useDeleteConnection();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const handleApprove = async (connectionId) => {
     try {
@@ -46,6 +58,17 @@ export default function ConnectionsList() {
       toast({ title: t('connectionsList.approved') });
     } catch (err) {
       toast({ title: t('connectionsList.approveFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteConnection.mutateAsync(deleteTarget.id);
+      toast({ title: t('connectionsList.deleteSuccess') });
+    } catch (err) {
+      toast({ title: t('connectionsList.deleteFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -81,6 +104,22 @@ export default function ConnectionsList() {
           </Button>
         ) : null,
     },
+    ...(canDelete ? [{
+      key: 'delete_action',
+      label: '',
+      render: (row) => (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          data-testid={`connection-delete-${row.id}`}
+          className="text-[#ba550c] hover:text-[#ba550c] hover:bg-[#fdecea]"
+          onClick={(e) => { e.stopPropagation(); setDeleteTarget(row); }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
+    }] : []),
   ];
 
   return (
@@ -136,6 +175,29 @@ export default function ConnectionsList() {
       />
 
       <ConnectionFormDialog open={formOpen} onOpenChange={setFormOpen} />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent data-testid="connection-delete-confirm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('connectionsList.deleteConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.status === 'Active'
+                ? t('connectionsList.deleteConfirmDescriptionActive')
+                : t('connectionsList.deleteConfirmDescription')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="connection-delete-cancel">{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="connection-delete-confirm-action"
+              className="bg-[#ba550c] hover:bg-[#a34a0a]"
+              onClick={handleDelete}
+            >
+              {t('connectionsList.deleteConfirmAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }

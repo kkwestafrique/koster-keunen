@@ -168,3 +168,28 @@ export function useUpdateConnectionStatus() {
     },
   });
 }
+
+// Second entity in the deliberately scoped-down Delete rollout (after
+// villages). Confirmed directly before building this: zero real foreign
+// keys anywhere in the database reference connections at all -- nothing
+// depends on a connection row, so deleting one is genuinely safe from a
+// pure data-integrity standpoint. Distinct from revoking (which keeps the
+// row as a historical record, just marked inactive): this permanently
+// removes the row itself. Real contracts/transactions created while a
+// connection existed reference the actors directly, not the connection
+// row, so they're never affected either way.
+export function useDeleteConnection() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('connections').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['connection-between'] });
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+      queryClient.invalidateQueries({ queryKey: ['actors'] });
+      queryClient.invalidateQueries({ queryKey: ['actors-lite'] });
+    },
+  });
+}
