@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -8,6 +8,9 @@ import { useLossRecords } from '@/hooks/useTransactions';
 import { useConstants } from '@/hooks/useConstants';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { formatDate } from '@/lib/dateFormat';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
+
+const FILTER_DEFAULTS = { search: '', product: '', page: 1, pageSize: 15 };
 
 // Real browsable Loss list, replacing the previous /stocks/loss page,
 // which queried stocks where stock_type='Loss' — a data shape nothing in
@@ -18,10 +21,12 @@ export default function LossList() {
   const { t } = useTranslation();
   usePageTitle(t('lossList.title'));
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [product, setProduct] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const { search, product, page, pageSize } = filters;
+  const setSearch = (v) => setFilters({ search: v, page: 1 });
+  const setProduct = (v) => setFilters({ product: v, page: 1 });
+  const setPage = (v) => setFilters({ page: v });
+  const setPageSize = (v) => setFilters({ pageSize: v, page: 1 });
 
   const { data: products = [] } = useConstants('product_type');
   const { data, isLoading } = useLossRecords({ page, pageSize, product, search });

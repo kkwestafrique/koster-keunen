@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import AppLayout from '@/components/layout/AppLayout';
@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { formatDateTime } from '@/lib/dateFormat';
 
 const STATUS_OPTIONS = ['Cancelled', 'Inprogress', 'Completed', 'Failed'];
@@ -40,10 +41,29 @@ function UploadHistoryTable({ uploadType, showProgress, testId }) {
   const { t } = useTranslation();
   usePageTitle(t('bulkUploads.title'));
   const { supplyChainId } = useAuth();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
+  // Real gap found via the newest audit (M5), with a real, specific
+  // wrinkle: this component renders twice on the same page (the
+  // Connections and Transactions tabs both use it). Generic filter key
+  // names in the URL would collide between the two -- switching tabs
+  // would incorrectly inherit the other tab's leftover search/status/
+  // page from the URL. Prefixed with the already-unique uploadType so
+  // each tab's filters live under their own distinct URL params.
+  const prefix = uploadType.toLowerCase();
+  const FILTER_DEFAULTS = {
+    [`${prefix}_page`]: 1,
+    [`${prefix}_pageSize`]: 5,
+    [`${prefix}_search`]: '',
+    [`${prefix}_status`]: '',
+  };
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const page = filters[`${prefix}_page`];
+  const pageSize = filters[`${prefix}_pageSize`];
+  const search = filters[`${prefix}_search`];
+  const status = filters[`${prefix}_status`];
+  const setPage = (v) => setFilters({ [`${prefix}_page`]: v });
+  const setPageSize = (v) => setFilters({ [`${prefix}_pageSize`]: v, [`${prefix}_page`]: 1 });
+  const setSearch = (v) => setFilters({ [`${prefix}_search`]: v, [`${prefix}_page`]: 1 });
+  const setStatus = (v) => setFilters({ [`${prefix}_status`]: v, [`${prefix}_page`]: 1 });
 
   const { data, isLoading } = useQuery({
     queryKey: ['bulk_uploads', { uploadType, page, pageSize, search, status, supplyChainId }],
