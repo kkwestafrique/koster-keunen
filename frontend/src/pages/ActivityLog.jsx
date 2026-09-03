@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
@@ -6,9 +6,11 @@ import DataTable from '@/components/common/DataTable';
 import { useActivityLog } from '@/hooks/useActivityLog';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { formatDateTime } from '@/lib/dateFormat';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 const ENTITY_TYPES = ['Actor', 'Beekeeper', 'Contract', 'Stock', 'Transaction', 'Claim'];
 const PAGE_SIZE = 15;
+const FILTER_DEFAULTS = { search: '', entityType: '', page: 1 };
 
 // Gap 8 (Medium, Phase 1): no dedicated audit-history screen existed --
 // the who/when data was real but scattered across individual records.
@@ -28,9 +30,11 @@ export default function ActivityLog() {
   usePageTitle(t('activityLog.title'));
   const { data: rows = [], isLoading } = useActivityLog();
 
-  const [search, setSearch] = useState('');
-  const [entityType, setEntityType] = useState('');
-  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const { search, entityType, page } = filters;
+  const setSearch = (v) => setFilters({ search: v, page: 1 });
+  const setEntityType = (v) => setFilters({ entityType: v, page: 1 });
+  const setPage = (v) => setFilters({ page: v });
 
   const filtered = useMemo(() => {
     let result = rows;
