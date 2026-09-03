@@ -360,7 +360,20 @@ export function useBulkUpload(templateKey) {
         await supabase.from('bulk_uploads').insert({
           supply_chain_id: supplyChainId,
           upload_type: template.uploadType,
-          file_name: fileName,
+          // Real bug found via tracing the actual call chain (M7):
+          // this always used the closure-captured `fileName` state.
+          // Every real caller invokes submit() immediately after
+          // await loadFile(file) inside the same handler -- loadFile
+          // does correctly call setFileName(file.name) internally, but
+          // the already-running caller's own closure still references
+          // whatever `submit` function existed BEFORE that state
+          // update, not the fresh one React creates afterward. A
+          // classic stale-closure gap, not a timing coincidence.
+          // options.fileName is a real, explicit value the caller
+          // already has in hand (the actual File object's own .name),
+          // sidestepping the closure risk entirely rather than trying
+          // to out-time it.
+          file_name: options.fileName ?? fileName,
           status: inserted === 0 ? 'Failed' : 'Completed',
           progress: 100,
           // Real bug found via independent audit (BUG-21): `errors` was
@@ -468,7 +481,10 @@ export function useBulkUpload(templateKey) {
         await supabase.from('bulk_uploads').insert({
           supply_chain_id: supplyChainId,
           upload_type: template.uploadType,
-          file_name: fileName,
+          // Same real fix as the transactions path above (M7): prefer
+          // the explicitly-passed value over the closure-captured
+          // hook state.
+          file_name: options.fileName ?? fileName,
           status: (inserted === 0 && updated === 0) ? 'Failed' : 'Completed',
           progress: 100,
           // Same fix as the transactions path above (BUG-21): `errors`

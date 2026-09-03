@@ -117,7 +117,7 @@ function MultiUploadBody({ onDone }) {
     try {
       await loadFile(file);
       setProgress(60);
-      const result = await submit();
+      const result = await submit({ fileName: file.name });
       setProgress(100);
       setPhase('done');
       if (result.inserted > 0 || result.updated > 0) {

@@ -27,7 +27,7 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
   };
 
   const handleSubmit = async () => {
-    const res = await bulkUpload.submit();
+    const res = await bulkUpload.submit({ fileName: bulkUpload.fileName });
     if (res.inserted > 0) {
       toast({ title: t('contracts.bulkImportComplete', { count: res.inserted }) });
       bulkUpload.reset();
