@@ -77,26 +77,26 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('forms.actorFrom')}</Label>
+            <Label htmlFor="conn-form-from" className="text-[#5a6f9a]">{t('forms.actorFrom')}</Label>
             <Select value={form.actor_from_id} onValueChange={setActorFrom}>
-              <SelectTrigger data-testid="conn-form-from"><SelectValue placeholder={t('forms.selectActor')} /></SelectTrigger>
+              <SelectTrigger id="conn-form-from" data-testid="conn-form-from"><SelectValue placeholder={t('forms.selectActor')} /></SelectTrigger>
               <SelectContent>
                 {actorsForFrom.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name} ({a.traceability_code})</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('forms.actorTo')}</Label>
+            <Label htmlFor="conn-form-to" className="text-[#5a6f9a]">{t('forms.actorTo')}</Label>
             <Select value={form.actor_to_id} onValueChange={setActorTo}>
-              <SelectTrigger data-testid="conn-form-to"><SelectValue placeholder={t('forms.selectActor')} /></SelectTrigger>
+              <SelectTrigger id="conn-form-to" data-testid="conn-form-to"><SelectValue placeholder={t('forms.selectActor')} /></SelectTrigger>
               <SelectContent>
                 {actorsForTo.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name} ({a.traceability_code})</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('forms.connectionType')}</Label>
-            <Input data-testid="conn-form-type" value={form.connection_type} onChange={(e) => set('connection_type')(e.target.value)} />
+            <Label htmlFor="conn-form-type" className="text-[#5a6f9a]">{t('forms.connectionType')}</Label>
+            <Input id="conn-form-type" data-testid="conn-form-type" value={form.connection_type} onChange={(e) => set('connection_type')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[#5a6f9a]">{t('forms.status')}</Label>
@@ -105,9 +105,9 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('forms.contactGender')}</Label>
+            <Label htmlFor="conn-form-gender" className="text-[#5a6f9a]">{t('forms.contactGender')}</Label>
             <Select value={form.contact_gender} onValueChange={set('contact_gender')}>
-              <SelectTrigger data-testid="conn-form-gender"><SelectValue placeholder={t('forms.selectGender')} /></SelectTrigger>
+              <SelectTrigger id="conn-form-gender" data-testid="conn-form-gender"><SelectValue placeholder={t('forms.selectGender')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Male">{t('common.male')}</SelectItem>
                 <SelectItem value="Female">{t('common.female')}</SelectItem>
@@ -115,13 +115,13 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('forms.year')}</Label>
-            <Input type="number" data-testid="conn-form-year" value={form.year} onChange={(e) => set('year')(Number(e.target.value))} />
+            <Label htmlFor="conn-form-year" className="text-[#5a6f9a]">{t('forms.year')}</Label>
+            <Input id="conn-form-year" type="number" data-testid="conn-form-year" value={form.year} onChange={(e) => set('year')(Number(e.target.value))} />
           </div>
           <div className="flex flex-col gap-1.5 col-span-2">
-            <Label className="text-[#5a6f9a]">{t('forms.village')}</Label>
+            <Label htmlFor="conn-form-village" className="text-[#5a6f9a]">{t('forms.village')}</Label>
             <Select value={form.village_id} onValueChange={set('village_id')}>
-              <SelectTrigger data-testid="conn-form-village"><SelectValue placeholder={t('forms.selectVillage')} /></SelectTrigger>
+              <SelectTrigger id="conn-form-village" data-testid="conn-form-village"><SelectValue placeholder={t('forms.selectVillage')} /></SelectTrigger>
               <SelectContent>
                 {villages.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
               </SelectContent>

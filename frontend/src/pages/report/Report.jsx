@@ -264,9 +264,9 @@ export default function Report() {
 
           {activeReport?.modal === 'yearOnly' && (
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#5a6f9a]">{t('contractWizard.year')} *</Label>
+              <Label htmlFor="report-year" className="text-[#5a6f9a]">{t('contractWizard.year')} *</Label>
               <Select value={filters.year} onValueChange={(v) => setFilters((f) => ({ ...f, year: v }))}>
-                <SelectTrigger data-testid="report-year"><SelectValue placeholder={t('contractWizard.selectYear')} /></SelectTrigger>
+                <SelectTrigger id="report-year" data-testid="report-year"><SelectValue placeholder={t('contractWizard.selectYear')} /></SelectTrigger>
                 <SelectContent>
                   {YEARS.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                 </SelectContent>
@@ -278,18 +278,18 @@ export default function Report() {
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#5a6f9a]">{t('report.startYear')} *</Label>
+                  <Label htmlFor="report-start-year" className="text-[#5a6f9a]">{t('report.startYear')} *</Label>
                   <Select value={filters.startYear} onValueChange={(v) => setFilters((f) => ({ ...f, startYear: v }))}>
-                    <SelectTrigger data-testid="report-start-year"><SelectValue placeholder={t('report.selectStartYear')} /></SelectTrigger>
+                    <SelectTrigger id="report-start-year" data-testid="report-start-year"><SelectValue placeholder={t('report.selectStartYear')} /></SelectTrigger>
                     <SelectContent>
                       {YEARS.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#5a6f9a]">{t('report.endYear')} *</Label>
+                  <Label htmlFor="report-end-year" className="text-[#5a6f9a]">{t('report.endYear')} *</Label>
                   <Select value={filters.endYear} onValueChange={(v) => setFilters((f) => ({ ...f, endYear: v }))}>
-                    <SelectTrigger data-testid="report-end-year"><SelectValue placeholder={t('report.selectEndYear')} /></SelectTrigger>
+                    <SelectTrigger id="report-end-year" data-testid="report-end-year"><SelectValue placeholder={t('report.selectEndYear')} /></SelectTrigger>
                     <SelectContent>
                       {YEARS.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                     </SelectContent>
@@ -297,7 +297,7 @@ export default function Report() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('report.standards')} *</Label>
+                <span className="text-[#5a6f9a] block">{t('report.standards')} *</span>
                 <MultiCheck
                   options={STANDARDS}
                   allLabel={t('report.allStandards')}
@@ -313,16 +313,16 @@ export default function Report() {
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#5a6f9a]">{t('report.dateFrom')}</Label>
-                  <Input type="date" data-testid="report-date-from" min="1900-01-01" max="2100-12-31" value={filters.dateFrom} onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))} />
+                  <Label htmlFor="report-date-from" className="text-[#5a6f9a]">{t('report.dateFrom')}</Label>
+                  <Input id="report-date-from" type="date" data-testid="report-date-from" min="1900-01-01" max="2100-12-31" value={filters.dateFrom} onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#5a6f9a]">{t('report.dateTo')}</Label>
-                  <Input type="date" data-testid="report-date-to" min="1900-01-01" max="2100-12-31" value={filters.dateTo} onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))} />
+                  <Label htmlFor="report-date-to" className="text-[#5a6f9a]">{t('report.dateTo')}</Label>
+                  <Input id="report-date-to" type="date" data-testid="report-date-to" min="1900-01-01" max="2100-12-31" value={filters.dateTo} onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))} />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('report.products')}</Label>
+                <span className="text-[#5a6f9a] block">{t('report.products')}</span>
                 <MultiCheck
                   options={PRODUCTS}
                   allLabel={t('report.allProducts')}
@@ -332,7 +332,7 @@ export default function Report() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('report.standards')}</Label>
+                <span className="text-[#5a6f9a] block">{t('report.standards')}</span>
                 <MultiCheck
                   options={STANDARDS}
                   allLabel={t('report.allStandards')}
