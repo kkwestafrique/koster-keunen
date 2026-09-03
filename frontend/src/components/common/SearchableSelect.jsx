@@ -28,8 +28,8 @@ export default function SearchableSelect({
           data-testid={testId}
           className="w-full justify-between font-normal bg-white border-[#cfd8e6] text-[#032b71] hover:bg-white disabled:opacity-50"
         >
-          <span className={`truncate ${selected ? '' : 'text-[#7089b4]'}`}>{selected ? selected.label : placeholder}</span>
-          <ChevronDown className="h-4 w-4 opacity-50 shrink-0 text-[#7089b4]" />
+          <span className={`truncate ${selected ? '' : 'text-[#5a6f9a]'}`}>{selected ? selected.label : placeholder}</span>
+          <ChevronDown className="h-4 w-4 opacity-50 shrink-0 text-[#5a6f9a]" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white" align="start">

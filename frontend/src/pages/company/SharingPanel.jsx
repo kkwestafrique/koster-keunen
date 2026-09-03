@@ -105,7 +105,7 @@ function ShareAccessDialog({ open, onOpenChange }) {
               </SelectContent>
             </Select>
             {form.permissionLevel && (
-              <p className="text-xs text-[#7089b4]">{t(LEVEL_DESCRIPTION_KEYS[form.permissionLevel])}</p>
+              <p className="text-xs text-[#5a6f9a]">{t(LEVEL_DESCRIPTION_KEYS[form.permissionLevel])}</p>
             )}
           </div>
         </div>
@@ -173,13 +173,13 @@ export default function SharingPanel() {
       </div>
 
       {loadingMyGrants ? (
-        <p className="text-sm text-[#7089b4] mb-6">{t('common.loading')}</p>
+        <p className="text-sm text-[#5a6f9a] mb-6">{t('common.loading')}</p>
       ) : activeMyGrants.length === 0 && revokedMyGrants.length === 0 ? (
-        <p className="text-sm text-[#7089b4] mb-6" data-testid="sharing-my-grants-empty">{t('sharing.noneSharedYet')}</p>
+        <p className="text-sm text-[#5a6f9a] mb-6" data-testid="sharing-my-grants-empty">{t('sharing.noneSharedYet')}</p>
       ) : (
         <table className="w-full text-sm mb-6" data-testid="sharing-my-grants-table">
           <thead>
-            <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+            <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
               <th className="py-2">{t('sharing.person')}</th>
               <th className="py-2">{t('sharing.module')}</th>
               <th className="py-2">{t('sharing.permissionLevel')}</th>
@@ -197,7 +197,7 @@ export default function SharingPanel() {
                 <td className="py-2">{g.created_at?.slice(0, 10)}</td>
                 <td className="py-2">
                   {g.revoked_at ? (
-                    <span className="text-[#7089b4]">{t('sharing.revokedOn', { date: g.revoked_at.slice(0, 10) })}</span>
+                    <span className="text-[#5a6f9a]">{t('sharing.revokedOn', { date: g.revoked_at.slice(0, 10) })}</span>
                   ) : (
                     <span className="text-[#219653] font-bold">{t('sharing.active')}</span>
                   )}
@@ -223,13 +223,13 @@ export default function SharingPanel() {
 
       <h3 className="text-sm font-black text-[#032b71] mb-3">{t('sharing.sharedWithMe')}</h3>
       {loadingReceived ? (
-        <p className="text-sm text-[#7089b4]">{t('common.loading')}</p>
+        <p className="text-sm text-[#5a6f9a]">{t('common.loading')}</p>
       ) : grantsReceived.length === 0 ? (
-        <p className="text-sm text-[#7089b4]" data-testid="sharing-received-empty">{t('sharing.nothingSharedWithYouYet')}</p>
+        <p className="text-sm text-[#5a6f9a]" data-testid="sharing-received-empty">{t('sharing.nothingSharedWithYouYet')}</p>
       ) : (
         <table className="w-full text-sm" data-testid="sharing-received-table">
           <thead>
-            <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+            <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
               <th className="py-2">{t('sharing.sharedBy')}</th>
               <th className="py-2">{t('sharing.from')}</th>
               <th className="py-2">{t('sharing.module')}</th>

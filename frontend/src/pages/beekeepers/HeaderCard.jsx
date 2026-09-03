@@ -89,7 +89,7 @@ export default function HeaderCard({ bk }) {
               <h2 className="text-xl font-black text-[#032b71]" data-testid="beekeeper-header-name">{bk.full_name}</h2>
               {(bk.standards || []).map((s) => <StandardBadge key={s} standard={s} />)}
               {pendingStandards.map((s) => (
-                <span key={s} className="text-sm font-bold text-[#7089b4]" data-testid={`bk-pending-standard-${s}`}>
+                <span key={s} className="text-sm font-bold text-[#5a6f9a]" data-testid={`bk-pending-standard-${s}`}>
                   {s} ({t('verification.pending')})
                 </span>
               ))}

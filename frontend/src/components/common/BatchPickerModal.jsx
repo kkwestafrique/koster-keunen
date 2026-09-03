@@ -91,9 +91,9 @@ export default function BatchPickerModal({ open, onOpenChange, product, standard
         </DialogHeader>
 
         {isLoading ? (
-          <p className="text-sm text-[#7089b4]">{t('common.loading')}</p>
+          <p className="text-sm text-[#5a6f9a]">{t('common.loading')}</p>
         ) : batches.length === 0 ? (
-          <p className="text-sm text-[#7089b4]" data-testid={`${testIdPrefix}-empty`}>{t('batchPicker.noBatchesFound')}</p>
+          <p className="text-sm text-[#5a6f9a]" data-testid={`${testIdPrefix}-empty`}>{t('batchPicker.noBatchesFound')}</p>
         ) : (
           <>
             {Number(requiredQuantity) > 0 && (
@@ -112,7 +112,7 @@ export default function BatchPickerModal({ open, onOpenChange, product, standard
             )}
             <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+              <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
                 <th className="py-2 w-10"></th>
                 <th className="py-2">{t('batchPicker.id')}</th>
                 <th className="py-2">{t('batchPicker.batch')}</th>
@@ -161,7 +161,7 @@ export default function BatchPickerModal({ open, onOpenChange, product, standard
 
         <div className="bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4 mt-2" data-testid={`${testIdPrefix}-summary`}>
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-[#7089b4]">{t('batchPicker.selectionSummary')}</span>
+            <span className="text-[#5a6f9a]">{t('batchPicker.selectionSummary')}</span>
             <span className={overSelected ? 'text-[#ba550c] font-bold' : 'text-[#032b71] font-bold'}>
               {totalSelected} / {required} {batches[0]?.unit || 'Kg'}
             </span>

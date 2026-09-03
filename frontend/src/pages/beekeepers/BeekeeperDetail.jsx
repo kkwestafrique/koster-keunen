@@ -28,7 +28,7 @@ export default function BeekeeperDetail() {
   if (isLoading || !bk) {
     return (
       <AppLayout title={t('beekeeperDetail.title')}>
-        <p className="text-[#7089b4]">{t('common.loading')}</p>
+        <p className="text-[#5a6f9a]">{t('common.loading')}</p>
       </AppLayout>
     );
   }
@@ -48,13 +48,13 @@ export default function BeekeeperDetail() {
 
       <Tabs defaultValue="details">
         <TabsList className="bg-transparent border-b border-[#cfd8e6] p-0 rounded-none h-auto gap-6 justify-start">
-          <TabsTrigger value="details" data-testid="bk-tab-details" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold">
+          <TabsTrigger value="details" data-testid="bk-tab-details" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold">
             {t('beekeeperDetail.beekeeperDetails')}
           </TabsTrigger>
-          <TabsTrigger value="overview" data-testid="bk-tab-overview" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold">
+          <TabsTrigger value="overview" data-testid="bk-tab-overview" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold">
             {t('beekeeperDetail.overview')}
           </TabsTrigger>
-          <TabsTrigger value="transactions" data-testid="bk-tab-transactions" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold">
+          <TabsTrigger value="transactions" data-testid="bk-tab-transactions" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold">
             {t('actorProfile.transactions')}
           </TabsTrigger>
         </TabsList>

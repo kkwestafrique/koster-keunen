@@ -25,7 +25,7 @@ function StatCard({ label, value, testId }) {
       className="bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-1 justify-center flex-1"
     >
       <span className="text-[28px] font-bold text-[#032b71]">{value ?? '—'}</span>
-      <span className="text-xs text-[#7089b4]">{label}</span>
+      <span className="text-xs text-[#5a6f9a]">{label}</span>
     </div>
   );
 }
@@ -46,11 +46,24 @@ function ChartCard({ title, controls, children, testId, isEmpty }) {
           content and no explanation -- indistinguishable from a
           loading state or a genuine bug. Fixed once here, shared by
           every chart on this page. */}
+      {/* Real gap found via independent audit (A1): SVG charts had no
+          accessible name at all -- a screen reader announces raw,
+          meaningless SVG markup instead of what the chart actually
+          shows. Wrapping the real chart content (not the empty-state
+          text, which is already plain, readable text) in role="img"
+          with the same title already shown visually tells assistive
+          tech to treat the whole chart as one described image rather
+          than trying to narrate its internal SVG structure. Fixed once
+          here, shared by every chart on this page. */}
       {isEmpty ? (
-        <div className="flex items-center justify-center h-[260px] text-sm text-[#7089b4]" data-testid={`${testId}-empty`}>
+        <div className="flex items-center justify-center h-[260px] text-sm text-[#5a6f9a]" data-testid={`${testId}-empty`}>
           {t('common.noDataAvailable')}
         </div>
-      ) : children}
+      ) : (
+        <div role="img" aria-label={typeof title === 'string' ? title : undefined}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -166,7 +179,7 @@ export default function Dashboard() {
               className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
                 tab === 'supply'
                   ? 'bg-white text-[#0f48aa] border-[#0f48aa]'
-                  : 'bg-[#e8ecf3] text-[#7089b4] border-transparent'
+                  : 'bg-[#e8ecf3] text-[#5a6f9a] border-transparent'
               }`}
             >
               {t('dashboard.supplyChainOverview')}
@@ -177,7 +190,7 @@ export default function Dashboard() {
               className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
                 tab === 'transactions'
                   ? 'bg-white text-[#0f48aa] border-[#0f48aa]'
-                  : 'bg-[#e8ecf3] text-[#7089b4] border-transparent'
+                  : 'bg-[#e8ecf3] text-[#5a6f9a] border-transparent'
               }`}
             >
               {t('dashboard.transactionOverview')}
@@ -186,7 +199,7 @@ export default function Dashboard() {
 
           {/* Filter bar */}
           <div className="bg-white border border-[#cfd8e6] rounded-b-[5px] px-8 py-4 flex flex-col gap-2">
-            <span className="text-[13px] text-[#7089b4]">
+            <span className="text-[13px] text-[#5a6f9a]">
               {tab === 'transactions' ? t('dashboard.filterHintTransactions') : t('dashboard.filterHint')}
             </span>
             <div className="flex gap-4">
@@ -309,14 +322,14 @@ export default function Dashboard() {
                       ]}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
-                      <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#7089b4' }} />
-                      <YAxis tick={{ fontSize: 12, fill: '#7089b4' }} />
+                      <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <YAxis tick={{ fontSize: 12, fill: '#5a6f9a' }} />
                       <Tooltip />
                       <Bar dataKey="value" fill="#0f48aa" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-sm text-[#7089b4] text-center py-16">{t('common.noRecordsFound')}</p>
+                  <p className="text-sm text-[#5a6f9a] text-center py-16">{t('common.noRecordsFound')}</p>
                 )}
               </ChartCard>
 
@@ -325,14 +338,14 @@ export default function Dashboard() {
                   <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={txSummary.byProduct} layout="vertical" margin={{ left: 24 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
-                      <XAxis type="number" tick={{ fontSize: 12, fill: '#7089b4' }} />
-                      <YAxis type="category" dataKey="product" width={110} tick={{ fontSize: 11, fill: '#7089b4' }} />
+                      <XAxis type="number" tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <YAxis type="category" dataKey="product" width={110} tick={{ fontSize: 11, fill: '#5a6f9a' }} />
                       <Tooltip />
                       <Bar dataKey="quantity" fill="#2d9cdb" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-sm text-[#7089b4] text-center py-16">{t('common.noRecordsFound')}</p>
+                  <p className="text-sm text-[#5a6f9a] text-center py-16">{t('common.noRecordsFound')}</p>
                 )}
               </ChartCard>
             </div>

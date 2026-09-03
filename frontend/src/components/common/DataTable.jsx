@@ -98,7 +98,7 @@ export default function DataTable({
         <TableHeader>
           <TableRow className="border-b border-[#cfd8e6] hover:bg-transparent">
             {columns.map((col) => (
-              <TableHead key={col.key} className="text-[#7089b4] font-bold bg-transparent">
+              <TableHead key={col.key} className="text-[#5a6f9a] font-bold bg-transparent">
                 {col.sortable ? (
                   <button
                     type="button"
@@ -121,22 +121,38 @@ export default function DataTable({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center py-8 text-[#7089b4]">
+              <TableCell colSpan={columns.length} className="text-center py-8 text-[#5a6f9a]">
                 {t('common.loading')}
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center py-8 text-[#7089b4]" data-testid="data-table-empty">
+              <TableCell colSpan={columns.length} className="text-center py-8 text-[#5a6f9a]" data-testid="data-table-empty">
                 {resolvedEmptyMessage}
               </TableCell>
             </TableRow>
           ) : (
             displayRows.map((row, idx) => (
+              // Real gap found via independent audit (C4): table rows
+              // were mouse-only -- keyboard users couldn't Tab to a row
+              // or press Enter to open it, and screen readers had no
+              // indication a row was interactive at all. Only made
+              // focusable/keyboard-operable when there's actually a
+              // click handler to trigger -- a table with no
+              // onRowClick genuinely isn't interactive, so it
+              // shouldn't claim to be. Fixed once here, shared by
+              // every table in the app.
               <TableRow
                 key={row.id || idx}
-                className="border-b border-[#cfd8e6] cursor-pointer transition-colors"
+                className={`border-b border-[#cfd8e6] transition-colors ${onRowClick ? 'cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0f48aa] focus-visible:-outline-offset-2' : ''}`}
                 onClick={() => onRowClick && onRowClick(row)}
+                tabIndex={onRowClick ? 0 : undefined}
+                onKeyDown={onRowClick ? (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onRowClick(row);
+                  }
+                } : undefined}
                 data-testid={`${testId}-row-${row.id || idx}`}
               >
                 {columns.map((col) => (
@@ -164,7 +180,7 @@ export default function DataTable({
             showing one that looks broken. */}
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-[#7089b4]">{t('common.itemsPerPage')}</span>
+            <span className="text-sm text-[#5a6f9a]">{t('common.itemsPerPage')}</span>
             <Select
               value={String(pageSize)}
               onValueChange={(v) => onPageSizeChange(Number(v))}
@@ -182,7 +198,7 @@ export default function DataTable({
         )}
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-[#7089b4]" data-testid={`${testId}-summary`}>
+          <span className="text-sm text-[#5a6f9a]" data-testid={`${testId}-summary`}>
             {rangeFrom} - {rangeTo} {t('common.of')} {total || 0}
           </span>
           <Pagination className="justify-end w-auto mx-0">

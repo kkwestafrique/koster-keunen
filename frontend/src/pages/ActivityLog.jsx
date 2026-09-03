@@ -74,7 +74,7 @@ export default function ActivityLog() {
   return (
     <AppLayout hideDefaultHeader>
       <h1 className="text-lg font-black text-[#0f48aa] mb-1" data-testid="activity-log-title">{t('activityLog.title')}</h1>
-      <p className="text-sm text-[#7089b4] mb-4">{t('activityLog.description')}</p>
+      <p className="text-sm text-[#5a6f9a] mb-4">{t('activityLog.description')}</p>
 
       <FilterBar
         testId="activity-log"

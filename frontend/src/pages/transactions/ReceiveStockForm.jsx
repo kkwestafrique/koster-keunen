@@ -123,9 +123,9 @@ export default function ReceiveStockForm() {
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5 max-w-sm">
-            <Label className="text-[#7089b4]">{t('contractWizard.standard')}</Label>
+            <Label htmlFor="receive-standard" className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
             <Select value={form.standard} onValueChange={set('standard')}>
-              <SelectTrigger data-testid="receive-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
+              <SelectTrigger id="receive-standard" data-testid="receive-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
               <SelectContent>
                 {STANDARDS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
@@ -136,18 +136,18 @@ export default function ReceiveStockForm() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4]">{t('receiveForm.village')}</Label>
+                  <Label htmlFor="receive-village" className="text-[#5a6f9a]">{t('receiveForm.village')}</Label>
                   <Select value={form.village_id} onValueChange={(v) => setForm((f) => ({ ...f, village_id: v, beekeeper_id: '' }))}>
-                    <SelectTrigger data-testid="receive-village"><SelectValue placeholder={t('forms.selectVillage')} /></SelectTrigger>
+                    <SelectTrigger id="receive-village" data-testid="receive-village"><SelectValue placeholder={t('forms.selectVillage')} /></SelectTrigger>
                     <SelectContent>
                       {villages.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4]">{t('receiveForm.beekeeperFullName')}</Label>
+                  <Label htmlFor="receive-beekeeper" className="text-[#5a6f9a]">{t('receiveForm.beekeeperFullName')}</Label>
                   <Select value={form.beekeeper_id} onValueChange={set('beekeeper_id')}>
-                    <SelectTrigger data-testid="receive-beekeeper">
+                    <SelectTrigger id="receive-beekeeper" data-testid="receive-beekeeper">
                       <SelectValue placeholder={t('receiveForm.selectBeekeeper')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -159,48 +159,48 @@ export default function ReceiveStockForm() {
                   )}
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4]">{t('contractWizard.currency')}</Label>
+                  <Label htmlFor="receive-currency" className="text-[#5a6f9a]">{t('contractWizard.currency')}</Label>
                   <Select value={form.currency} onValueChange={set('currency')}>
-                    <SelectTrigger data-testid="receive-currency"><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="receive-currency" data-testid="receive-currency"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4]">{t('receiveForm.transactionDate')}</Label>
-                  <Input type="date" data-testid="receive-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => set('transaction_date')(e.target.value)} />
+                  <Label htmlFor="receive-date" className="text-[#5a6f9a]">{t('receiveForm.transactionDate')}</Label>
+                  <Input id="receive-date" type="date" data-testid="receive-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => set('transaction_date')(e.target.value)} />
                 </div>
               </div>
 
-              <Label className="text-[#032b71] font-bold mt-2">{t('contractWizard.products')}</Label>
+              <span className="text-[#032b71] font-bold mt-2 block">{t('contractWizard.products')}</span>
               {form.products.map((row, idx) => (
                 <div key={idx} className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 items-end">
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[#7089b4] text-xs">{t('contractWizard.product')}</Label>
+                    <Label htmlFor={`receive-product-${idx}`} className="text-[#5a6f9a] text-xs">{t('contractWizard.product')}</Label>
                     <Select value={row.product} onValueChange={(v) => setProductRow(idx, { product: v })}>
-                      <SelectTrigger><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
+                      <SelectTrigger id={`receive-product-${idx}`} data-testid={`receive-product-${idx}`}><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
                       <SelectContent>
                         {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[#7089b4] text-xs">{t('receiveForm.quantity')}</Label>
-                    <Input type="number" min="0" value={row.quantity} onChange={(e) => setProductRow(idx, { quantity: e.target.value })} />
+                    <Label htmlFor={`receive-quantity-${idx}`} className="text-[#5a6f9a] text-xs">{t('receiveForm.quantity')}</Label>
+                    <Input id={`receive-quantity-${idx}`} data-testid={`receive-quantity-${idx}`} type="number" min="0" value={row.quantity} onChange={(e) => setProductRow(idx, { quantity: e.target.value })} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[#7089b4] text-xs">{t('contractWizard.unit')}</Label>
+                    <Label htmlFor={`receive-unit-${idx}`} className="text-[#5a6f9a] text-xs">{t('contractWizard.unit')}</Label>
                     <Select value={row.unit} onValueChange={(v) => setProductRow(idx, { unit: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger id={`receive-unit-${idx}`} data-testid={`receive-unit-${idx}`}><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[#7089b4] text-xs">{t('contractWizard.price')}</Label>
-                    <Input type="number" min="0" value={row.price} onChange={(e) => setProductRow(idx, { price: e.target.value })} />
+                    <Label htmlFor={`receive-price-${idx}`} className="text-[#5a6f9a] text-xs">{t('contractWizard.price')}</Label>
+                    <Input id={`receive-price-${idx}`} data-testid={`receive-price-${idx}`} type="number" min="0" value={row.price} onChange={(e) => setProductRow(idx, { price: e.target.value })} />
                   </div>
                   {form.products.length > 1 && (
                     <Button type="button" variant="ghost" className="text-[#ba550c]" onClick={() => setForm((f) => ({ ...f, products: f.products.filter((_, i) => i !== idx) }))}>
@@ -243,7 +243,7 @@ export default function ReceiveStockForm() {
 
               <table className="w-full text-sm mb-2">
                 <thead>
-                  <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                  <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
                     <th className="py-2">{t('contractWizard.product')}</th>
                     <th className="py-2">{t('receiveForm.quantity')}</th>
                     <th className="py-2">{t('contractWizard.unit')}</th>
@@ -277,7 +277,7 @@ export default function ReceiveStockForm() {
             <div className="bg-[#fffaec] border border-[#f2e4b3] rounded-[5px] p-5 flex flex-col gap-4" data-testid="receive-multiple-block">
               <div>
                 <p className="text-sm font-bold text-[#032b71] mb-1">1. {t('receiveForm.downloadTemplate')}</p>
-                <p className="text-xs text-[#7089b4] mb-3">{t('receiveForm.templateNote')}</p>
+                <p className="text-xs text-[#5a6f9a] mb-3">{t('receiveForm.templateNote')}</p>
                 <div className="flex flex-col gap-3 max-w-sm">
                   <Select value={form.currency} onValueChange={set('currency')}>
                     <SelectTrigger data-testid="receive-multi-currency"><SelectValue placeholder={t('contractWizard.selectCurrency')} /></SelectTrigger>
@@ -301,7 +301,7 @@ export default function ReceiveStockForm() {
                     checked={bulkUpload.isHistorical}
                     onCheckedChange={(v) => bulkUpload.setIsHistorical(!!v)}
                   />
-                  <span className="text-xs text-[#7089b4]">
+                  <span className="text-xs text-[#5a6f9a]">
                     <span className="font-bold text-[#032b71]">{t('receiveForm.historicalDataLabel')}</span>
                     {' '}{t('receiveForm.historicalDataNote')}
                   </span>
@@ -329,7 +329,7 @@ export default function ReceiveStockForm() {
                   </span>
                 </label>
                 {bulkUpload.fileName && (
-                  <span className="ml-3 text-sm text-[#7089b4]">{bulkUpload.fileName}</span>
+                  <span className="ml-3 text-sm text-[#5a6f9a]">{bulkUpload.fileName}</span>
                 )}
                 {bulkUpload.parseError && (
                   <p className="mt-2 text-sm text-[#ba550c] font-bold" data-testid="receive-bulk-parse-error">
@@ -348,7 +348,7 @@ export default function ReceiveStockForm() {
                     <div className="max-h-64 overflow-y-auto border border-[#cfd8e6] rounded-[5px]">
                       <table className="w-full text-xs">
                         <thead className="bg-white sticky top-0">
-                          <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                          <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
                             <th className="py-2 px-3">{t('receiveForm.row')}</th>
                             <th className="py-2 px-3">{t('receiveForm.status')}</th>
                             <th className="py-2 px-3">{t('receiveForm.issues')}</th>
@@ -365,7 +365,7 @@ export default function ReceiveStockForm() {
                                   <span className="text-[#ba550c] font-bold">{t('receiveForm.invalid')}</span>
                                 )}
                               </td>
-                              <td className="py-1.5 px-3 text-[#7089b4]">{r.errors.join('; ') || '—'}</td>
+                              <td className="py-1.5 px-3 text-[#5a6f9a]">{r.errors.join('; ') || '—'}</td>
                             </tr>
                           ))}
                         </tbody>

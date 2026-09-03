@@ -100,7 +100,7 @@ function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} })
           <DetailField label={t('contracts.year')} value={contract.year} testId="update-contract-year" />
           <DetailField label={t('contractWizard.supplier')} value={contract.actors?.contact_name} testId="update-contract-actor" />
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-[#7089b4]">{t('contracts.standard')}</span>
+            <span className="text-xs text-[#5a6f9a]">{t('contracts.standard')}</span>
             <StandardBadge standard={contract.standard} />
           </div>
         </div>
@@ -145,7 +145,7 @@ function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} })
             <Button type="button" variant="outline" className="border-[#0f48aa] text-[#0f48aa] shrink-0" onClick={() => fileInputRef.current?.click()}>
               {t('contractWizard.uploadFile')}
             </Button>
-            <span className="text-sm text-[#7089b4] truncate">{newFile?.name || t('forms.noFileChosen')}</span>
+            <span className="text-sm text-[#5a6f9a] truncate">{newFile?.name || t('forms.noFileChosen')}</span>
             <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT_ATTR} className="hidden" onChange={(e) => setNewFile(e.target.files?.[0] || null)} />
           </div>
         </div>
@@ -306,11 +306,11 @@ function DeliveryNotificationTab({ contractGroupId, contractProducts, canAdd }) 
         </div>
       )}
       {deliveries.length === 0 ? (
-        <p className="text-sm text-[#7089b4]" data-testid="contract-deliveries-empty">{t('contractDetail.noDeliveryNotificationsFound')}</p>
+        <p className="text-sm text-[#5a6f9a]" data-testid="contract-deliveries-empty">{t('contractDetail.noDeliveryNotificationsFound')}</p>
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+            <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
               <th className="py-2">{t('contractWizard.product')}</th>
               <th className="py-2">{t('contractDetail.deliveringQuantity')}</th>
               <th className="py-2">{t('contractDetail.expectedDeliveryDate')}</th>
@@ -369,7 +369,7 @@ export default function ContractDetail() {
   if (isLoading) {
     return (
       <AppLayout hideDefaultHeader>
-        <p className="text-[#7089b4]">{t('common.loading')}</p>
+        <p className="text-[#5a6f9a]">{t('common.loading')}</p>
       </AppLayout>
     );
   }
@@ -383,7 +383,7 @@ export default function ContractDetail() {
         >
           <ChevronLeft className="h-4 w-4" /> {t('actorProfile.back')}
         </button>
-        <p className="text-[#7089b4]" data-testid="contract-not-found">{t('common.noContractsFound')}</p>
+        <p className="text-[#5a6f9a]" data-testid="contract-not-found">{t('common.noContractsFound')}</p>
       </AppLayout>
     );
   }
@@ -404,7 +404,7 @@ export default function ContractDetail() {
         <h1 className="text-lg font-black text-[#0f48aa]">{t('contractDetail.title')}</h1>
         <div className="flex items-center gap-3">
           {contract.updated_at && (
-            <span className="text-xs italic text-[#7089b4]" data-testid="contract-last-updated">
+            <span className="text-xs italic text-[#5a6f9a]" data-testid="contract-last-updated">
               {t('contractDetail.lastUpdatedOn')}: {formatDate(contract.updated_at)}
             </span>
           )}
@@ -439,7 +439,7 @@ export default function ContractDetail() {
           <DetailField label={t('contracts.signatureDate')} value={formatDate(contract.signature_date)} />
 
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-[#7089b4]">{t('contracts.standard')}</span>
+            <span className="text-xs text-[#5a6f9a]">{t('contracts.standard')}</span>
             <StandardBadge standard={contract.standard} />
           </div>
           <DetailField label={t('contractWizard.advanceAmountPaid')} value={contract.advance_amount_paid != null ? `${contract.advance_amount_paid} ${contract.currency || ''}` : null} />
@@ -453,10 +453,10 @@ export default function ContractDetail() {
 
       <Tabs defaultValue="products">
         <TabsList className="bg-transparent border-b border-[#cfd8e6] p-0 rounded-none h-auto gap-6 justify-start mb-0">
-          <TabsTrigger value="products" data-testid="contract-tab-products" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold">
+          <TabsTrigger value="products" data-testid="contract-tab-products" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold">
             {t('contractDetail.productDetails')}
           </TabsTrigger>
-          <TabsTrigger value="deliveries" data-testid="contract-tab-deliveries" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold">
+          <TabsTrigger value="deliveries" data-testid="contract-tab-deliveries" className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold">
             {t('contractDetail.deliveryNotification')}
           </TabsTrigger>
         </TabsList>
@@ -464,12 +464,12 @@ export default function ContractDetail() {
         <TabsContent value="products">
           <div className="bg-white border border-[#cfd8e6] rounded-b-[5px] border-t-0 p-6" data-testid="contract-detail-products">
             {products.length === 0 ? (
-              <p className="text-sm text-[#7089b4]">{t('common.noRecordsFound')}</p>
+              <p className="text-sm text-[#5a6f9a]">{t('common.noRecordsFound')}</p>
             ) : (
               <>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                    <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
                       <th className="py-2">{t('contractWizard.product')}</th>
                       <th className="py-2">{t('contractWizard.expectedQuantity')}</th>
                       <th className="py-2">{t('contractDetail.maximumPricePerKg')}</th>
@@ -515,7 +515,7 @@ export default function ContractDetail() {
             )}
 
             <div className="mt-4">
-              <span className="text-xs text-[#7089b4]">{t('contractWizard.attachedFile')}</span>
+              <span className="text-xs text-[#5a6f9a]">{t('contractWizard.attachedFile')}</span>
               <p className="text-sm text-[#032b71]">
                 {contract.attachment_url
                   ? <a href={contract.attachment_url} target="_blank" rel="noreferrer" className="text-[#0f48aa] underline">{t('contractWizard.attachedFile')}</a>

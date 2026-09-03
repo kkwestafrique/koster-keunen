@@ -23,14 +23,14 @@ export default function StockDetail() {
   const { data: originTransaction } = useTransactionForStock(id);
   const { canViewChangeHistory } = usePermissions();
 
-  if (isLoading) return <AppLayout hideDefaultHeader><p className="text-[#7089b4]">{t('common.loading')}</p></AppLayout>;
-  if (!stock) return <AppLayout hideDefaultHeader><p className="text-[#7089b4]">{t('common.notFound')}</p></AppLayout>;
+  if (isLoading) return <AppLayout hideDefaultHeader><p className="text-[#5a6f9a]">{t('common.loading')}</p></AppLayout>;
+  if (!stock) return <AppLayout hideDefaultHeader><p className="text-[#5a6f9a]">{t('common.notFound')}</p></AppLayout>;
 
   return (
     <AppLayout hideDefaultHeader>
       <button
         data-testid="stock-detail-back"
-        className="flex items-center gap-1 text-sm text-[#7089b4] hover:text-[#032b71] mb-4"
+        className="flex items-center gap-1 text-sm text-[#5a6f9a] hover:text-[#032b71] mb-4"
         onClick={() => navigate(-1)}
       >
         <ChevronLeft className="h-4 w-4" /> {t('common.back')}
@@ -64,7 +64,7 @@ export default function StockDetail() {
         </div>
 
         <div className="border-t border-[#f0f0f0] pt-5">
-          <p className="text-xs font-bold text-[#7089b4] mb-2">{t('stocks.origin')}</p>
+          <p className="text-xs font-bold text-[#5a6f9a] mb-2">{t('stocks.origin')}</p>
           {originTransaction ? (
             <button
               data-testid="stock-detail-origin-transaction"
@@ -74,7 +74,7 @@ export default function StockDetail() {
               {t('stocks.viewOriginTransaction', { code: originTransaction.transaction_code })}
             </button>
           ) : (
-            <p className="text-sm text-[#7089b4]">{t('stocks.noOriginTransaction')}</p>
+            <p className="text-sm text-[#5a6f9a]">{t('stocks.noOriginTransaction')}</p>
           )}
         </div>
       </div>

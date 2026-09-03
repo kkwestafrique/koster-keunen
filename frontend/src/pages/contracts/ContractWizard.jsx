@@ -219,7 +219,7 @@ export default function ContractWizard() {
           {step === 1 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="contract-wizard-step1">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('contractWizard.year')}</Label>
+                <Label className="text-[#5a6f9a]">{t('contractWizard.year')}</Label>
                 <Select value={form.year} onValueChange={set('year')}>
                   <SelectTrigger data-testid="contract-year"><SelectValue placeholder={t('contractWizard.selectYear')} /></SelectTrigger>
                   <SelectContent>
@@ -228,7 +228,7 @@ export default function ContractWizard() {
                 </Select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('contractWizard.standard')}</Label>
+                <Label className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
                 <Select value={form.standard} onValueChange={handleStandardChange}>
                   <SelectTrigger data-testid="contract-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
                   <SelectContent>
@@ -237,12 +237,12 @@ export default function ContractWizard() {
                 </Select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('contractWizard.supplier')}</Label>
+                <Label className="text-[#5a6f9a]">{t('contractWizard.supplier')}</Label>
                 <Select value={form.supplier_actor_id} onValueChange={handleSupplierChange} disabled={!form.standard}>
                   <SelectTrigger data-testid="contract-supplier"><SelectValue placeholder={form.standard ? t('contractWizard.selectSupplier') : t('contractWizard.selectStandardFirst')} /></SelectTrigger>
                   <SelectContent>
                     {suppliersMatchingStandard.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-[#7089b4]">
+                      <div className="px-3 py-2 text-sm text-[#5a6f9a]">
                         {form.standard ? t('contractWizard.noSupplierMatchesStandard') : t('contractWizard.selectStandardFirst')}
                       </div>
                     ) : (
@@ -252,7 +252,7 @@ export default function ContractWizard() {
                 </Select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('contractWizard.currency')}</Label>
+                <Label className="text-[#5a6f9a]">{t('contractWizard.currency')}</Label>
                 <Select value={form.currency} onValueChange={set('currency')}>
                   <SelectTrigger data-testid="contract-currency"><SelectValue placeholder={t('contractWizard.selectCurrency')} /></SelectTrigger>
                   <SelectContent>
@@ -266,7 +266,7 @@ export default function ContractWizard() {
                 {form.products.map((row, idx) => (
                   <div key={idx} className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 items-end" data-testid={`contract-product-row-${idx}`}>
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-[#7089b4] text-xs">{t('contractWizard.product')}</Label>
+                      <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.product')}</Label>
                       <Select value={row.product} onValueChange={(v) => setProductRow(idx, { product: v })}>
                         <SelectTrigger><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
                         <SelectContent>
@@ -275,17 +275,17 @@ export default function ContractWizard() {
                       </Select>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-[#7089b4] text-xs">{t('contractWizard.expectedQuantity')}</Label>
+                      <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.expectedQuantity')}</Label>
                       <Input type="number" min="0" value={row.expected_quantity} onChange={(e) => setProductRow(idx, { expected_quantity: e.target.value })} />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-[#7089b4] text-xs">{t('contractWizard.unit')}</Label>
+                      <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.unit')}</Label>
                       <div className="h-10 flex items-center px-3 text-sm text-[#032b71] bg-[#f4f6fa] rounded-md border border-input" data-testid={`contract-product-unit-${idx}`}>
                         {row.unit}
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-[#7089b4] text-xs">{t('contractWizard.price')}</Label>
+                      <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.price')}</Label>
                       <Input type="number" min="0" value={row.price} onChange={(e) => setProductRow(idx, { price: e.target.value })} />
                     </div>
                     {form.products.length > 1 && (
@@ -309,15 +309,15 @@ export default function ContractWizard() {
               )}
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('contractWizard.advanceAmountPaid')}</Label>
+                <Label className="text-[#5a6f9a]">{t('contractWizard.advanceAmountPaid')}</Label>
                 <Input type="number" min="0" data-testid="contract-advance-amount" value={form.advance_amount_paid} onChange={(e) => set('advance_amount_paid')(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('contractWizard.advancePercent')}</Label>
-                <Input disabled data-testid="contract-advance-percent" value={`${advancePercent}%`} className="bg-[#f4f6fa] text-[#7089b4]" />
+                <Label className="text-[#5a6f9a]">{t('contractWizard.advancePercent')}</Label>
+                <Input disabled data-testid="contract-advance-percent" value={`${advancePercent}%`} className="bg-[#f4f6fa] text-[#5a6f9a]" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('contractWizard.uploadContract')}</Label>
+                <Label className="text-[#5a6f9a]">{t('contractWizard.uploadContract')}</Label>
                 <div className="flex items-center gap-3">
                   <Button
                     type="button"
@@ -327,7 +327,7 @@ export default function ContractWizard() {
                   >
                     {t('contractWizard.uploadFile')}
                   </Button>
-                  <span className="text-sm text-[#7089b4] truncate">{contractFile?.name || t('forms.noFileChosen')}</span>
+                  <span className="text-sm text-[#5a6f9a] truncate">{contractFile?.name || t('forms.noFileChosen')}</span>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -338,11 +338,11 @@ export default function ContractWizard() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('contractWizard.signatureDate')}</Label>
+                <Label className="text-[#5a6f9a]">{t('contractWizard.signatureDate')}</Label>
                 <Input type="date" data-testid="contract-signature-date" min="1900-01-01" max="2100-12-31" value={form.signature_date} onChange={(e) => set('signature_date')(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5 col-span-full">
-                <Label className="text-[#7089b4]">{t('contractWizard.comments')}</Label>
+                <Label className="text-[#5a6f9a]">{t('contractWizard.comments')}</Label>
                 <Textarea data-testid="contract-comments" value={form.comments} onChange={(e) => set('comments')(e.target.value)} rows={3} />
               </div>
 
@@ -367,7 +367,7 @@ export default function ContractWizard() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4 mb-6">
                 <SummaryField label={t('contractWizard.year')} value={form.year} />
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-xs text-[#7089b4]">{t('contractWizard.standard')}</span>
+                  <span className="text-xs text-[#5a6f9a]">{t('contractWizard.standard')}</span>
                   <StandardBadge standard={form.standard} />
                 </div>
                 <SummaryField label={t('contractWizard.supplier')} value={supplier?.contact_name || '—'} />
@@ -382,7 +382,7 @@ export default function ContractWizard() {
 
               <table className="w-full text-sm mb-6">
                 <thead>
-                  <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                  <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
                     <th className="py-2">{t('contractWizard.product')}</th>
                     <th className="py-2">{t('contractWizard.expectedQuantity')}</th>
                     <th className="py-2">{t('contractWizard.unit')}</th>
@@ -402,13 +402,13 @@ export default function ContractWizard() {
               </table>
 
               <div className="mb-6">
-                <span className="text-xs text-[#7089b4]">{t('contractWizard.attachedFile')}</span>
+                <span className="text-xs text-[#5a6f9a]">{t('contractWizard.attachedFile')}</span>
                 <p className="text-sm text-[#032b71]">{contractFile?.name || t('contractWizard.noAttachedFiles')}</p>
               </div>
 
               {form.comments && (
                 <div className="mb-6">
-                  <span className="text-xs text-[#7089b4]">{t('contractWizard.comments')}</span>
+                  <span className="text-xs text-[#5a6f9a]">{t('contractWizard.comments')}</span>
                   <p className="text-sm text-[#032b71]">{form.comments}</p>
                 </div>
               )}
@@ -447,11 +447,11 @@ function StepMarker({ n, active, done, label }) {
   return (
     <div className="flex items-center gap-3">
       <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${
-        active || done ? 'bg-[#0f48aa] text-white' : 'bg-[#ebf6ff] text-[#7089b4]'
+        active || done ? 'bg-[#0f48aa] text-white' : 'bg-[#ebf6ff] text-[#5a6f9a]'
       }`}>
         {n}
       </div>
-      <span className={`text-sm ${active ? 'font-bold text-[#0f48aa]' : 'text-[#7089b4]'}`}>{label}</span>
+      <span className={`text-sm ${active ? 'font-bold text-[#0f48aa]' : 'text-[#5a6f9a]'}`}>{label}</span>
     </div>
   );
 }

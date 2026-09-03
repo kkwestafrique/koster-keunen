@@ -1,14 +1,27 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 
 export default function AppLayout({ title, hideDefaultHeader, children }) {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-[#f9fafc]">
+      {/* Real gap found via independent audit (A4): no skip-navigation
+          link existed, forcing keyboard users to Tab through the full
+          sidebar on every single page load before reaching real
+          content. Standard pattern: visually hidden until it receives
+          focus (first Tab press), then visible and usable. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[200] focus:bg-white focus:text-[#0f48aa] focus:px-4 focus:py-2 focus:rounded-[5px] focus:border focus:border-[#0f48aa] focus:font-bold"
+      >
+        {t('common.skipToContent')}
+      </a>
       <Sidebar />
       <div className="ml-[240px]">
         <TopBar />
-        <main data-testid="main-content">
+        <main id="main-content" data-testid="main-content" tabIndex={-1}>
           {!hideDefaultHeader && title && (
             <div className="px-8 pt-6 pb-2">
               <h2 className="text-lg font-black text-[#0f48aa]">{title}</h2>

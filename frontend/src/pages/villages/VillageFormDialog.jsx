@@ -54,11 +54,11 @@ export default function VillageFormDialog({ open, onOpenChange }) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.villageName')}</Label>
+            <Label className="text-[#5a6f9a]">{t('forms.villageName')}</Label>
             <Input data-testid="village-form-name" required value={form.name} onChange={(e) => set('name')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.country')}</Label>
+            <Label className="text-[#5a6f9a]">{t('forms.country')}</Label>
             <Select value={form.country} onValueChange={setCountry}>
               <SelectTrigger data-testid="village-form-country"><SelectValue placeholder={t('forms.selectCountry')} /></SelectTrigger>
               <SelectContent>
@@ -67,7 +67,7 @@ export default function VillageFormDialog({ open, onOpenChange }) {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.stateRegion')}</Label>
+            <Label className="text-[#5a6f9a]">{t('forms.stateRegion')}</Label>
             <Select value={form.state_region} onValueChange={setState} disabled={!form.country}>
               <SelectTrigger data-testid="village-form-state">
                 <SelectValue placeholder={form.country ? t('forms.selectState') : t('forms.selectCountryFirst')} />
@@ -78,7 +78,7 @@ export default function VillageFormDialog({ open, onOpenChange }) {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('forms.lgaMunicipality')}</Label>
+            <Label className="text-[#5a6f9a]">{t('forms.lgaMunicipality')}</Label>
             {lgas.length > 0 ? (
               <Select value={form.lga_municipality} onValueChange={set('lga_municipality')} disabled={!form.state_region}>
                 <SelectTrigger data-testid="village-form-lga">

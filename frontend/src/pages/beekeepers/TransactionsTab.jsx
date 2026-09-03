@@ -12,13 +12,13 @@ export default function TransactionsTab({ beekeeperId }) {
   const { data: transactions = [] } = useBeekeeperTransactions(beekeeperId);
 
   if (transactions.length === 0) {
-    return <p className="text-sm text-[#7089b4]" data-testid="bk-transactions-empty">{t('common.noRecordsFound')}</p>;
+    return <p className="text-sm text-[#5a6f9a]" data-testid="bk-transactions-empty">{t('common.noRecordsFound')}</p>;
   }
 
   return (
     <table className="w-full text-sm" data-testid="bk-transactions-table">
       <thead>
-        <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+        <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
           <th className="py-2">{t('transactions.date')}</th>
           <th className="py-2">{t('contractWizard.product')}</th>
           <th className="py-2">{t('transactions.quantityDelivered')}</th>

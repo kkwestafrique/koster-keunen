@@ -52,7 +52,7 @@ export default function ActorDetail() {
   if (isLoading || !actor) {
     return (
       <AppLayout hideDefaultHeader>
-        <p className="text-[#7089b4]">{t('common.loading')}</p>
+        <p className="text-[#5a6f9a]">{t('common.loading')}</p>
       </AppLayout>
     );
   }
@@ -86,21 +86,21 @@ export default function ActorDetail() {
               <TabsTrigger
                 value="details"
                 data-testid="actor-tab-details"
-                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold"
               >
                 {t('actorProfile.actorDetails')}
               </TabsTrigger>
               <TabsTrigger
                 value="transactions"
                 data-testid="actor-tab-transactions"
-                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold"
               >
                 {t('actorProfile.transactions')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="pt-5">
-              <p className="text-xs text-[#7089b4] mb-1">{t('actorProfile.actorDescription')}</p>
+              <p className="text-xs text-[#5a6f9a] mb-1">{t('actorProfile.actorDescription')}</p>
               <p className="text-sm text-[#032b71] mb-5">{actor.description || '-'}</p>
 
               <h3 className="text-sm font-black text-[#032b71] mb-3">{t('actorProfile.address')}</h3>
@@ -123,11 +123,11 @@ export default function ActorDetail() {
 
             <TabsContent value="transactions" className="pt-5">
               {transactions.length === 0 ? (
-                <p className="text-sm text-[#7089b4]">{t('common.noRecordsFound')}</p>
+                <p className="text-sm text-[#5a6f9a]">{t('common.noRecordsFound')}</p>
               ) : (
                 <table className="w-full text-sm" data-testid="actor-transactions-table">
                   <thead>
-                    <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                    <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
                       <th className="py-2">{t('transactions.date')}</th>
                       <th className="py-2">{t('contractWizard.product')}</th>
                       <th className="py-2">{t('transactions.quantityDelivered')}</th>

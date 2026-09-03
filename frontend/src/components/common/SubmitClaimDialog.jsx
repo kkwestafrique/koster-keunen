@@ -77,13 +77,13 @@ export default function SubmitClaimDialog({ entityType, entityId, currentStandar
         </DialogHeader>
 
         {availableStandards.length === 0 ? (
-          <p className="text-sm text-[#7089b4]" data-testid="submit-claim-none-available">
+          <p className="text-sm text-[#5a6f9a]" data-testid="submit-claim-none-available">
             {t('verification.noStandardsAvailable')}
           </p>
         ) : (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#7089b4]">{t('verification.selectStandard')}</Label>
+              <Label className="text-[#5a6f9a]">{t('verification.selectStandard')}</Label>
               <Select value={standard} onValueChange={setStandard}>
                 <SelectTrigger className="bg-white" data-testid="submit-claim-standard">
                   <SelectValue placeholder={t('verification.selectStandardPlaceholder')} />
@@ -96,7 +96,7 @@ export default function SubmitClaimDialog({ entityType, entityId, currentStandar
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#7089b4]">{t('verification.evidenceNote')}</Label>
+              <Label className="text-[#5a6f9a]">{t('verification.evidenceNote')}</Label>
               <Textarea
                 data-testid="submit-claim-evidence"
                 value={evidenceNote}

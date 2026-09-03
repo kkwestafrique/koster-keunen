@@ -42,7 +42,8 @@
     "downloadRowCount": "{{count}} row exported",
     "downloadRowCount_other": "{{count}} rows exported",
     "downloadFailed": "Export failed",
-    "downloadAgain": "Download"
+    "downloadAgain": "Download",
+    "notificationsUnread": "Notifications ({{count}} unread)"
   },
   "login": {
     "title": "Login to",
@@ -291,7 +292,8 @@
     "records": "records",
     "noDataAvailable": "No data available.",
     "back": "Back",
-    "templateDownloaded": "Template downloaded."
+    "templateDownloaded": "Template downloaded.",
+    "skipToContent": "Skip to main content"
   },
   "beekeeperDetail": {
     "title": "Beekeeper profile",

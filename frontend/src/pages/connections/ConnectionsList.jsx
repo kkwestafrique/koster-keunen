@@ -53,12 +53,12 @@ export default function ConnectionsList() {
     {
       key: 'is_supplier',
       label: t('connectionsList.supplier'),
-      render: (row) => (row.is_supplier ? <Check className="h-4 w-4 text-[#219653]" /> : <X className="h-4 w-4 text-[#7089b4]" />),
+      render: (row) => (row.is_supplier ? <Check className="h-4 w-4 text-[#219653]" /> : <X className="h-4 w-4 text-[#5a6f9a]" />),
     },
     {
       key: 'is_buyer',
       label: t('connectionsList.buyer'),
-      render: (row) => (row.is_buyer ? <Check className="h-4 w-4 text-[#219653]" /> : <X className="h-4 w-4 text-[#7089b4]" />),
+      render: (row) => (row.is_buyer ? <Check className="h-4 w-4 text-[#219653]" /> : <X className="h-4 w-4 text-[#5a6f9a]" />),
     },
     {
       key: 'approve_action',

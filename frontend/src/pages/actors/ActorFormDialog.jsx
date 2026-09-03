@@ -141,7 +141,7 @@ function ConnectIdModal({ open, onOpenChange, onAdded }) {
         {found && (
           <div className="bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-3 text-sm text-[#032b71]" data-testid="connect-id-found">
             <p className="font-bold">{found.contact_name}</p>
-            <p className="text-[#7089b4]">{found.actor_type} &middot; {found.country}</p>
+            <p className="text-[#5a6f9a]">{found.actor_type} &middot; {found.country}</p>
           </div>
         )}
 

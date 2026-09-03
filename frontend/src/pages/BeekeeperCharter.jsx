@@ -176,7 +176,7 @@ export default function BeekeeperCharter() {
 
         {PILLARS.map((pillar) => (
           <div key={pillar.number}>
-            <p className="text-xs font-bold text-[#7089b4] mt-7 mb-1">Pillar {pillar.number}</p>
+            <p className="text-xs font-bold text-[#5a6f9a] mt-7 mb-1">Pillar {pillar.number}</p>
             <h3 id={`pillar-${pillar.number}`} className="text-base font-black text-[#ba550c] mb-2 scroll-mt-20">
               {pillar.title}
             </h3>

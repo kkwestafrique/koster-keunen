@@ -175,7 +175,7 @@ export default function CompanyProfile() {
                         <StandardBadge key={s} standard={s} />
                       ))}
                       {pendingStandards.map((s) => (
-                        <span key={s} className="text-sm font-bold text-[#7089b4]" data-testid={`company-pending-standard-${s}`}>
+                        <span key={s} className="text-sm font-bold text-[#5a6f9a]" data-testid={`company-pending-standard-${s}`}>
                           {s} ({t('verification.pending')})
                         </span>
                       ))}
@@ -212,7 +212,7 @@ export default function CompanyProfile() {
             {editing ? (
               <div className="flex flex-col gap-4" data-testid="company-edit-form">
                 <div className="flex flex-col gap-1.5 max-w-md">
-                  <Label className="text-[#7089b4]">{t('actorProfile.contactFullName')}</Label>
+                  <Label className="text-[#5a6f9a]">{t('actorProfile.contactFullName')}</Label>
                   <Input
                     className="bg-white"
                     data-testid="company-edit-contact-name"
@@ -221,7 +221,7 @@ export default function CompanyProfile() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4]">{t('forms.actorType')}</Label>
+                  <Label className="text-[#5a6f9a]">{t('forms.actorType')}</Label>
                   <RadioGroup
                     value={editForm.actor_type}
                     onValueChange={(v) => setEditForm((f) => ({ ...f, actor_type: v }))}
@@ -235,12 +235,12 @@ export default function CompanyProfile() {
                   </RadioGroup>
                 </div>
                 <div className="flex flex-col gap-1.5 max-w-xs">
-                  <Label className="text-[#7089b4]">{t('forms.logo')}</Label>
+                  <Label className="text-[#5a6f9a]">{t('forms.logo')}</Label>
                   <Input type="file" accept={MEDIA_ACCEPT_ATTR} className="bg-white" data-testid="company-edit-logo" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4]">{t('actorProfile.actorDescription')}</Label>
+                  <Label className="text-[#5a6f9a]">{t('actorProfile.actorDescription')}</Label>
                   <textarea
                     data-testid="company-edit-description"
                     className="border border-[#cfd8e6] rounded-[5px] bg-white text-[#032b71] text-sm p-3 min-h-[80px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0f48aa]"
@@ -266,7 +266,7 @@ export default function CompanyProfile() {
                 <h3 className="text-sm font-black text-[#032b71]">{t('actorProfile.contactInformation')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[#7089b4]">{t('actorProfile.contactEmail')}</Label>
+                    <Label className="text-[#5a6f9a]">{t('actorProfile.contactEmail')}</Label>
                     <Input
                       type="email"
                       className="bg-white"
@@ -276,7 +276,7 @@ export default function CompanyProfile() {
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[#7089b4]">{t('actorProfile.contactNumber')}</Label>
+                    <Label className="text-[#5a6f9a]">{t('actorProfile.contactNumber')}</Label>
                     <Input
                       className="bg-white"
                       data-testid="company-edit-contact-phone"
@@ -308,7 +308,7 @@ export default function CompanyProfile() {
                     copy button removes the one bit of friction in the
                     single feature that had reported real trouble. */}
                 <div className="flex flex-col gap-1" data-testid="company-connect-id-field">
-                  <span className="text-xs font-medium text-[#7089b4]">{t('actorProfile.connectId')}</span>
+                  <span className="text-xs font-medium text-[#5a6f9a]">{t('actorProfile.connectId')}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-[#032b71] font-medium">{actor.connect_id ?? '—'}</span>
                     {actor.connect_id && (
@@ -320,7 +320,7 @@ export default function CompanyProfile() {
                           navigator.clipboard.writeText(actor.connect_id);
                           toast({ title: t('actorProfile.connectIdCopied') });
                         }}
-                        className="text-[#7089b4] hover:text-[#0f48aa]"
+                        className="text-[#5a6f9a] hover:text-[#0f48aa]"
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
@@ -336,14 +336,14 @@ export default function CompanyProfile() {
               <TabsTrigger
                 value="details"
                 data-testid="company-tab-details"
-                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold"
               >
                 {t('actorProfile.actorDetails')}
               </TabsTrigger>
               <TabsTrigger
                 value="team"
                 data-testid="company-tab-team"
-                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold flex items-center gap-2"
+                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold flex items-center gap-2"
               >
                 {t('actorProfile.teamMembers')}
                 <span className="bg-[#0f48aa] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -353,14 +353,14 @@ export default function CompanyProfile() {
               <TabsTrigger
                 value="sharing"
                 data-testid="company-tab-sharing"
-                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+                className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold"
               >
                 {t('sharing.tabLabel')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="pt-5">
-              <p className="text-xs text-[#7089b4] mb-1">{t('actorProfile.actorDescription')}</p>
+              <p className="text-xs text-[#5a6f9a] mb-1">{t('actorProfile.actorDescription')}</p>
               <p className="text-sm text-[#032b71] mb-5">{actor.description || '-'}</p>
 
               <h3 className="text-sm font-black text-[#032b71] mb-3">{t('actorProfile.address')}</h3>
@@ -383,11 +383,11 @@ export default function CompanyProfile() {
 
             <TabsContent value="team" className="pt-5">
               {teamMembers.length === 0 ? (
-                <p className="text-sm text-[#7089b4] mb-4">{t('common.noRecordsFound')}</p>
+                <p className="text-sm text-[#5a6f9a] mb-4">{t('common.noRecordsFound')}</p>
               ) : (
                 <table className="w-full text-sm mb-4" data-testid="team-members-table">
                   <thead>
-                    <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                    <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
                       <th className="py-2 font-bold">{t('companyProfile.memberId')}</th>
                       <th className="py-2 font-bold">{t('companyProfile.member')}</th>
                       <th className="py-2 font-bold">{t('companyProfile.email')}</th>
@@ -416,7 +416,7 @@ export default function CompanyProfile() {
                                 disabled={isReadOnly}
                                 title={isReadOnly ? t('common.readOnlyActorTooltip') : undefined}
                               >
-                                <MoreVertical className="h-4 w-4 text-[#7089b4]" />
+                                <MoreVertical className="h-4 w-4 text-[#5a6f9a]" />
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -472,18 +472,18 @@ export default function CompanyProfile() {
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#7089b4]">{t('companyProfile.memberFullName')}</Label>
+              <Label className="text-[#5a6f9a]">{t('companyProfile.memberFullName')}</Label>
               <Input data-testid="invite-name" value={inviteForm.name} onChange={(e) => setInviteForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#7089b4]">{t('companyProfile.memberEmail')}</Label>
+              <Label className="text-[#5a6f9a]">{t('companyProfile.memberEmail')}</Label>
               <Input type="email" data-testid="invite-email" value={inviteForm.email} onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))} />
               {inviteForm.email && !inviteEmailValid && (
                 <p className="text-xs text-[#ba550c]" data-testid="invite-email-invalid">{t('companyProfile.invalidEmail')}</p>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#7089b4]">{t('companyProfile.memberRole')}</Label>
+              <Label className="text-[#5a6f9a]">{t('companyProfile.memberRole')}</Label>
               <Select value={inviteForm.role} onValueChange={(v) => setInviteForm((f) => ({ ...f, role: v }))}>
                 <SelectTrigger data-testid="invite-role"><SelectValue placeholder={t('companyProfile.selectRole')} /></SelectTrigger>
                 <SelectContent>
@@ -514,7 +514,7 @@ export default function CompanyProfile() {
             <DialogDescription className="sr-only">{t('companyProfile.editMember')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('companyProfile.memberRole')}</Label>
+            <Label className="text-[#5a6f9a]">{t('companyProfile.memberRole')}</Label>
             <Select value={roleValue} onValueChange={setRoleValue}>
               <SelectTrigger data-testid="edit-role-select"><SelectValue /></SelectTrigger>
               <SelectContent>

@@ -14,7 +14,7 @@ const STATUS_OPTIONS = ['Cancelled', 'Inprogress', 'Completed', 'Failed'];
 const STATUS_COLORS = {
   Completed: '#219653',
   Inprogress: '#79730a',
-  Cancelled: '#7089b4',
+  Cancelled: '#5a6f9a',
   Failed: '#ba550c',
 };
 
@@ -26,7 +26,7 @@ function UploadStatus({ status, errorDetail }) {
   return (
     <span
       className="text-sm font-bold"
-      style={{ color: STATUS_COLORS[status] || '#7089b4' }}
+      style={{ color: STATUS_COLORS[status] || '#5a6f9a' }}
       title={status === 'Failed' && errorDetail ? errorDetail : undefined}
       data-testid={status === 'Failed' && errorDetail ? 'upload-error-detail' : undefined}
     >
@@ -127,14 +127,14 @@ export default function BulkUploads() {
           <TabsTrigger
             value="connections"
             data-testid="bulk-tab-connections"
-            className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+            className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold"
           >
             {t('nav.connections')}
           </TabsTrigger>
           <TabsTrigger
             value="transactions"
             data-testid="bulk-tab-transactions"
-            className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#7089b4] font-bold"
+            className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold"
           >
             {t('nav.transactions')}
           </TabsTrigger>

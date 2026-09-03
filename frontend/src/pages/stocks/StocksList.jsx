@@ -117,7 +117,7 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
             today). A real, always-visible label fixes this regardless
             of what the browser does with placeholders. */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-[#7089b4]" htmlFor={`${testId}-date-from-filter`}>{t('stocks.dateFrom')}</label>
+          <label className="text-xs text-[#5a6f9a]" htmlFor={`${testId}-date-from-filter`}>{t('stocks.dateFrom')}</label>
           <Input
             id={`${testId}-date-from-filter`}
             type="date"
@@ -130,7 +130,7 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-[#7089b4]" htmlFor={`${testId}-date-to-filter`}>{t('stocks.dateTo')}</label>
+          <label className="text-xs text-[#5a6f9a]" htmlFor={`${testId}-date-to-filter`}>{t('stocks.dateTo')}</label>
           <Input
             id={`${testId}-date-to-filter`}
             type="date"

@@ -91,9 +91,9 @@ function NavGroup({ item, currentPath, t }) {
         <NavIcon Icon={item.icon} active={isChildActive} />
         <span className="flex-1 text-left">{t(item.labelKey)}</span>
         {open ? (
-          <ChevronDown className={`h-4 w-4 ${isChildActive ? 'text-white' : 'text-[#7089b4]'}`} />
+          <ChevronDown className={`h-4 w-4 ${isChildActive ? 'text-white' : 'text-[#5a6f9a]'}`} />
         ) : (
-          <ChevronRight className={`h-4 w-4 ${isChildActive ? 'text-white' : 'text-[#7089b4]'}`} />
+          <ChevronRight className={`h-4 w-4 ${isChildActive ? 'text-white' : 'text-[#5a6f9a]'}`} />
         )}
       </button>
       {open && (
@@ -177,7 +177,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-3">
-        <p className="text-xs text-[#7089b4] px-1 mb-1.5">{t('topbar.myActor')}</p>
+        <p className="text-xs text-[#5a6f9a] px-1 mb-1.5">{t('topbar.myActor')}</p>
         {myActors.length > 1 ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -197,7 +197,7 @@ export default function Sidebar() {
                     {currentActor?.actor_name || t('topbar.selectActor')}
                   </p>
                 </div>
-                <ChevronDown className="h-4 w-4 text-[#7089b4] shrink-0" />
+                <ChevronDown className="h-4 w-4 text-[#5a6f9a] shrink-0" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">

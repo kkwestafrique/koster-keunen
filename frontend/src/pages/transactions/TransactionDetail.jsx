@@ -32,7 +32,7 @@ import { formatDate } from '@/lib/dateFormat';
 function BatchChips({ batches, testId }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  if (!batches || batches.length === 0) return <span className="text-sm text-[#7089b4]">—</span>;
+  if (!batches || batches.length === 0) return <span className="text-sm text-[#5a6f9a]">—</span>;
   return (
     <div className="flex flex-wrap gap-2" data-testid={testId}>
       {batches.map((b, idx) =>
@@ -94,14 +94,14 @@ export default function TransactionDetail() {
   if (isLoading) {
     return (
       <AppLayout hideDefaultHeader>
-        <p className="text-[#7089b4]">{t('common.loading')}</p>
+        <p className="text-[#5a6f9a]">{t('common.loading')}</p>
       </AppLayout>
     );
   }
   if (!tx) {
     return (
       <AppLayout hideDefaultHeader>
-        <p className="text-[#7089b4]" data-testid="transaction-not-found">{t('common.noRecordsFound')}</p>
+        <p className="text-[#5a6f9a]" data-testid="transaction-not-found">{t('common.noRecordsFound')}</p>
       </AppLayout>
     );
   }
@@ -219,7 +219,7 @@ export default function TransactionDetail() {
           <DetailField label={t('processForm.transactionType')} value={isMerging ? t('processForm.merging') : tx.direction} />
         </div>
         <div className="flex flex-col gap-1 mb-4">
-          <span className="text-xs text-[#7089b4]">{t('contracts.standard')}</span>
+          <span className="text-xs text-[#5a6f9a]">{t('contracts.standard')}</span>
           <div className="flex items-center gap-3">
             <StandardBadge standard={tx.standard} />
             {tx.direction === 'Received' && (
@@ -266,7 +266,7 @@ export default function TransactionDetail() {
               <DetailField label={t('contractWizard.currency')} value={tx.currency} />
               <DetailField label={t('transactions.totalAmount')} value={tx.total_amount != null ? Number(tx.total_amount).toLocaleString() : null} />
             </div>
-            <p className="text-xs text-[#7089b4] mb-1">{t('transactionDetail.destinationBatches')}</p>
+            <p className="text-xs text-[#5a6f9a] mb-1">{t('transactionDetail.destinationBatches')}</p>
             <BatchChips batches={destinationBatchChips} testId="transaction-destination-batches" />
           </>
         )}
@@ -278,7 +278,7 @@ export default function TransactionDetail() {
               <DetailField label={isMerging ? t('processForm.product') : t('processForm.convertedProduct')} value={tx.product} />
               <DetailField label={isMerging ? t('processForm.mergedQuantity') : t('receiveForm.quantity')} value={tx.total_quantity != null ? `${tx.total_quantity} Kg` : null} />
             </div>
-            <p className="text-xs text-[#7089b4] mb-1">{t('transactionDetail.destinationBatches')}</p>
+            <p className="text-xs text-[#5a6f9a] mb-1">{t('transactionDetail.destinationBatches')}</p>
             <BatchChips batches={destinationBatchChips} testId="transaction-destination-batches" />
 
             {!isMerging && tx.quantity_lost > 0 && (
@@ -301,7 +301,7 @@ export default function TransactionDetail() {
                 value={tx.direction === 'Processing' ? (tx.source_quantity != null ? `${tx.source_quantity} Kg` : null) : (tx.total_quantity != null ? `${tx.total_quantity} Kg` : null)}
               />
             </div>
-            <p className="text-xs text-[#7089b4] mb-1">{t('transactionDetail.sourceBatches')}</p>
+            <p className="text-xs text-[#5a6f9a] mb-1">{t('transactionDetail.sourceBatches')}</p>
             <BatchChips batches={sourceBatchChips} testId="transaction-source-batches" />
           </>
         )}
@@ -315,9 +315,9 @@ export default function TransactionDetail() {
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#7089b4]">{t('transactionDetail.rejectReason')}</Label>
+              <Label htmlFor="reject-reason" className="text-[#5a6f9a]">{t('transactionDetail.rejectReason')}</Label>
               <Select value={rejectReason} onValueChange={setRejectReason}>
-                <SelectTrigger data-testid="reject-reason"><SelectValue placeholder={t('transactionDetail.selectRejectReason')} /></SelectTrigger>
+                <SelectTrigger id="reject-reason" data-testid="reject-reason"><SelectValue placeholder={t('transactionDetail.selectRejectReason')} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Wrong quantity">{t('transactionDetail.reasonWrongQuantity')}</SelectItem>
                   <SelectItem value="Wrong product">{t('transactionDetail.reasonWrongProduct')}</SelectItem>
@@ -328,8 +328,9 @@ export default function TransactionDetail() {
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#7089b4]">{t('transactionDetail.rejectComment')}</Label>
+              <Label htmlFor="reject-comment" className="text-[#5a6f9a]">{t('transactionDetail.rejectComment')}</Label>
               <Textarea
+                id="reject-comment"
                 data-testid="reject-comment"
                 value={rejectComment}
                 onChange={(e) => setRejectComment(e.target.value)}

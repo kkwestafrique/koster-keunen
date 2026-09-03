@@ -51,7 +51,7 @@ function LanguageSwitcher() {
         >
           <span className="text-sm leading-none">{current.flag}</span>
           <span className="text-xs font-medium">{current.code === 'en' ? 'En' : 'Fr'}</span>
-          <ChevronDown className="h-3 w-3 text-[#7089b4]" />
+          <ChevronDown className="h-3 w-3 text-[#5a6f9a]" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
@@ -75,7 +75,7 @@ function LanguageSwitcher() {
 function statusIcon(status) {
   if (status === 'Completed') return <CheckCircle2 className="h-4 w-4 text-[#219653] shrink-0" />;
   if (status === 'Failed') return <XCircle className="h-4 w-4 text-[#ba550c] shrink-0" />;
-  return <Loader2 className="h-4 w-4 text-[#7089b4] shrink-0 animate-spin" />;
+  return <Loader2 className="h-4 w-4 text-[#5a6f9a] shrink-0 animate-spin" />;
 }
 
 function DownloadsPanel() {
@@ -87,6 +87,7 @@ function DownloadsPanel() {
       <PopoverTrigger asChild>
         <button
           data-testid="top-bar-download"
+          aria-label={t('topbar.downloads')}
           className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-[#f5f5f5] transition-colors"
         >
           <Download className="h-5 w-5 text-[#032b71]" />
@@ -101,14 +102,14 @@ function DownloadsPanel() {
         </div>
         <div className="max-h-80 overflow-y-auto">
           {exports.length === 0 ? (
-            <p className="text-sm text-[#7089b4] text-center py-8">{t('topbar.noDownloadsYet')}</p>
+            <p className="text-sm text-[#5a6f9a] text-center py-8">{t('topbar.noDownloadsYet')}</p>
           ) : (
             exports.map((e) => (
               <div key={e.id} className="flex items-start gap-2.5 px-4 py-2.5 border-b border-[#f5f5f5] last:border-0" data-testid={`download-row-${e.id}`}>
                 {statusIcon(e.status)}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[#032b71] font-medium truncate">{e.file_name}</p>
-                  <p className="text-xs text-[#7089b4]">
+                  <p className="text-xs text-[#5a6f9a]">
                     {e.status === 'Inprogress' && t('topbar.downloadInProgress')}
                     {e.status === 'Completed' && t('topbar.downloadRowCount', { count: e.row_count ?? 0 })}
                     {e.status === 'Failed' && (e.error_message || t('topbar.downloadFailed'))}
@@ -161,6 +162,7 @@ function NotificationBell() {
       <PopoverTrigger asChild>
         <button
           data-testid="top-bar-notifications"
+          aria-label={unreadCount > 0 ? t('topbar.notificationsUnread', { count: unreadCount }) : t('topbar.notifications')}
           className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-[#f5f5f5] transition-colors"
         >
           <Bell className="h-5 w-5 text-[#032b71]" />
@@ -189,7 +191,7 @@ function NotificationBell() {
         </div>
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="text-sm text-[#7089b4] text-center py-8">{t('topbar.noNotificationsYet')}</p>
+            <p className="text-sm text-[#5a6f9a] text-center py-8">{t('topbar.noNotificationsYet')}</p>
           ) : (
             notifications.map((n) => (
               <button
@@ -201,8 +203,8 @@ function NotificationBell() {
                 {!n.read_at && <span className="h-2 w-2 rounded-full bg-[#0f48aa] mt-1.5 shrink-0" />}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[#032b71] font-medium">{n.title}</p>
-                  {n.message && <p className="text-xs text-[#7089b4] truncate">{n.message}</p>}
-                  <p className="text-xs text-[#7089b4] mt-0.5">{timeAgo(n.created_at)}</p>
+                  {n.message && <p className="text-xs text-[#5a6f9a] truncate">{n.message}</p>}
+                  <p className="text-xs text-[#5a6f9a] mt-0.5">{timeAgo(n.created_at)}</p>
                 </div>
               </button>
             ))
@@ -252,7 +254,7 @@ export default function TopBar() {
               <span className="text-sm text-[#032b71] font-medium" data-testid="top-bar-username">
                 {displayName}
               </span>
-              <ChevronDown className="h-4 w-4 text-[#7089b4]" />
+              <ChevronDown className="h-4 w-4 text-[#5a6f9a]" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">

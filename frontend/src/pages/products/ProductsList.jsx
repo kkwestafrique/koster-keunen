@@ -30,7 +30,7 @@ export default function ProductsList() {
   return (
     <AppLayout hideDefaultHeader>
       <h1 className="text-lg font-black text-[#0f48aa] mb-4">{t('productsList.title')}</h1>
-      <p className="text-sm text-[#7089b4] mb-5">{t('productsList.description')}</p>
+      <p className="text-sm text-[#5a6f9a] mb-5">{t('productsList.description')}</p>
 
       <DataTable
         testId="products-list"

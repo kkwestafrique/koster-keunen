@@ -4,7 +4,7 @@ import React from 'react';
 const STATUS_COLORS = {
   Active: '#219653',
   Achieved: '#219653',
-  Inactive: '#7089b4',
+  Inactive: '#5a6f9a',
   Potential: '#79730a',
   Revoked: '#ba550c',
   Pending: '#79730a',
@@ -19,7 +19,7 @@ const STATUS_COLORS = {
 };
 
 export default function StatusBadge({ status, testId }) {
-  const color = STATUS_COLORS[status] || '#7089b4';
+  const color = STATUS_COLORS[status] || '#5a6f9a';
   return (
     <span
       data-testid={testId || `status-badge-${status}`}

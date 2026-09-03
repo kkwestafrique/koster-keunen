@@ -90,7 +90,7 @@ export default function DetailsTab({ bk }) {
   if (!editing) {
     return (
       <div data-testid="bk-details-tab-view">
-        <p className="text-xs text-[#7089b4] mb-1">{t('beekeeperDetail.description')}</p>
+        <p className="text-xs text-[#5a6f9a] mb-1">{t('beekeeperDetail.description')}</p>
         <p className="text-sm text-[#032b71] mb-5">{bk.description || '-'}</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">

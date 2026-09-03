@@ -19,7 +19,7 @@ export default function NotFound() {
       <div className="flex flex-col items-center justify-center py-24 gap-3 text-center" data-testid="not-found-page">
         <h1 className="text-4xl font-black text-[#0f48aa]">404</h1>
         <p className="text-base font-bold text-[#032b71]">{t('notFound.title')}</p>
-        <p className="text-sm text-[#7089b4] max-w-sm">{t('notFound.description')}</p>
+        <p className="text-sm text-[#5a6f9a] max-w-sm">{t('notFound.description')}</p>
         <Button
           className="bg-[#0f48aa] text-white hover:bg-[#0d3d91] mt-2"
           onClick={() => navigate('/')}

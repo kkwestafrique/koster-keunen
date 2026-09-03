@@ -168,7 +168,7 @@ export default function SendStockForm() {
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('contractWizard.standard')}</Label>
+            <Label className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
             <Select value={form.standard} onValueChange={handleStandardChange}>
               <SelectTrigger data-testid="send-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
               <SelectContent>
@@ -177,7 +177,7 @@ export default function SendStockForm() {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('sendForm.destinationActor')}</Label>
+            <Label className="text-[#5a6f9a]">{t('sendForm.destinationActor')}</Label>
             <Select
               value={form.destination_actor_id}
               onValueChange={(v) => setForm((f) => ({ ...f, destination_actor_id: v, currency: f.currency || 'NGN', contract_id: '' }))}
@@ -189,7 +189,7 @@ export default function SendStockForm() {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('contractWizard.product')}</Label>
+            <Label className="text-[#5a6f9a]">{t('contractWizard.product')}</Label>
             <Select value={form.product} onValueChange={handleProductChange}>
               <SelectTrigger data-testid="send-product"><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
               <SelectContent>
@@ -198,10 +198,10 @@ export default function SendStockForm() {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('sendForm.quantityRequired')}</Label>
+            <Label className="text-[#5a6f9a]">{t('sendForm.quantityRequired')}</Label>
             <Input type="number" min="0" data-testid="send-quantity" value={form.quantity} onChange={(e) => { set('quantity')(e.target.value); setSelectedBatches([]); }} />
             {form.standard && form.product && (
-              <p className="text-xs text-[#7089b4]" data-testid="send-available-hint">
+              <p className="text-xs text-[#5a6f9a]" data-testid="send-available-hint">
                 {t('sendForm.availableHint', { quantity: totalAvailableForStandard })}
               </p>
             )}
@@ -217,7 +217,7 @@ export default function SendStockForm() {
               {selectedBatches.length > 0 ? t('batchPicker.editSelection') : t('batchPicker.title')}
             </Button>
             {selectedBatches.length > 0 && (
-              <p className="text-xs text-[#7089b4]" data-testid="send-batch-summary">
+              <p className="text-xs text-[#5a6f9a]" data-testid="send-batch-summary">
                 {t('batchPicker.batchesSelected', { count: selectedBatches.length, total: selectedBatches.reduce((s, b) => s + Number(b.quantity), 0) })}
               </p>
             )}
@@ -228,11 +228,11 @@ export default function SendStockForm() {
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('contractWizard.price')}</Label>
+            <Label className="text-[#5a6f9a]">{t('contractWizard.price')}</Label>
             <Input type="number" min="0" data-testid="send-price" value={form.price} onChange={(e) => set('price')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('contractWizard.currency')}</Label>
+            <Label className="text-[#5a6f9a]">{t('contractWizard.currency')}</Label>
             <Select value={form.currency} onValueChange={set('currency')}>
               <SelectTrigger data-testid="send-currency"><SelectValue placeholder={t('contractWizard.selectCurrency')} /></SelectTrigger>
               <SelectContent>
@@ -241,19 +241,19 @@ export default function SendStockForm() {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('sendForm.invoiceNumber')}</Label>
+            <Label className="text-[#5a6f9a]">{t('sendForm.invoiceNumber')}</Label>
             <Input data-testid="send-invoice" value={form.invoice_number} onChange={(e) => set('invoice_number')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('sendForm.blNumber')}</Label>
+            <Label className="text-[#5a6f9a]">{t('sendForm.blNumber')}</Label>
             <Input data-testid="send-bl" value={form.bl_number} onChange={(e) => set('bl_number')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('receiveForm.transactionDate')}</Label>
+            <Label className="text-[#5a6f9a]">{t('receiveForm.transactionDate')}</Label>
             <Input type="date" data-testid="send-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => set('transaction_date')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('transactions.linkToContract')}</Label>
+            <Label className="text-[#5a6f9a]">{t('transactions.linkToContract')}</Label>
             <Select
               value={form.contract_id || 'none'}
               onValueChange={(v) => set('contract_id')(v === 'none' ? '' : v)}
@@ -278,12 +278,12 @@ export default function SendStockForm() {
                 that can come up empty, rather than a silent, confusing
                 blank list. */}
             {!form.destination_actor_id && (
-              <p className="text-xs text-[#7089b4]" data-testid="send-contract-select-actor-first">
+              <p className="text-xs text-[#5a6f9a]" data-testid="send-contract-select-actor-first">
                 {t('transactions.selectActorFirst')}
               </p>
             )}
             {form.destination_actor_id && linkableContracts.length === 0 && (
-              <p className="text-xs text-[#7089b4]" data-testid="send-contract-none-for-actor">
+              <p className="text-xs text-[#5a6f9a]" data-testid="send-contract-none-for-actor">
                 {t('transactions.noContractsForActor')}
               </p>
             )}
@@ -336,7 +336,7 @@ export default function SendStockForm() {
           </div>
 
           <div>
-            <span className="text-xs text-[#7089b4]">{t('batchPicker.title')}</span>
+            <span className="text-xs text-[#5a6f9a]">{t('batchPicker.title')}</span>
             <ul className="text-sm text-[#032b71] mt-1">
               {selectedBatches.map((b) => (
                 <li key={b.stockId}>{b.batchReference || b.stockId}: {b.quantity} Kg</li>

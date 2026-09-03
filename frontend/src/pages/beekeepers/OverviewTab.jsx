@@ -129,7 +129,7 @@ export default function OverviewTab({ bk }) {
           const matches = cropTotal === 0 || hiveTypeTotal === cropTotal;
           return (
             <p
-              className={`text-xs ${matches ? 'text-[#7089b4]' : 'text-[#ba550c] font-medium'}`}
+              className={`text-xs ${matches ? 'text-[#5a6f9a]' : 'text-[#ba550c] font-medium'}`}
               data-testid="bk-overview-edit-hive-totals"
             >
               {t('forms.totalHivesByType')}: {hiveTypeTotal} · {t('forms.totalHivesByCrop')}: {cropTotal}
@@ -164,7 +164,7 @@ export default function OverviewTab({ bk }) {
         )}
       </div>
 
-      <p className="text-xs text-[#7089b4] mb-2">{t('forms.hiveSpreadPerCrop')}</p>
+      <p className="text-xs text-[#5a6f9a] mb-2">{t('forms.hiveSpreadPerCrop')}</p>
       <div className="flex flex-wrap gap-3 mb-6">
         {HIVE_SPREAD_CROPS.map((crop) => {
           const key = `hive_${crop.toLowerCase().replace(' ', '_')}`;
@@ -178,7 +178,7 @@ export default function OverviewTab({ bk }) {
         })}
       </div>
 
-      <p className="text-xs text-[#7089b4] mb-2">{t('beekeeperDetail.totalBeehivesInstalled')}</p>
+      <p className="text-xs text-[#5a6f9a] mb-2">{t('beekeeperDetail.totalBeehivesInstalled')}</p>
       <div className="grid grid-cols-5 gap-3 mb-8">
         {[
           [t('beekeeperDetail.totalHives'), bk.total_hives],
@@ -189,18 +189,18 @@ export default function OverviewTab({ bk }) {
         ].map(([label, value]) => (
           <div key={label} className="bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-3 text-center">
             <p className="text-lg font-black text-[#032b71]">{value ?? 0}</p>
-            <p className="text-xs text-[#7089b4]">{label}</p>
+            <p className="text-xs text-[#5a6f9a]">{label}</p>
           </div>
         ))}
       </div>
 
       <h3 className="text-sm font-black text-[#032b71] mb-3">{t('beekeeperDetail.previousYearDetails')}</h3>
       {history.length === 0 ? (
-        <p className="text-sm text-[#7089b4]">{t('common.noRecordsFound')}</p>
+        <p className="text-sm text-[#5a6f9a]">{t('common.noRecordsFound')}</p>
       ) : (
         <table className="w-full text-sm" data-testid="bk-previous-years-table">
           <thead>
-            <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+            <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
               <th className="py-2 w-8"></th>
               <th className="py-2">{t('beekeeperDetail.year')}</th>
               <th className="py-2">{t('beekeeperDetail.lastUpdatedOn')}</th>

@@ -102,7 +102,7 @@ export default function ForgotPassword() {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5" data-testid="forgot-password-form">
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="email" className="text-[#7089b4] text-sm font-medium">{t('forgotPassword.email')}</Label>
+                    <Label htmlFor="email" className="text-[#5a6f9a] text-sm font-medium">{t('forgotPassword.email')}</Label>
                     <Input
                       id="email"
                       data-testid="forgot-password-email-input"

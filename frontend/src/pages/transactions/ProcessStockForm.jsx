@@ -155,7 +155,7 @@ export default function ProcessStockForm() {
       ) : step === 1 ? (
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[#7089b4]">{t('processForm.mode')}</Label>
+          <Label className="text-[#5a6f9a]">{t('processForm.mode')}</Label>
           <RadioGroup value={mode} onValueChange={handleModeChange} className="flex gap-6" data-testid="process-mode">
             <label className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
               <RadioGroupItem value="Processing" data-testid="process-mode-processing" /> {t('processForm.title')}
@@ -167,7 +167,7 @@ export default function ProcessStockForm() {
         </div>
 
         <div className="flex flex-col gap-1.5 max-w-sm">
-          <Label className="text-[#7089b4]">{t('contractWizard.standard')}</Label>
+          <Label className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
           <Select value={form.standard} onValueChange={handleStandardChange}>
             <SelectTrigger data-testid="process-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
             <SelectContent>
@@ -180,7 +180,7 @@ export default function ProcessStockForm() {
           <>
             <div className="grid grid-cols-2 gap-4 border-b border-[#cfd8e6] pb-4">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('processForm.sourceProduct')}</Label>
+                <Label className="text-[#5a6f9a]">{t('processForm.sourceProduct')}</Label>
                 <Select value={form.source_product} onValueChange={handleSourceProductChange}>
                   <SelectTrigger data-testid="process-source-product"><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
                   <SelectContent>
@@ -188,13 +188,13 @@ export default function ProcessStockForm() {
                   </SelectContent>
                 </Select>
                 {sourceProductsWithStock.length === 0 && (
-                  <p className="text-xs text-[#7089b4]" data-testid="process-no-source-products">
+                  <p className="text-xs text-[#5a6f9a]" data-testid="process-no-source-products">
                     {t('processForm.noSourceProductsAvailable')}
                   </p>
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#7089b4]">{t('processForm.sourceQuantity')}</Label>
+                <Label className="text-[#5a6f9a]">{t('processForm.sourceQuantity')}</Label>
                 <Input type="number" min="0" data-testid="process-source-quantity" value={form.source_quantity} onChange={(e) => handleSourceQuantityChange(e.target.value)} />
                 {/* Real UX gap found via live testing feedback: someone
                     could type any quantity here with no idea whether
@@ -204,7 +204,7 @@ export default function ProcessStockForm() {
                     both chosen, so this is visible before typing a
                     number at all. */}
                 {form.standard && form.source_product && (
-                  <p className="text-xs text-[#7089b4]" data-testid="process-available-hint">
+                  <p className="text-xs text-[#5a6f9a]" data-testid="process-available-hint">
                     {t('processForm.availableHint', { quantity: totalAvailableForStandard })}
                   </p>
                 )}
@@ -220,7 +220,7 @@ export default function ProcessStockForm() {
                   {selectedBatches.length > 0 ? t('batchPicker.editSelection') : t('batchPicker.title')}
                 </Button>
                 {selectedBatches.length > 0 && (
-                  <p className="text-xs text-[#7089b4]" data-testid="process-batch-summary">
+                  <p className="text-xs text-[#5a6f9a]" data-testid="process-batch-summary">
                     {t('batchPicker.batchesSelected', { count: selectedBatches.length, total: selectedBatches.reduce((s, b) => s + Number(b.quantity), 0) })}
                   </p>
                 )}
@@ -242,7 +242,7 @@ export default function ProcessStockForm() {
             {form.destinations.map((row, idx) => (
               <div key={idx} className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 items-end" data-testid={`process-destination-row-${idx}`}>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4] text-xs">{mode === 'Merging' ? t('processForm.product') : t('processForm.convertedProduct')}</Label>
+                  <Label className="text-[#5a6f9a] text-xs">{mode === 'Merging' ? t('processForm.product') : t('processForm.convertedProduct')}</Label>
                   {mode === 'Merging' ? (
                     <div className="h-10 flex items-center px-3 text-sm text-[#032b71] bg-[#f4f6fa] rounded-md border border-input" data-testid={`process-destination-product-${idx}`}>
                       {form.source_product || '—'}
@@ -257,11 +257,11 @@ export default function ProcessStockForm() {
                   )}
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4] text-xs">{t('receiveForm.quantity')}</Label>
+                  <Label className="text-[#5a6f9a] text-xs">{t('receiveForm.quantity')}</Label>
                   <Input type="number" min="0" value={row.quantity} onChange={(e) => setDestination(idx, { quantity: e.target.value })} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#7089b4] text-xs">{t('contractWizard.unit')}</Label>
+                  <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.unit')}</Label>
                   <Select value={row.unit} onValueChange={(v) => setDestination(idx, { unit: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -287,7 +287,7 @@ export default function ProcessStockForm() {
             </Button>
 
             <div className="flex flex-col gap-1.5 max-w-sm">
-              <Label className="text-[#7089b4]">{t('receiveForm.transactionDate')}</Label>
+              <Label className="text-[#5a6f9a]">{t('receiveForm.transactionDate')}</Label>
               <Input type="date" data-testid="process-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => setForm((f) => ({ ...f, transaction_date: e.target.value }))} />
             </div>
 
@@ -331,7 +331,7 @@ export default function ProcessStockForm() {
           </div>
 
           <div>
-            <span className="text-xs text-[#7089b4]">{t('batchPicker.title')}</span>
+            <span className="text-xs text-[#5a6f9a]">{t('batchPicker.title')}</span>
             <ul className="text-sm text-[#032b71] mt-1">
               {selectedBatches.map((b) => (
                 <li key={b.stockId}>{b.batchReference || b.stockId}: {b.quantity} Kg</li>
@@ -341,7 +341,7 @@ export default function ProcessStockForm() {
 
           <table className="w-full text-sm mb-2">
             <thead>
-              <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+              <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
                 <th className="py-2">{mode === 'Merging' ? t('processForm.product') : t('processForm.convertedProduct')}</th>
                 <th className="py-2">{t('receiveForm.quantity')}</th>
                 <th className="py-2">{t('contractWizard.unit')}</th>
@@ -367,7 +367,7 @@ export default function ProcessStockForm() {
             className={`rounded-[5px] p-4 border ${totalSelectedForValidation - totalDestinationForValidation > 0 ? 'bg-[#fff8e6] border-[#e6c34d]' : 'bg-[#ebf6ff] border-[#cfd8e6]'}`}
             data-testid="process-review-loss"
           >
-            <span className="text-xs text-[#7089b4]">{t('processForm.computedLoss')}</span>
+            <span className="text-xs text-[#5a6f9a]">{t('processForm.computedLoss')}</span>
             <p className="text-lg font-black text-[#032b71]">{totalSelectedForValidation - totalDestinationForValidation} Kg</p>
           </div>
 

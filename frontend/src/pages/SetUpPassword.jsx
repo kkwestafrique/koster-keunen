@@ -91,7 +91,7 @@ export default function SetUpPassword() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f9fafc] text-[#7089b4]" data-testid="setup-password-checking">
+      <div className="min-h-screen flex items-center justify-center bg-[#f9fafc] text-[#5a6f9a]" data-testid="setup-password-checking">
         {t('common.loading')}
       </div>
     );
@@ -150,7 +150,7 @@ export default function SetUpPassword() {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-5" data-testid="setup-password-form">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="new-password" className="text-[#7089b4] text-sm font-medium">{t('setUpPassword.enterPassword')}</Label>
+                <Label htmlFor="new-password" className="text-[#5a6f9a] text-sm font-medium">{t('setUpPassword.enterPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="new-password"
@@ -161,19 +161,19 @@ export default function SetUpPassword() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="h-12 border-[#cfd8e6] focus-visible:ring-[#0f48aa] text-[#032b71] pr-10"
                   />
-                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7089b4]">
+                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5a6f9a]">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 <div className="flex items-center gap-4 text-xs mt-1">
-                  <span className={hasEightLetters ? 'text-[#219653] font-medium' : 'text-[#7089b4]'}>✓ {t('resetPassword.ruleLetters')}</span>
-                  <span className={hasNumeral ? 'text-[#219653] font-medium' : 'text-[#7089b4]'}>✓ {t('resetPassword.ruleNumericals')}</span>
-                  <span className={hasSymbol ? 'text-[#219653] font-medium' : 'text-[#7089b4]'}>✓ {t('resetPassword.ruleSymbols')}</span>
+                  <span className={hasEightLetters ? 'text-[#219653] font-medium' : 'text-[#5a6f9a]'}>✓ {t('resetPassword.ruleLetters')}</span>
+                  <span className={hasNumeral ? 'text-[#219653] font-medium' : 'text-[#5a6f9a]'}>✓ {t('resetPassword.ruleNumericals')}</span>
+                  <span className={hasSymbol ? 'text-[#219653] font-medium' : 'text-[#5a6f9a]'}>✓ {t('resetPassword.ruleSymbols')}</span>
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="confirm-password" className="text-[#7089b4] text-sm font-medium">{t('setUpPassword.reenterPassword')}</Label>
+                <Label htmlFor="confirm-password" className="text-[#5a6f9a] text-sm font-medium">{t('setUpPassword.reenterPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="confirm-password"
@@ -184,7 +184,7 @@ export default function SetUpPassword() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="h-12 border-[#cfd8e6] focus-visible:ring-[#0f48aa] text-[#032b71] pr-10"
                   />
-                  <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7089b4]">
+                  <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5a6f9a]">
                     {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 // one convention across the app.
 export default function RequiredLabel({ children, required, spaced = true, className = '', htmlFor, testId }) {
   return (
-    <Label htmlFor={htmlFor} data-testid={testId} className={`text-[#7089b4] ${className}`}>
+    <Label htmlFor={htmlFor} data-testid={testId} className={`text-[#5a6f9a] ${className}`}>
       {children}
       {required && <span className="text-[#EB5757] text-xs align-baseline">{spaced ? ' *' : '*'}</span>}
     </Label>

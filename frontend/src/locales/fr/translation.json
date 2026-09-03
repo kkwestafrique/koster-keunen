@@ -42,7 +42,8 @@
     "downloadRowCount": "{{count}} ligne exportée",
     "downloadRowCount_other": "{{count}} lignes exportées",
     "downloadFailed": "Échec de l'export",
-    "downloadAgain": "Télécharger"
+    "downloadAgain": "Télécharger",
+    "notificationsUnread": "Notifications ({{count}} non lues)"
   },
   "login": {
     "title": "Connectez-vous à",
@@ -291,7 +292,8 @@
     "records": "enregistrements",
     "noDataAvailable": "Aucune donnée disponible.",
     "back": "Retour",
-    "templateDownloaded": "Modèle téléchargé."
+    "templateDownloaded": "Modèle téléchargé.",
+    "skipToContent": "Passer au contenu principal"
   },
   "beekeeperDetail": {
     "title": "Profil de l'apiculteur",

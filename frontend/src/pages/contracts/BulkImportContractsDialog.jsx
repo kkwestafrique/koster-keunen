@@ -73,7 +73,7 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
               <Upload className="h-4 w-4" /> {t('receiveForm.uploadFileVerify')}
             </span>
           </label>
-          {bulkUpload.fileName && <span className="text-sm text-[#7089b4]">{bulkUpload.fileName}</span>}
+          {bulkUpload.fileName && <span className="text-sm text-[#5a6f9a]">{bulkUpload.fileName}</span>}
           {bulkUpload.parseError && (
             <p className="text-sm text-[#ba550c] font-bold" data-testid="contracts-bulk-parse-error">{bulkUpload.parseError}</p>
           )}
@@ -89,7 +89,7 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
               <div className="max-h-56 overflow-y-auto border border-[#cfd8e6] rounded-[5px]">
                 <table className="w-full text-xs">
                   <thead className="bg-white sticky top-0">
-                    <tr className="text-left text-[#7089b4] border-b border-[#cfd8e6]">
+                    <tr className="text-left text-[#5a6f9a] border-b border-[#cfd8e6]">
                       <th className="py-2 px-3">{t('receiveForm.row')}</th>
                       <th className="py-2 px-3">{t('receiveForm.status')}</th>
                       <th className="py-2 px-3">{t('receiveForm.issues')}</th>
@@ -104,7 +104,7 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
                             ? <span className="text-[#219653] font-bold">{t('receiveForm.valid')}</span>
                             : <span className="text-[#ba550c] font-bold">{t('receiveForm.invalid')}</span>}
                         </td>
-                        <td className="py-1.5 px-3 text-[#7089b4]">{r.errors.join('; ') || '—'}</td>
+                        <td className="py-1.5 px-3 text-[#5a6f9a]">{r.errors.join('; ') || '—'}</td>
                       </tr>
                     ))}
                   </tbody>

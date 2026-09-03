@@ -99,7 +99,7 @@ export default function VerificationQueue() {
   return (
     <AppLayout hideDefaultHeader>
       <h1 className="text-lg font-black text-[#0f48aa] mb-4">{t('verification.title')}</h1>
-      <p className="text-sm text-[#7089b4] mb-5">{t('verification.description')}</p>
+      <p className="text-sm text-[#5a6f9a] mb-5">{t('verification.description')}</p>
 
       <DataTable
         testId="verification-queue"
@@ -119,7 +119,7 @@ export default function VerificationQueue() {
             <DialogDescription className="sr-only">{t('verification.rejectClaim')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#7089b4]">{t('verification.rejectionReason')}</Label>
+            <Label className="text-[#5a6f9a]">{t('verification.rejectionReason')}</Label>
             <Textarea
               data-testid="claim-reject-reason"
               value={rejectReason}

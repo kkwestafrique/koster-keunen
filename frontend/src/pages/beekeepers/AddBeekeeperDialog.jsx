@@ -61,7 +61,7 @@ function MultiUploadPanel({ multiMode, onToggle }) {
       <p className="font-black text-[#032b71]">
         {multiMode ? t('forms.addSingleConnections') : t('forms.addMultipleConnections')}
       </p>
-      <p className="text-xs text-[#7089b4]">
+      <p className="text-xs text-[#5a6f9a]">
         {multiMode ? t('forms.switchToSingleUploadDescription') : t('forms.switchToMultipleUploadDescription')}
       </p>
       <Button
@@ -173,13 +173,13 @@ function MultiUploadBody({ onDone }) {
             >
               {processing ? t('forms.verifyingTemplate') : t('forms.uploadAndVerifyData')}
             </Button>
-            <span className="text-sm text-[#7089b4]">{fileLabel || t('forms.noFileChosen')}</span>
+            <span className="text-sm text-[#5a6f9a]">{fileLabel || t('forms.noFileChosen')}</span>
             <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleFileChange} />
           </div>
 
           {(processing || done) && (
             <div className="flex flex-col gap-1" data-testid="bk-wizard-progress">
-              <span className="text-xs text-[#7089b4]">{t('forms.progressPercentage')}</span>
+              <span className="text-xs text-[#5a6f9a]">{t('forms.progressPercentage')}</span>
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-1.5 rounded-full bg-[#e3e9f5] overflow-hidden">
                   <div className="h-full bg-[#a9bce8] transition-all" style={{ width: `${progress}%` }} />
@@ -506,7 +506,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
                       const matches = cropTotal === 0 || hiveTypeTotal === cropTotal;
                       return (
                         <p
-                          className={`text-xs mt-1 ${matches ? 'text-[#7089b4]' : 'text-[#ba550c] font-medium'}`}
+                          className={`text-xs mt-1 ${matches ? 'text-[#5a6f9a]' : 'text-[#ba550c] font-medium'}`}
                           data-testid="bk-wizard-hive-totals"
                         >
                           {t('forms.totalHivesByType')}: {hiveTypeTotal} · {t('forms.totalHivesByCrop')}: {cropTotal}
