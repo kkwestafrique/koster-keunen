@@ -219,27 +219,27 @@ export default function ContractWizard() {
           {step === 1 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="contract-wizard-step1">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('contractWizard.year')}</Label>
+                <Label htmlFor="contract-year" className="text-[#5a6f9a]">{t('contractWizard.year')}</Label>
                 <Select value={form.year} onValueChange={set('year')}>
-                  <SelectTrigger data-testid="contract-year"><SelectValue placeholder={t('contractWizard.selectYear')} /></SelectTrigger>
+                  <SelectTrigger id="contract-year" data-testid="contract-year"><SelectValue placeholder={t('contractWizard.selectYear')} /></SelectTrigger>
                   <SelectContent>
                     {YEARS.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
+                <Label htmlFor="contract-standard" className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
                 <Select value={form.standard} onValueChange={handleStandardChange}>
-                  <SelectTrigger data-testid="contract-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
+                  <SelectTrigger id="contract-standard" data-testid="contract-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
                   <SelectContent>
                     {STANDARDS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('contractWizard.supplier')}</Label>
+                <Label htmlFor="contract-supplier" className="text-[#5a6f9a]">{t('contractWizard.supplier')}</Label>
                 <Select value={form.supplier_actor_id} onValueChange={handleSupplierChange} disabled={!form.standard}>
-                  <SelectTrigger data-testid="contract-supplier"><SelectValue placeholder={form.standard ? t('contractWizard.selectSupplier') : t('contractWizard.selectStandardFirst')} /></SelectTrigger>
+                  <SelectTrigger id="contract-supplier" data-testid="contract-supplier"><SelectValue placeholder={form.standard ? t('contractWizard.selectSupplier') : t('contractWizard.selectStandardFirst')} /></SelectTrigger>
                   <SelectContent>
                     {suppliersMatchingStandard.length === 0 ? (
                       <div className="px-3 py-2 text-sm text-[#5a6f9a]">
@@ -252,9 +252,9 @@ export default function ContractWizard() {
                 </Select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('contractWizard.currency')}</Label>
+                <Label htmlFor="contract-currency" className="text-[#5a6f9a]">{t('contractWizard.currency')}</Label>
                 <Select value={form.currency} onValueChange={set('currency')}>
-                  <SelectTrigger data-testid="contract-currency"><SelectValue placeholder={t('contractWizard.selectCurrency')} /></SelectTrigger>
+                  <SelectTrigger id="contract-currency" data-testid="contract-currency"><SelectValue placeholder={t('contractWizard.selectCurrency')} /></SelectTrigger>
                   <SelectContent>
                     {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
@@ -262,21 +262,21 @@ export default function ContractWizard() {
               </div>
 
               <div className="col-span-full flex flex-col gap-3">
-                <Label className="text-[#032b71] font-bold">{t('contractWizard.products')}</Label>
+                <span className="text-[#032b71] font-bold block">{t('contractWizard.products')}</span>
                 {form.products.map((row, idx) => (
                   <div key={idx} className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 items-end" data-testid={`contract-product-row-${idx}`}>
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.product')}</Label>
+                      <Label htmlFor={`contract-product-${idx}`} className="text-[#5a6f9a] text-xs">{t('contractWizard.product')}</Label>
                       <Select value={row.product} onValueChange={(v) => setProductRow(idx, { product: v })}>
-                        <SelectTrigger><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
+                        <SelectTrigger id={`contract-product-${idx}`} data-testid={`contract-product-${idx}`}><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
                         <SelectContent>
                           {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.expectedQuantity')}</Label>
-                      <Input type="number" min="0" value={row.expected_quantity} onChange={(e) => setProductRow(idx, { expected_quantity: e.target.value })} />
+                      <Label htmlFor={`contract-expected-quantity-${idx}`} className="text-[#5a6f9a] text-xs">{t('contractWizard.expectedQuantity')}</Label>
+                      <Input id={`contract-expected-quantity-${idx}`} data-testid={`contract-expected-quantity-${idx}`} type="number" min="0" value={row.expected_quantity} onChange={(e) => setProductRow(idx, { expected_quantity: e.target.value })} />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.unit')}</Label>
@@ -285,8 +285,8 @@ export default function ContractWizard() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.price')}</Label>
-                      <Input type="number" min="0" value={row.price} onChange={(e) => setProductRow(idx, { price: e.target.value })} />
+                      <Label htmlFor={`contract-price-${idx}`} className="text-[#5a6f9a] text-xs">{t('contractWizard.price')}</Label>
+                      <Input id={`contract-price-${idx}`} data-testid={`contract-price-${idx}`} type="number" min="0" value={row.price} onChange={(e) => setProductRow(idx, { price: e.target.value })} />
                     </div>
                     {form.products.length > 1 && (
                       <Button type="button" variant="ghost" className="text-[#ba550c]" onClick={() => removeProductRow(idx)}>
@@ -309,15 +309,15 @@ export default function ContractWizard() {
               )}
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('contractWizard.advanceAmountPaid')}</Label>
-                <Input type="number" min="0" data-testid="contract-advance-amount" value={form.advance_amount_paid} onChange={(e) => set('advance_amount_paid')(e.target.value)} />
+                <Label htmlFor="contract-advance-amount" className="text-[#5a6f9a]">{t('contractWizard.advanceAmountPaid')}</Label>
+                <Input id="contract-advance-amount" type="number" min="0" data-testid="contract-advance-amount" value={form.advance_amount_paid} onChange={(e) => set('advance_amount_paid')(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('contractWizard.advancePercent')}</Label>
-                <Input disabled data-testid="contract-advance-percent" value={`${advancePercent}%`} className="bg-[#f4f6fa] text-[#5a6f9a]" />
+                <Label htmlFor="contract-advance-percent" className="text-[#5a6f9a]">{t('contractWizard.advancePercent')}</Label>
+                <Input id="contract-advance-percent" disabled data-testid="contract-advance-percent" value={`${advancePercent}%`} className="bg-[#f4f6fa] text-[#5a6f9a]" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('contractWizard.uploadContract')}</Label>
+                <span className="text-[#5a6f9a] block">{t('contractWizard.uploadContract')}</span>
                 <div className="flex items-center gap-3">
                   <Button
                     type="button"
@@ -338,12 +338,12 @@ export default function ContractWizard() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('contractWizard.signatureDate')}</Label>
-                <Input type="date" data-testid="contract-signature-date" min="1900-01-01" max="2100-12-31" value={form.signature_date} onChange={(e) => set('signature_date')(e.target.value)} />
+                <Label htmlFor="contract-signature-date" className="text-[#5a6f9a]">{t('contractWizard.signatureDate')}</Label>
+                <Input id="contract-signature-date" type="date" data-testid="contract-signature-date" min="1900-01-01" max="2100-12-31" value={form.signature_date} onChange={(e) => set('signature_date')(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5 col-span-full">
-                <Label className="text-[#5a6f9a]">{t('contractWizard.comments')}</Label>
-                <Textarea data-testid="contract-comments" value={form.comments} onChange={(e) => set('comments')(e.target.value)} rows={3} />
+                <Label htmlFor="contract-comments" className="text-[#5a6f9a]">{t('contractWizard.comments')}</Label>
+                <Textarea id="contract-comments" data-testid="contract-comments" value={form.comments} onChange={(e) => set('comments')(e.target.value)} rows={3} />
               </div>
 
               <div className="col-span-full flex justify-between mt-2">

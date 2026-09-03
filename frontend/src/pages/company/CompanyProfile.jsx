@@ -212,8 +212,9 @@ export default function CompanyProfile() {
             {editing ? (
               <div className="flex flex-col gap-4" data-testid="company-edit-form">
                 <div className="flex flex-col gap-1.5 max-w-md">
-                  <Label className="text-[#5a6f9a]">{t('actorProfile.contactFullName')}</Label>
+                  <Label htmlFor="company-edit-contact-name" className="text-[#5a6f9a]">{t('actorProfile.contactFullName')}</Label>
                   <Input
+                    id="company-edit-contact-name"
                     className="bg-white"
                     data-testid="company-edit-contact-name"
                     value={editForm.contact_name}
@@ -221,7 +222,7 @@ export default function CompanyProfile() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#5a6f9a]">{t('forms.actorType')}</Label>
+                  <span className="text-[#5a6f9a] block">{t('forms.actorType')}</span>
                   <RadioGroup
                     value={editForm.actor_type}
                     onValueChange={(v) => setEditForm((f) => ({ ...f, actor_type: v }))}
@@ -235,13 +236,14 @@ export default function CompanyProfile() {
                   </RadioGroup>
                 </div>
                 <div className="flex flex-col gap-1.5 max-w-xs">
-                  <Label className="text-[#5a6f9a]">{t('forms.logo')}</Label>
-                  <Input type="file" accept={MEDIA_ACCEPT_ATTR} className="bg-white" data-testid="company-edit-logo" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
+                  <Label htmlFor="company-edit-logo" className="text-[#5a6f9a]">{t('forms.logo')}</Label>
+                  <Input id="company-edit-logo" type="file" accept={MEDIA_ACCEPT_ATTR} className="bg-white" data-testid="company-edit-logo" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#5a6f9a]">{t('actorProfile.actorDescription')}</Label>
+                  <Label htmlFor="company-edit-description" className="text-[#5a6f9a]">{t('actorProfile.actorDescription')}</Label>
                   <textarea
+                    id="company-edit-description"
                     data-testid="company-edit-description"
                     className="border border-[#cfd8e6] rounded-[5px] bg-white text-[#032b71] text-sm p-3 min-h-[80px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0f48aa]"
                     value={editForm.description}
@@ -266,8 +268,9 @@ export default function CompanyProfile() {
                 <h3 className="text-sm font-black text-[#032b71]">{t('actorProfile.contactInformation')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[#5a6f9a]">{t('actorProfile.contactEmail')}</Label>
+                    <Label htmlFor="company-edit-contact-email" className="text-[#5a6f9a]">{t('actorProfile.contactEmail')}</Label>
                     <Input
+                      id="company-edit-contact-email"
                       type="email"
                       className="bg-white"
                       data-testid="company-edit-contact-email"
@@ -276,8 +279,9 @@ export default function CompanyProfile() {
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[#5a6f9a]">{t('actorProfile.contactNumber')}</Label>
+                    <Label htmlFor="company-edit-contact-phone" className="text-[#5a6f9a]">{t('actorProfile.contactNumber')}</Label>
                     <Input
+                      id="company-edit-contact-phone"
                       className="bg-white"
                       data-testid="company-edit-contact-phone"
                       value={editForm.contact_phone}
@@ -472,20 +476,20 @@ export default function CompanyProfile() {
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#5a6f9a]">{t('companyProfile.memberFullName')}</Label>
-              <Input data-testid="invite-name" value={inviteForm.name} onChange={(e) => setInviteForm((f) => ({ ...f, name: e.target.value }))} />
+              <Label htmlFor="invite-name" className="text-[#5a6f9a]">{t('companyProfile.memberFullName')}</Label>
+              <Input id="invite-name" data-testid="invite-name" value={inviteForm.name} onChange={(e) => setInviteForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#5a6f9a]">{t('companyProfile.memberEmail')}</Label>
-              <Input type="email" data-testid="invite-email" value={inviteForm.email} onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))} />
+              <Label htmlFor="invite-email" className="text-[#5a6f9a]">{t('companyProfile.memberEmail')}</Label>
+              <Input id="invite-email" type="email" data-testid="invite-email" value={inviteForm.email} onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))} />
               {inviteForm.email && !inviteEmailValid && (
                 <p className="text-xs text-[#ba550c]" data-testid="invite-email-invalid">{t('companyProfile.invalidEmail')}</p>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[#5a6f9a]">{t('companyProfile.memberRole')}</Label>
+              <Label htmlFor="invite-role" className="text-[#5a6f9a]">{t('companyProfile.memberRole')}</Label>
               <Select value={inviteForm.role} onValueChange={(v) => setInviteForm((f) => ({ ...f, role: v }))}>
-                <SelectTrigger data-testid="invite-role"><SelectValue placeholder={t('companyProfile.selectRole')} /></SelectTrigger>
+                <SelectTrigger id="invite-role" data-testid="invite-role"><SelectValue placeholder={t('companyProfile.selectRole')} /></SelectTrigger>
                 <SelectContent>
                   {TEAM_ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                 </SelectContent>
@@ -514,9 +518,9 @@ export default function CompanyProfile() {
             <DialogDescription className="sr-only">{t('companyProfile.editMember')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('companyProfile.memberRole')}</Label>
+            <Label htmlFor="edit-role-select" className="text-[#5a6f9a]">{t('companyProfile.memberRole')}</Label>
             <Select value={roleValue} onValueChange={setRoleValue}>
-              <SelectTrigger data-testid="edit-role-select"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="edit-role-select" data-testid="edit-role-select"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {TEAM_ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
               </SelectContent>
