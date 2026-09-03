@@ -54,22 +54,22 @@ export default function VillageFormDialog({ open, onOpenChange }) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('forms.villageName')}</Label>
-            <Input data-testid="village-form-name" required value={form.name} onChange={(e) => set('name')(e.target.value)} />
+            <Label htmlFor="village-form-name" className="text-[#5a6f9a]">{t('forms.villageName')}</Label>
+            <Input id="village-form-name" data-testid="village-form-name" required value={form.name} onChange={(e) => set('name')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('forms.country')}</Label>
+            <Label htmlFor="village-form-country" className="text-[#5a6f9a]">{t('forms.country')}</Label>
             <Select value={form.country} onValueChange={setCountry}>
-              <SelectTrigger data-testid="village-form-country"><SelectValue placeholder={t('forms.selectCountry')} /></SelectTrigger>
+              <SelectTrigger id="village-form-country" data-testid="village-form-country"><SelectValue placeholder={t('forms.selectCountry')} /></SelectTrigger>
               <SelectContent>
                 {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('forms.stateRegion')}</Label>
+            <Label htmlFor="village-form-state" className="text-[#5a6f9a]">{t('forms.stateRegion')}</Label>
             <Select value={form.state_region} onValueChange={setState} disabled={!form.country}>
-              <SelectTrigger data-testid="village-form-state">
+              <SelectTrigger id="village-form-state" data-testid="village-form-state">
                 <SelectValue placeholder={form.country ? t('forms.selectState') : t('forms.selectCountryFirst')} />
               </SelectTrigger>
               <SelectContent>
@@ -78,10 +78,10 @@ export default function VillageFormDialog({ open, onOpenChange }) {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('forms.lgaMunicipality')}</Label>
+            <Label htmlFor="village-form-lga" className="text-[#5a6f9a]">{t('forms.lgaMunicipality')}</Label>
             {lgas.length > 0 ? (
               <Select value={form.lga_municipality} onValueChange={set('lga_municipality')} disabled={!form.state_region}>
-                <SelectTrigger data-testid="village-form-lga">
+                <SelectTrigger id="village-form-lga" data-testid="village-form-lga">
                   <SelectValue placeholder={form.state_region ? t('forms.selectLga') : t('forms.selectStateFirst')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -90,6 +90,7 @@ export default function VillageFormDialog({ open, onOpenChange }) {
               </Select>
             ) : (
               <Input
+                id="village-form-lga"
                 data-testid="village-form-lga"
                 value={form.lga_municipality}
                 disabled={!form.state_region}

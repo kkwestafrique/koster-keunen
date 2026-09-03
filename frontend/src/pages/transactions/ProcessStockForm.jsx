@@ -155,7 +155,7 @@ export default function ProcessStockForm() {
       ) : step === 1 ? (
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[#5a6f9a]">{t('processForm.mode')}</Label>
+          <span className="text-[#5a6f9a] block">{t('processForm.mode')}</span>
           <RadioGroup value={mode} onValueChange={handleModeChange} className="flex gap-6" data-testid="process-mode">
             <label className="flex items-center gap-2 text-sm text-[#032b71] cursor-pointer">
               <RadioGroupItem value="Processing" data-testid="process-mode-processing" /> {t('processForm.title')}
@@ -167,9 +167,9 @@ export default function ProcessStockForm() {
         </div>
 
         <div className="flex flex-col gap-1.5 max-w-sm">
-          <Label className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
+          <Label htmlFor="process-standard" className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
           <Select value={form.standard} onValueChange={handleStandardChange}>
-            <SelectTrigger data-testid="process-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
+            <SelectTrigger id="process-standard" data-testid="process-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
             <SelectContent>
               {STANDARDS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
@@ -180,9 +180,9 @@ export default function ProcessStockForm() {
           <>
             <div className="grid grid-cols-2 gap-4 border-b border-[#cfd8e6] pb-4">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('processForm.sourceProduct')}</Label>
+                <Label htmlFor="process-source-product" className="text-[#5a6f9a]">{t('processForm.sourceProduct')}</Label>
                 <Select value={form.source_product} onValueChange={handleSourceProductChange}>
-                  <SelectTrigger data-testid="process-source-product"><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
+                  <SelectTrigger id="process-source-product" data-testid="process-source-product"><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
                   <SelectContent>
                     {sourceProductsWithStock.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                   </SelectContent>
@@ -194,8 +194,8 @@ export default function ProcessStockForm() {
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[#5a6f9a]">{t('processForm.sourceQuantity')}</Label>
-                <Input type="number" min="0" data-testid="process-source-quantity" value={form.source_quantity} onChange={(e) => handleSourceQuantityChange(e.target.value)} />
+                <Label htmlFor="process-source-quantity" className="text-[#5a6f9a]">{t('processForm.sourceQuantity')}</Label>
+                <Input id="process-source-quantity" type="number" min="0" data-testid="process-source-quantity" value={form.source_quantity} onChange={(e) => handleSourceQuantityChange(e.target.value)} />
                 {/* Real UX gap found via live testing feedback: someone
                     could type any quantity here with no idea whether
                     real stock actually backed it up, only discovering a
@@ -242,14 +242,14 @@ export default function ProcessStockForm() {
             {form.destinations.map((row, idx) => (
               <div key={idx} className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 items-end" data-testid={`process-destination-row-${idx}`}>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#5a6f9a] text-xs">{mode === 'Merging' ? t('processForm.product') : t('processForm.convertedProduct')}</Label>
+                  <Label htmlFor={`process-destination-product-${idx}`} className="text-[#5a6f9a] text-xs">{mode === 'Merging' ? t('processForm.product') : t('processForm.convertedProduct')}</Label>
                   {mode === 'Merging' ? (
-                    <div className="h-10 flex items-center px-3 text-sm text-[#032b71] bg-[#f4f6fa] rounded-md border border-input" data-testid={`process-destination-product-${idx}`}>
+                    <div id={`process-destination-product-${idx}`} className="h-10 flex items-center px-3 text-sm text-[#032b71] bg-[#f4f6fa] rounded-md border border-input" data-testid={`process-destination-product-${idx}`}>
                       {form.source_product || '—'}
                     </div>
                   ) : (
                     <Select value={row.converted_product} onValueChange={(v) => setDestination(idx, { converted_product: v })}>
-                      <SelectTrigger data-testid={`process-destination-product-${idx}`}><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
+                      <SelectTrigger id={`process-destination-product-${idx}`} data-testid={`process-destination-product-${idx}`}><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
                       <SelectContent>
                         {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                       </SelectContent>
@@ -257,13 +257,13 @@ export default function ProcessStockForm() {
                   )}
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#5a6f9a] text-xs">{t('receiveForm.quantity')}</Label>
-                  <Input type="number" min="0" value={row.quantity} onChange={(e) => setDestination(idx, { quantity: e.target.value })} />
+                  <Label htmlFor={`process-destination-quantity-${idx}`} className="text-[#5a6f9a] text-xs">{t('receiveForm.quantity')}</Label>
+                  <Input id={`process-destination-quantity-${idx}`} data-testid={`process-destination-quantity-${idx}`} type="number" min="0" value={row.quantity} onChange={(e) => setDestination(idx, { quantity: e.target.value })} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[#5a6f9a] text-xs">{t('contractWizard.unit')}</Label>
+                  <Label htmlFor={`process-destination-unit-${idx}`} className="text-[#5a6f9a] text-xs">{t('contractWizard.unit')}</Label>
                   <Select value={row.unit} onValueChange={(v) => setDestination(idx, { unit: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger id={`process-destination-unit-${idx}`} data-testid={`process-destination-unit-${idx}`}><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
                     </SelectContent>
@@ -287,8 +287,8 @@ export default function ProcessStockForm() {
             </Button>
 
             <div className="flex flex-col gap-1.5 max-w-sm">
-              <Label className="text-[#5a6f9a]">{t('receiveForm.transactionDate')}</Label>
-              <Input type="date" data-testid="process-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => setForm((f) => ({ ...f, transaction_date: e.target.value }))} />
+              <Label htmlFor="process-date" className="text-[#5a6f9a]">{t('receiveForm.transactionDate')}</Label>
+              <Input id="process-date" type="date" data-testid="process-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => setForm((f) => ({ ...f, transaction_date: e.target.value }))} />
             </div>
 
             <div className="flex justify-between mt-2">

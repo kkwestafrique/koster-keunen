@@ -168,38 +168,38 @@ export default function SendStockForm() {
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-3xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
+            <Label htmlFor="send-standard" className="text-[#5a6f9a]">{t('contractWizard.standard')}</Label>
             <Select value={form.standard} onValueChange={handleStandardChange}>
-              <SelectTrigger data-testid="send-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
+              <SelectTrigger id="send-standard" data-testid="send-standard"><SelectValue placeholder={t('contractWizard.selectStandard')} /></SelectTrigger>
               <SelectContent>
                 {STANDARDS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('sendForm.destinationActor')}</Label>
+            <Label htmlFor="send-actor" className="text-[#5a6f9a]">{t('sendForm.destinationActor')}</Label>
             <Select
               value={form.destination_actor_id}
               onValueChange={(v) => setForm((f) => ({ ...f, destination_actor_id: v, currency: f.currency || 'NGN', contract_id: '' }))}
             >
-              <SelectTrigger data-testid="send-actor"><SelectValue placeholder={t('forms.selectActor')} /></SelectTrigger>
+              <SelectTrigger id="send-actor" data-testid="send-actor"><SelectValue placeholder={t('forms.selectActor')} /></SelectTrigger>
               <SelectContent>
                 {actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.contact_name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('contractWizard.product')}</Label>
+            <Label htmlFor="send-product" className="text-[#5a6f9a]">{t('contractWizard.product')}</Label>
             <Select value={form.product} onValueChange={handleProductChange}>
-              <SelectTrigger data-testid="send-product"><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
+              <SelectTrigger id="send-product" data-testid="send-product"><SelectValue placeholder={t('contractWizard.selectProduct')} /></SelectTrigger>
               <SelectContent>
                 {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('sendForm.quantityRequired')}</Label>
-            <Input type="number" min="0" data-testid="send-quantity" value={form.quantity} onChange={(e) => { set('quantity')(e.target.value); setSelectedBatches([]); }} />
+            <Label htmlFor="send-quantity" className="text-[#5a6f9a]">{t('sendForm.quantityRequired')}</Label>
+            <Input id="send-quantity" type="number" min="0" data-testid="send-quantity" value={form.quantity} onChange={(e) => { set('quantity')(e.target.value); setSelectedBatches([]); }} />
             {form.standard && form.product && (
               <p className="text-xs text-[#5a6f9a]" data-testid="send-available-hint">
                 {t('sendForm.availableHint', { quantity: totalAvailableForStandard })}
@@ -228,38 +228,38 @@ export default function SendStockForm() {
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('contractWizard.price')}</Label>
-            <Input type="number" min="0" data-testid="send-price" value={form.price} onChange={(e) => set('price')(e.target.value)} />
+            <Label htmlFor="send-price" className="text-[#5a6f9a]">{t('contractWizard.price')}</Label>
+            <Input id="send-price" type="number" min="0" data-testid="send-price" value={form.price} onChange={(e) => set('price')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('contractWizard.currency')}</Label>
+            <Label htmlFor="send-currency" className="text-[#5a6f9a]">{t('contractWizard.currency')}</Label>
             <Select value={form.currency} onValueChange={set('currency')}>
-              <SelectTrigger data-testid="send-currency"><SelectValue placeholder={t('contractWizard.selectCurrency')} /></SelectTrigger>
+              <SelectTrigger id="send-currency" data-testid="send-currency"><SelectValue placeholder={t('contractWizard.selectCurrency')} /></SelectTrigger>
               <SelectContent>
                 {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('sendForm.invoiceNumber')}</Label>
-            <Input data-testid="send-invoice" value={form.invoice_number} onChange={(e) => set('invoice_number')(e.target.value)} />
+            <Label htmlFor="send-invoice" className="text-[#5a6f9a]">{t('sendForm.invoiceNumber')}</Label>
+            <Input id="send-invoice" data-testid="send-invoice" value={form.invoice_number} onChange={(e) => set('invoice_number')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('sendForm.blNumber')}</Label>
-            <Input data-testid="send-bl" value={form.bl_number} onChange={(e) => set('bl_number')(e.target.value)} />
+            <Label htmlFor="send-bl" className="text-[#5a6f9a]">{t('sendForm.blNumber')}</Label>
+            <Input id="send-bl" data-testid="send-bl" value={form.bl_number} onChange={(e) => set('bl_number')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('receiveForm.transactionDate')}</Label>
-            <Input type="date" data-testid="send-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => set('transaction_date')(e.target.value)} />
+            <Label htmlFor="send-date" className="text-[#5a6f9a]">{t('receiveForm.transactionDate')}</Label>
+            <Input id="send-date" type="date" data-testid="send-date" min="1900-01-01" max="2100-12-31" value={form.transaction_date} onChange={(e) => set('transaction_date')(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('transactions.linkToContract')}</Label>
+            <Label htmlFor="send-contract" className="text-[#5a6f9a]">{t('transactions.linkToContract')}</Label>
             <Select
               value={form.contract_id || 'none'}
               onValueChange={(v) => set('contract_id')(v === 'none' ? '' : v)}
               disabled={!form.destination_actor_id}
             >
-              <SelectTrigger data-testid="send-contract"><SelectValue placeholder={t('transactions.noContract')} /></SelectTrigger>
+              <SelectTrigger id="send-contract" data-testid="send-contract"><SelectValue placeholder={t('transactions.noContract')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{t('transactions.noContract')}</SelectItem>
                 {linkableContracts.map((c) => (

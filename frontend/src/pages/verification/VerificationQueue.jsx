@@ -119,8 +119,9 @@ export default function VerificationQueue() {
             <DialogDescription className="sr-only">{t('verification.rejectClaim')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[#5a6f9a]">{t('verification.rejectionReason')}</Label>
+            <Label htmlFor="claim-reject-reason" className="text-[#5a6f9a]">{t('verification.rejectionReason')}</Label>
             <Textarea
+              id="claim-reject-reason"
               data-testid="claim-reject-reason"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
