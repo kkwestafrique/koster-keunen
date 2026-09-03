@@ -234,7 +234,8 @@
     "createdOn": "Created on",
     "origin": "Origin",
     "viewOriginTransaction": "View originating transaction ({{code}})",
-    "noOriginTransaction": "No linked transaction found for this batch."
+    "noOriginTransaction": "No linked transaction found for this batch.",
+    "depleted": "depleted"
   },
   "actorProfile": {
     "title": "Actor profile",

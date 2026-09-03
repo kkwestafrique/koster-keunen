@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft } from 'lucide-react';
 import { PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
 import { useAvailableBatches, useProcessStock, useProductsWithStock } from '@/hooks/useTransactions';
 import { useActingActor } from '@/hooks/useActors';
@@ -143,6 +143,13 @@ export default function ProcessStockForm() {
 
   return (
     <AppLayout hideDefaultHeader>
+      <button
+        data-testid="process-breadcrumb-back"
+        onClick={() => navigate('/process')}
+        className="flex items-center gap-1 text-sm font-bold text-[#0f48aa] mb-3 hover:underline"
+      >
+        <ChevronLeft className="h-4 w-4" /> {t('common.back')}
+      </button>
       <h1 className="text-lg font-black text-[#0f48aa] mb-6">{t('processForm.title')}</h1>
 
       {isReadOnly ? (

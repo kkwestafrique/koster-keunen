@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Download, Upload } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, ChevronLeft } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
 import { useBeekeepers } from '@/hooks/useBeekeepers';
 import { useActingActor } from '@/hooks/useActors';
@@ -101,6 +101,18 @@ export default function ReceiveStockForm() {
 
   return (
     <AppLayout hideDefaultHeader>
+      {/* Real gap found via the newest audit: this form had no
+          top-of-page way back, unlike the established pattern on
+          detail pages (Stock, Contract). The bottom "Back" button
+          already existed, but only after scrolling through the whole
+          form. */}
+      <button
+        data-testid="receive-breadcrumb-back"
+        onClick={() => navigate('/transactions')}
+        className="flex items-center gap-1 text-sm font-bold text-[#0f48aa] mb-3 hover:underline"
+      >
+        <ChevronLeft className="h-4 w-4" /> {t('common.back')}
+      </button>
       <h1 className="text-lg font-black text-[#0f48aa] mb-6">{t('receiveForm.title')}</h1>
 
       {isReadOnly ? (

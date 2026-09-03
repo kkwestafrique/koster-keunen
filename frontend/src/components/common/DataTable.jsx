@@ -93,7 +93,7 @@ export default function DataTable({
   const rangeTo = Math.min(page * pageSize, total || 0);
 
   return (
-    <div className="bg-white border border-[#cfd8e6] rounded-[5px] overflow-hidden" data-testid={testId}>
+    <div className="bg-white border border-[#cfd8e6] rounded-[5px]" data-testid={testId}>
       <Table className="zebra-table">
         <TableHeader>
           <TableRow className="border-b border-[#cfd8e6] hover:bg-transparent">
@@ -198,8 +198,8 @@ export default function DataTable({
         )}
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-[#5a6f9a]" data-testid={`${testId}-summary`}>
-            {rangeFrom} - {rangeTo} {t('common.of')} {total || 0}
+          <span className="text-sm text-[#5a6f9a] min-w-[80px]" data-testid={`${testId}-summary`}>
+            {loading ? '' : `${rangeFrom} - ${rangeTo} ${t('common.of')} ${total || 0}`}
           </span>
           <Pagination className="justify-end w-auto mx-0">
             <PaginationContent>
@@ -223,11 +223,41 @@ export default function DataTable({
                   className={page <= 1 ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
                 />
               </PaginationItem>
-              <PaginationItem>
-                <PaginationLink isActive className="border-[#0f48aa] text-[#0f48aa] rounded-[3px]">
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
+              {/* Real gap found via the newest audit (pagination "walk
+                  only"): only the current page number was shown, with
+                  no way to jump directly to a specific nearby page --
+                  first/prev/next/last were the only real navigation.
+                  Shows up to 5 real, clickable page numbers centered on
+                  the current page, adjusting the window near the start
+                  or end of the range so it never shows fewer than 5
+                  numbers when at least 5 pages exist. */}
+              {(() => {
+                const maxButtons = 5;
+                let start = Math.max(1, page - Math.floor(maxButtons / 2));
+                let end = Math.min(totalPages, start + maxButtons - 1);
+                start = Math.max(1, end - maxButtons + 1);
+                const pageNumbers = [];
+                for (let n = start; n <= end; n++) pageNumbers.push(n);
+                return pageNumbers.map((n) => (
+                  <PaginationItem key={n}>
+                    <PaginationLink
+                      isActive={n === page}
+                      data-testid={`${testId}-page-${n}`}
+                      tabIndex={0}
+                      onClick={() => n !== page && onPageChange(n)}
+                      onKeyDown={(e) => {
+                        if ((e.key === 'Enter' || e.key === ' ') && n !== page) {
+                          e.preventDefault();
+                          onPageChange(n);
+                        }
+                      }}
+                      className={`rounded-[3px] cursor-pointer ${n === page ? 'border-[#0f48aa] text-[#0f48aa]' : 'text-[#5a6f9a]'}`}
+                    >
+                      {n}
+                    </PaginationLink>
+                  </PaginationItem>
+                ));
+              })()}
               <PaginationItem>
                 <PaginationNext
                   data-testid={`${testId}-next`}

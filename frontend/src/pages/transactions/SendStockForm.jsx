@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ChevronLeft } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useActors, useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction, useConsumeStockBatch, useAvailableBatches } from '@/hooks/useTransactions';
@@ -155,6 +156,13 @@ export default function SendStockForm() {
 
   return (
     <AppLayout hideDefaultHeader>
+      <button
+        data-testid="send-breadcrumb-back"
+        onClick={() => navigate('/send')}
+        className="flex items-center gap-1 text-sm font-bold text-[#0f48aa] mb-3 hover:underline"
+      >
+        <ChevronLeft className="h-4 w-4" /> {t('common.back')}
+      </button>
       <h1 className="text-lg font-black text-[#0f48aa] mb-6">{t('sendForm.title')}</h1>
 
       {isReadOnly ? (

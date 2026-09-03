@@ -61,7 +61,24 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
     {
       key: 'quantity_available',
       label: t('stocks.quantityAvailable'),
-      render: (row) => (row.quantity_available != null ? `${row.quantity_available} ${row.unit || ''}` : '—'),
+      // Real feedback from the newest audit: zero-quantity (depleted)
+      // batches showed with no visual distinction from real, available
+      // stock -- easy to mistake a historical, used-up batch for
+      // something actually available. Showing everything here is still
+      // deliberate (real inventory history, not clutter -- confirmed
+      // earlier this session), this just makes a depleted batch
+      // visually read as depleted at a glance.
+      render: (row) => {
+        if (row.quantity_available == null) return '—';
+        const isDepleted = Number(row.quantity_available) === 0;
+        return isDepleted ? (
+          <span className="text-[#5a6f9a]" data-testid={`stock-depleted-${row.id}`}>
+            {row.quantity_available} {row.unit || ''} <span className="text-xs">({t('stocks.depleted')})</span>
+          </span>
+        ) : (
+          `${row.quantity_available} ${row.unit || ''}`
+        );
+      },
     },
   ];
 

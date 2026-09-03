@@ -234,7 +234,8 @@
     "createdOn": "Créé le",
     "origin": "Origine",
     "viewOriginTransaction": "Voir la transaction d'origine ({{code}})",
-    "noOriginTransaction": "Aucune transaction liée trouvée pour ce lot."
+    "noOriginTransaction": "Aucune transaction liée trouvée pour ce lot.",
+    "depleted": "épuisé"
   },
   "actorProfile": {
     "title": "Profil de l'acteur",

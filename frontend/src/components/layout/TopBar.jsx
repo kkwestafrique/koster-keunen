@@ -229,9 +229,9 @@ export default function TopBar() {
       data-testid="top-bar"
     >
       <div className="flex items-center gap-4">
-        <h1 className="text-lg font-black text-[#0f48aa]" data-testid="top-bar-actor-name">
+        <div className="text-lg font-black text-[#0f48aa]" data-testid="top-bar-actor-name">
           {currentActor?.contact_name || 'Koster Keunen'}
-        </h1>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <LanguageSwitcher />
