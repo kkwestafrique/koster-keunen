@@ -842,7 +842,12 @@
     "pending": "Pending",
     "claimSubmitted": "Claim submitted for review",
     "submitFailed": "Could not submit claim",
-    "submit": "Submit"
+    "submit": "Submit",
+    "claimDeleted": "Claim deleted.",
+    "deleteFailed": "Could not delete claim",
+    "deleteConfirmTitle": "Delete this claim?",
+    "deleteConfirmDescription": "This permanently removes the submission itself, as though it was never made. This is different from Reject, which keeps it as a real, reviewed decision on record.",
+    "deleteConfirmAction": "Delete"
   },
   "charter": {
     "tableOfContents": "Table contents",

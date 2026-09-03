@@ -7,12 +7,23 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { usePendingClaims, useVerifyClaim, useRejectClaim } from '@/hooks/useClaims';
+import { usePendingClaims, useVerifyClaim, useRejectClaim, useDeleteClaim } from '@/hooks/useClaims';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { formatDate } from '@/lib/dateFormat';
+import { Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // Gap 12: the queue a verifier actually works from. Verify/Reject are
 // Admin/Member only (enforced server-side too, not just hidden here), and
@@ -21,13 +32,15 @@ export default function VerificationQueue() {
   const { t } = useTranslation();
   usePageTitle(t('verification.title'));
   const { toast } = useToast();
-  const { canApprove } = usePermissions();
+  const { canApprove, canDelete } = usePermissions();
   const { data: claims = [], isLoading } = usePendingClaims();
   const verifyClaim = useVerifyClaim();
   const rejectClaim = useRejectClaim();
+  const deleteClaim = useDeleteClaim();
 
   const [rejectingClaim, setRejectingClaim] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const handleVerify = async (claimId) => {
@@ -53,6 +66,19 @@ export default function VerificationQueue() {
       toast({ title: t('verification.rejectFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setBusy(true);
+    try {
+      await deleteClaim.mutateAsync(deleteTarget.id);
+      toast({ title: t('verification.claimDeleted') });
+    } catch (err) {
+      toast({ title: t('verification.deleteFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    } finally {
+      setBusy(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -91,6 +117,25 @@ export default function VerificationQueue() {
                 {t('verification.reject')}
               </Button>
             </div>
+          ),
+        }]
+      : []),
+    ...(canDelete
+      ? [{
+          key: '__delete',
+          label: '',
+          render: (row) => (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              data-testid={`claim-delete-${row.id}`}
+              disabled={busy}
+              className="text-[#ba550c] hover:text-[#ba550c] hover:bg-[#fdecea]"
+              onClick={() => setDeleteTarget(row)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           ),
         }]
       : []),
@@ -143,6 +188,26 @@ export default function VerificationQueue() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent data-testid="claim-delete-confirm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('verification.deleteConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('verification.deleteConfirmDescription')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="claim-delete-cancel">{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="claim-delete-confirm-action"
+              disabled={busy}
+              className="bg-[#ba550c] hover:bg-[#a34a0a]"
+              onClick={handleDelete}
+            >
+              {t('verification.deleteConfirmAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }

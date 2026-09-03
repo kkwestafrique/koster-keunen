@@ -842,7 +842,12 @@
     "pending": "En attente",
     "claimSubmitted": "Demande soumise pour examen",
     "submitFailed": "Impossible de soumettre la demande",
-    "submit": "Soumettre"
+    "submit": "Soumettre",
+    "claimDeleted": "Demande supprimée.",
+    "deleteFailed": "Impossible de supprimer la demande",
+    "deleteConfirmTitle": "Supprimer cette demande ?",
+    "deleteConfirmDescription": "Cette action supprime définitivement la soumission elle-même, comme si elle n'avait jamais eu lieu. Ceci est différent de Rejeter, qui conserve une décision réelle et examinée dans l'historique.",
+    "deleteConfirmAction": "Supprimer"
   },
   "charter": {
     "tableOfContents": "Table des matières",

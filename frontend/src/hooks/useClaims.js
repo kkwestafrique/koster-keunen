@@ -100,3 +100,27 @@ export function useRejectClaim() {
     },
   });
 }
+
+// Fourth entity in the deliberately scoped-down Delete rollout (after
+// villages, connections, exports). Confirmed zero foreign keys reference
+// claims, safe to delete. Deliberately distinct from Reject (a real
+// decision that the claim's content doesn't meet the standard, keeps the
+// row as a Rejected historical record): Delete means the submission
+// itself was a mistake and should never have existed. Only ever exposed
+// from the Verification Queue, which already only shows Pending claims --
+// naturally scoped away from ever deleting an already-verified claim,
+// whose side effect (updating the entity's standards array via
+// verify_claim()) wouldn't be undone by deleting the claim row itself.
+export function useDeleteClaim() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (claimId) => {
+      const { error } = await supabase.from('claims').delete().eq('id', claimId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['claims'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-claims'] });
+    },
+  });
+}
