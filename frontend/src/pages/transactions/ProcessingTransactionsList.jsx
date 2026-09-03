@@ -10,6 +10,13 @@ import { useTransactions, useTransactionLoggers } from '@/hooks/useTransactions'
 import { useConstants } from '@/hooks/useConstants';
 import { useActingActor } from '@/hooks/useActors';
 import { formatDate } from '@/lib/dateFormat';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
+
+// Gap 13: pageSize default was 5 -- the same default the real platform's
+// own audit flagged as a real usability problem (398 beekeepers = 80
+// pages to click through). 15 is still one of DataTable's offered
+// options.
+const FILTER_DEFAULTS = { search: '', product: '', loggedBy: '', page: 1, pageSize: 15 };
 
 // Processing has a genuinely different list shape than Send/Received per
 // the audit (7 columns: Date, Transaction ID, Transaction type, Source
@@ -19,14 +26,13 @@ import { formatDate } from '@/lib/dateFormat';
 export default function ProcessingTransactionsList() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [product, setProduct] = useState('');
-  const [loggedBy, setLoggedBy] = useState('');
-  const [page, setPage] = useState(1);
-  // Gap 13: was 5 -- the same default the real platform's own audit
-  // flagged as a real usability problem (398 beekeepers = 80 pages to
-  // click through). 15 is still one of DataTable's offered options.
-  const [pageSize, setPageSize] = useState(15);
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const { search, product, loggedBy, page, pageSize } = filters;
+  const setSearch = (v) => setFilters({ search: v, page: 1 });
+  const setProduct = (v) => setFilters({ product: v, page: 1 });
+  const setLoggedBy = (v) => setFilters({ loggedBy: v, page: 1 });
+  const setPage = (v) => setFilters({ page: v });
+  const setPageSize = (v) => setFilters({ pageSize: v, page: 1 });
   const { isReadOnly } = useActingActor();
 
   const { data: products = [] } = useConstants('product_type');
