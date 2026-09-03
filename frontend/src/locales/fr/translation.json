@@ -43,7 +43,8 @@
     "downloadRowCount_other": "{{count}} lignes exportées",
     "downloadFailed": "Échec de l'export",
     "downloadAgain": "Télécharger",
-    "notificationsUnread": "Notifications ({{count}} non lues)"
+    "notificationsUnread": "Notifications ({{count}} non lues)",
+    "openMenu": "Ouvrir le menu"
   },
   "login": {
     "title": "Connectez-vous à",

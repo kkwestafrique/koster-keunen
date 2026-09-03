@@ -83,7 +83,7 @@ function NavGroup({ item, currentPath, t }) {
     <div className="px-3">
       <button
         data-testid={`sidebar-nav-${item.key}`}
-        onClick={() => setOpen(!open)}
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-full text-[14px] transition-colors ${
           isChildActive ? 'bg-[#0f48aa] text-white font-bold' : 'text-[#032b71] font-normal hover:bg-white/60'
         }`}
@@ -118,7 +118,7 @@ function NavGroup({ item, currentPath, t }) {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen, onCloseMobile }) {
   const { t } = useTranslation();
   const { profile, switchActor } = useAuth();
   const { toast } = useToast();
@@ -133,10 +133,27 @@ export default function Sidebar() {
   };
 
   return (
-    <aside
-      className="w-[240px] h-screen fixed left-0 top-0 flex flex-col bg-[#ebf6ff]"
-      data-testid="sidebar"
-    >
+    <>
+      {/* Real gap found via the newest audit (M2: no mobile layout at
+          all). This sidebar used to be permanently fixed at 240px with
+          no way to hide it -- on a real phone screen that's the
+          majority of the available width gone before any real content
+          shows at all. Now hidden by default below the md breakpoint,
+          sliding in as a real overlay when mobileOpen is true, with a
+          backdrop that closes it on tap -- same standard pattern used
+          everywhere for mobile navigation drawers. Unchanged above md:
+          always visible, exactly as before. */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={onCloseMobile}
+          data-testid="sidebar-mobile-backdrop"
+        />
+      )}
+      <aside
+        className={`w-[240px] h-screen fixed left-0 top-0 flex flex-col bg-[#ebf6ff] z-50 transition-transform duration-200 md:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        data-testid="sidebar"
+      >
       {/* Logo area */}
       <div className="h-16 flex items-center px-5 shrink-0 bg-white">
         <span className="text-lg font-black text-[#0f48aa]">Koster Keunen</span>
@@ -148,7 +165,7 @@ export default function Sidebar() {
         </div>
       )}
 
-      <nav className="flex-1 overflow-y-auto pt-3 flex flex-col gap-1">
+      <nav className="flex-1 overflow-y-auto pt-3 flex flex-col gap-1" onClick={onCloseMobile}>
         {NAV_ITEMS.map((item) =>
           item.children ? (
             <NavGroup key={item.key} item={item} currentPath={window.location.pathname} t={t} />
@@ -230,6 +247,7 @@ export default function Sidebar() {
           </div>
         )}
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

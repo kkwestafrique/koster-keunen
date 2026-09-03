@@ -43,7 +43,8 @@
     "downloadRowCount_other": "{{count}} rows exported",
     "downloadFailed": "Export failed",
     "downloadAgain": "Download",
-    "notificationsUnread": "Notifications ({{count}} unread)"
+    "notificationsUnread": "Notifications ({{count}} unread)",
+    "openMenu": "Open menu"
   },
   "login": {
     "title": "Login to",

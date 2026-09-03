@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Download, Bell, ChevronDown, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Download, Bell, ChevronDown, Loader2, CheckCircle2, XCircle, Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite } from '@/hooks/useActors';
 import { useRecentExports } from '@/hooks/useExports';
@@ -215,7 +215,7 @@ function NotificationBell() {
   );
 }
 
-export default function TopBar() {
+export default function TopBar({ onOpenMobileMenu }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
@@ -225,15 +225,28 @@ export default function TopBar() {
 
   return (
     <header
-      className="h-16 flex items-center justify-between px-8 bg-white sticky top-0 z-10 border-b border-[#e2eaf5]"
+      className="h-16 flex items-center justify-between px-4 md:px-8 bg-white sticky top-0 z-10 border-b border-[#e2eaf5]"
       data-testid="top-bar"
     >
       <div className="flex items-center gap-4">
-        <div className="text-lg font-black text-[#0f48aa]" data-testid="top-bar-actor-name">
+        {/* Real gap found via the newest audit (M2): with the sidebar
+            now correctly hidden by default on small screens, there was
+            no way to actually open it -- this is that entry point,
+            visible only below the md breakpoint where the sidebar
+            itself is hidden. */}
+        <button
+          data-testid="top-bar-menu-toggle"
+          aria-label={t('topbar.openMenu')}
+          onClick={onOpenMobileMenu}
+          className="md:hidden h-9 w-9 flex items-center justify-center rounded-full hover:bg-[#f5f5f5] transition-colors shrink-0"
+        >
+          <Menu className="h-5 w-5 text-[#032b71]" />
+        </button>
+        <div className="text-lg font-black text-[#0f48aa] truncate max-w-[140px] md:max-w-none" data-testid="top-bar-actor-name">
           {currentActor?.contact_name || 'Koster Keunen'}
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <LanguageSwitcher />
 
         <NotificationBell />
