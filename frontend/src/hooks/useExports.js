@@ -111,3 +111,21 @@ export function useUpdateExport() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['exports', supplyChainId] }),
   });
 }
+
+// Third entity in the deliberately scoped-down Delete rollout (after
+// villages, connections). Confirmed directly: zero foreign keys anywhere
+// reference exports, safe to delete. Deliberately scoped to just the
+// notification/history row itself, not the underlying stored file (if
+// still present) -- matches the same scope as villages/connections,
+// which also don't touch anything beyond their own row.
+export function useDeleteExport() {
+  const { supplyChainId } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('exports').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['exports', supplyChainId] }),
+  });
+}

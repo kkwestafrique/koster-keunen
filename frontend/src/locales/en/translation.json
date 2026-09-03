@@ -44,7 +44,9 @@
     "downloadFailed": "Export failed",
     "downloadAgain": "Download",
     "notificationsUnread": "Notifications ({{count}} unread)",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "deleteDownload": "Remove from downloads",
+    "downloadDeleteFailed": "Could not remove this download"
   },
   "login": {
     "title": "Login to",

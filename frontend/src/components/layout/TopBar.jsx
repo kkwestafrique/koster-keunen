@@ -1,13 +1,16 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Download, Bell, ChevronDown, Loader2, CheckCircle2, XCircle, Menu } from 'lucide-react';
+import { Download, Bell, ChevronDown, Loader2, CheckCircle2, XCircle, Menu, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite } from '@/hooks/useActors';
-import { useRecentExports } from '@/hooks/useExports';
+import { useRecentExports, useDeleteExport } from '@/hooks/useExports';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/useNotifications';
 import { useUpdateMyProfile } from '@/hooks/useMyProfile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import {
   DropdownMenu,
@@ -80,7 +83,18 @@ function statusIcon(status) {
 
 function DownloadsPanel() {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const { canDelete } = usePermissions();
   const { data: exports = [] } = useRecentExports();
+  const deleteExport = useDeleteExport();
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteExport.mutateAsync(id);
+    } catch (err) {
+      toast({ title: t('topbar.downloadDeleteFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    }
+  };
 
   return (
     <Popover>
@@ -124,6 +138,17 @@ function DownloadsPanel() {
                   >
                     {t('topbar.downloadAgain')}
                   </a>
+                )}
+                {canDelete && (
+                  <button
+                    type="button"
+                    aria-label={t('topbar.deleteDownload')}
+                    data-testid={`download-delete-${e.id}`}
+                    onClick={() => handleDelete(e.id)}
+                    className="text-[#5a6f9a] hover:text-[#ba550c] shrink-0 p-0.5"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 )}
               </div>
             ))

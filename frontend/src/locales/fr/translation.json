@@ -44,7 +44,9 @@
     "downloadFailed": "Échec de l'export",
     "downloadAgain": "Télécharger",
     "notificationsUnread": "Notifications ({{count}} non lues)",
-    "openMenu": "Ouvrir le menu"
+    "openMenu": "Ouvrir le menu",
+    "deleteDownload": "Retirer des téléchargements",
+    "downloadDeleteFailed": "Impossible de retirer ce téléchargement"
   },
   "login": {
     "title": "Connectez-vous à",
