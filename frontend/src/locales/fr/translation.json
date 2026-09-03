@@ -323,7 +323,12 @@
     "country": "Pays",
     "region": "Région",
     "lga": "LGA",
-    "beekeepers": "Apiculteurs"
+    "beekeepers": "Apiculteurs",
+    "deleteSuccess": "Village supprimé.",
+    "deleteFailed": "Impossible de supprimer le village",
+    "deleteConfirmTitle": "Supprimer ce village ?",
+    "deleteConfirmDescription": "Cette action supprimera définitivement « {{name}} ». Si un apiculteur, une connexion ou un stock y fait encore référence, la suppression sera bloquée et rien ne changera.",
+    "deleteConfirmAction": "Supprimer"
   },
   "connectionsList": {
     "title": "Connexions",

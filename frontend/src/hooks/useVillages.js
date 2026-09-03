@@ -89,6 +89,28 @@ export function useCreateVillage() {
   });
 }
 
+// Real gap found and confirmed: no delete capability existed anywhere in
+// the app for any entity, even though the database already has real
+// DELETE permissions (Admin/Member) and a real safety net -- every real
+// foreign key referencing villages (beekeepers, connections, stocks) uses
+// NO ACTION, meaning a village genuinely still in use will be rejected
+// with a clear constraint error rather than silently cascading or
+// orphaning real records. Starting with villages as one of the lowest-
+// risk entities to build this pattern on first.
+export function useDeleteVillage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('villages').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['villages'] });
+      queryClient.invalidateQueries({ queryKey: ['villages-lite'] });
+    },
+  });
+}
+
 // Used by forms (e.g. Add Beekeeper) that capture a full Country -> State ->
 // LGA -> Village address inline rather than picking from an existing village
 // list — matches the live-site audit, where Village is a free-text field.

@@ -323,7 +323,12 @@
     "country": "Country",
     "region": "Region",
     "lga": "LGA",
-    "beekeepers": "Beekeepers"
+    "beekeepers": "Beekeepers",
+    "deleteSuccess": "Village deleted.",
+    "deleteFailed": "Could not delete village",
+    "deleteConfirmTitle": "Delete this village?",
+    "deleteConfirmDescription": "This will permanently delete \"{{name}}\". If any beekeeper, connection, or stock record still refers to it, the deletion will be blocked and nothing will change.",
+    "deleteConfirmAction": "Delete"
   },
   "connectionsList": {
     "title": "Connections",
