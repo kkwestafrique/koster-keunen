@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import BulkImportContractsDialog from './BulkImportContractsDialog';
 import { formatDate } from '@/lib/dateFormat';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 // Matches the live site's "All contracts" filter exactly. Note there is no
 // Standard filter on the live list page — Standard is still shown as a
@@ -24,18 +25,23 @@ const CONTRACT_TYPE_OPTIONS = [
 
 const money = (v) => (v != null ? Number(v).toLocaleString() : '—');
 
+// Gap 13: pageSize default was 5 -- the same default the real platform's
+// own audit flagged as a real usability problem (398 beekeepers = 80
+// pages to click through). 15 is still one of DataTable's offered
+// options.
+const FILTER_DEFAULTS = { search: '', country: '', contractType: '', page: 1, pageSize: 15 };
+
 export default function ContractsList() {
   const { t } = useTranslation();
   usePageTitle(t('contractsList.title'));
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [country, setCountry] = useState('');
-  const [contractType, setContractType] = useState('');
-  const [page, setPage] = useState(1);
-  // Gap 13: was 5 -- the same default the real platform's own audit
-  // flagged as a real usability problem (398 beekeepers = 80 pages to
-  // click through). 15 is still one of DataTable's offered options.
-  const [pageSize, setPageSize] = useState(15);
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const { search, country, contractType, page, pageSize } = filters;
+  const setSearch = (v) => setFilters({ search: v, page: 1 });
+  const setCountry = (v) => setFilters({ country: v, page: 1 });
+  const setContractType = (v) => setFilters({ contractType: v, page: 1 });
+  const setPage = (v) => setFilters({ page: v });
+  const setPageSize = (v) => setFilters({ pageSize: v, page: 1 });
   const { isReadOnly } = useActingActor();
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
 

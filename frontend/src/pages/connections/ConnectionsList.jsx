@@ -13,20 +13,25 @@ import { useToast } from '@/hooks/use-toast';
 import ConnectionFormDialog from '@/pages/connections/ConnectionFormDialog';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 const YEAR_OPTIONS = Array.from({ length: 8 }, (_, i) => {
   const y = new Date().getFullYear() - i;
   return { value: String(y), label: String(y) };
 });
 
+const FILTER_DEFAULTS = { search: '', status: '', year: '', page: 1, pageSize: 5 };
+
 export default function ConnectionsList() {
   const { t } = useTranslation();
   usePageTitle(t('connectionsList.title'));
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-  const [year, setYear] = useState('');
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const { search, status, year, page, pageSize } = filters;
+  const setPage = (v) => setFilters({ page: v });
+  const setPageSize = (v) => setFilters({ pageSize: v, page: 1 });
+  const setSearch = (v) => setFilters({ search: v, page: 1 });
+  const setStatus = (v) => setFilters({ status: v, page: 1 });
+  const setYear = (v) => setFilters({ year: v, page: 1 });
   const [formOpen, setFormOpen] = useState(false);
 
   const { data, isLoading } = useConnections({ page, pageSize, search, status, year });

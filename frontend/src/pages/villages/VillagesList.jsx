@@ -8,12 +8,17 @@ import { Plus } from 'lucide-react';
 import { useVillages } from '@/hooks/useVillages';
 import VillageFormDialog from '@/pages/villages/VillageFormDialog';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
+
+const FILTER_DEFAULTS = { search: '', page: 1 };
 
 export default function VillagesList() {
   const { t } = useTranslation();
   usePageTitle(t('villagesList.title'));
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const { search, page } = filters;
+  const setPage = (v) => setFilters({ page: v });
+  const setSearch = (v) => setFilters({ search: v, page: 1 });
   const [formOpen, setFormOpen] = useState(false);
 
   const { data, isLoading } = useVillages({ page, search });
