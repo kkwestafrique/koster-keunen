@@ -11,20 +11,26 @@ import { useAllVillagesLite } from '@/hooks/useVillages';
 import { useActingActor } from '@/hooks/useActors';
 import AddBeekeeperDialog from '@/pages/beekeepers/AddBeekeeperDialog';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
+
+// Gap 13: pageSize default was 5 -- the same default the real platform's
+// own audit flagged as a real usability problem (398 beekeepers = 80
+// pages to click through). 15 is still one of DataTable's offered
+// options.
+const FILTER_DEFAULTS = { search: '', gender: '', villageId: '', year: '', page: 1, pageSize: 15 };
 
 // fixedStatus: 'Potential' | 'Achieved' | null (full list)
 export default function BeekeepersList({ fixedStatus, title, testId }) {
   const { t } = useTranslation();
   usePageTitle(t('beekeepersList.title'));
-  const [page, setPage] = useState(1);
-  // Gap 13: was 5 -- the same default the real platform's own audit
-  // flagged as a real usability problem (398 beekeepers = 80 pages to
-  // click through). 15 is still one of DataTable's offered options.
-  const [pageSize, setPageSize] = useState(15);
-  const [search, setSearch] = useState('');
-  const [gender, setGender] = useState('');
-  const [villageId, setVillageId] = useState('');
-  const [year, setYear] = useState('');
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const { search, gender, villageId, year, page, pageSize } = filters;
+  const setPage = (v) => setFilters({ page: v });
+  const setPageSize = (v) => setFilters({ pageSize: v, page: 1 });
+  const setSearch = (v) => setFilters({ search: v, page: 1 });
+  const setGender = (v) => setFilters({ gender: v, page: 1 });
+  const setVillageId = (v) => setFilters({ villageId: v, page: 1 });
+  const setYear = (v) => setFilters({ year: v, page: 1 });
   const [formOpen, setFormOpen] = useState(false);
   const navigate = useNavigate();
   const { isReadOnly } = useActingActor();

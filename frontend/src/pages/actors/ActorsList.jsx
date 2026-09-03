@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ActorFormDialog from '@/pages/actors/ActorFormDialog';
 import { ACTOR_TYPES } from '@/data/regions';
 import { useActorTypes } from '@/hooks/useActorTypes';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 // Matches the live site's Actor Type filter exactly — 'Buyer' is a valid
 // actor_type value elsewhere in the app but is not offered here or in the
@@ -20,18 +21,23 @@ import { useActorTypes } from '@/hooks/useActorTypes';
 // two can never silently drift apart.
 const ACTOR_TYPE_FILTER_OPTIONS = ACTOR_TYPES;
 
+// Gap 13: pageSize default was 5 -- the same default the real platform's
+// own audit flagged as a real usability problem (398 beekeepers = 80
+// pages to click through). 15 is still one of DataTable's offered
+// options.
+const FILTER_DEFAULTS = { search: '', actorType: '', status: '', page: 1, pageSize: 15 };
+
 export default function ActorsList({ title, testId }) {
   const { t } = useTranslation();
   const { profile } = useAuth();
   const { data: actorTypeOptions = ACTOR_TYPE_FILTER_OPTIONS } = useActorTypes();
-  const [page, setPage] = useState(1);
-  // Gap 13: was 5 -- the same default the real platform's own audit
-  // flagged as a real usability problem (398 beekeepers = 80 pages to
-  // click through). 15 is still one of DataTable's offered options.
-  const [pageSize, setPageSize] = useState(15);
-  const [search, setSearch] = useState('');
-  const [actorType, setActorType] = useState('');
-  const [status, setStatus] = useState('');
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const { search, actorType, status, page, pageSize } = filters;
+  const setPage = (v) => setFilters({ page: v });
+  const setPageSize = (v) => setFilters({ pageSize: v, page: 1 });
+  const setSearch = (v) => setFilters({ search: v, page: 1 });
+  const setActorType = (v) => setFilters({ actorType: v, page: 1 });
+  const setStatus = (v) => setFilters({ status: v, page: 1 });
   const [formOpen, setFormOpen] = useState(false);
   const navigate = useNavigate();
   const { isReadOnly } = useActingActor();
