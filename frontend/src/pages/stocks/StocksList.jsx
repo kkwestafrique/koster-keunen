@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -11,19 +11,24 @@ import { Plus } from 'lucide-react';
 import { useStocks } from '@/hooks/useStocks';
 import { useConstants } from '@/hooks/useConstants';
 import { useAllVillagesLite } from '@/hooks/useVillages';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
+
+const FILTER_DEFAULTS = { search: '', product: '', standard: '', village: '', dateFrom: '', dateTo: '', page: 1, pageSize: 5 };
 
 // Shared list for Stocks > Raw material / Final product / Loss.
 export default function StocksList({ stockType, title, actionLabel, testId }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [product, setProduct] = useState('');
-  const [standard, setStandard] = useState('');
-  const [village, setVillage] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
+  const { search, product, standard, village, dateFrom, dateTo, page, pageSize } = filters;
+  const setSearch = (v) => setFilters({ search: v, page: 1 });
+  const setProduct = (v) => setFilters({ product: v, page: 1 });
+  const setStandard = (v) => setFilters({ standard: v, page: 1 });
+  const setVillage = (v) => setFilters({ village: v, page: 1 });
+  const setDateFrom = (v) => setFilters({ dateFrom: v, page: 1 });
+  const setDateTo = (v) => setFilters({ dateTo: v, page: 1 });
+  const setPage = (v) => setFilters({ page: v });
+  const setPageSize = (v) => setFilters({ pageSize: v, page: 1 });
 
   const { data: products = [] } = useConstants('product_type');
   const { data: standards = [] } = useConstants('standard');
