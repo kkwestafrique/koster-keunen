@@ -28,7 +28,7 @@ const FILTER_DEFAULTS = { search: '', entityType: '', page: 1 };
 export default function ActivityLog() {
   const { t } = useTranslation();
   usePageTitle(t('activityLog.title'));
-  const { data: rows = [], isLoading } = useActivityLog();
+  const { data: rows = [], isLoading, isError, refetch } = useActivityLog();
 
   const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
   const { search, entityType, page } = filters;
@@ -105,6 +105,8 @@ export default function ActivityLog() {
         pageSize={PAGE_SIZE}
         onPageChange={setPage}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyMessage={t('activityLog.noRecords')}
       />
     </AppLayout>

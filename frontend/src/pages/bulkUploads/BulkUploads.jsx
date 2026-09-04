@@ -65,7 +65,7 @@ function UploadHistoryTable({ uploadType, showProgress, testId }) {
   const setSearch = (v) => setFilters({ [`${prefix}_search`]: v, [`${prefix}_page`]: 1 });
   const setStatus = (v) => setFilters({ [`${prefix}_status`]: v, [`${prefix}_page`]: 1 });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['bulk_uploads', { uploadType, page, pageSize, search, status, supplyChainId }],
     queryFn: async () => {
       let query = supabase
@@ -130,6 +130,8 @@ function UploadHistoryTable({ uploadType, showProgress, testId }) {
         onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onPageChange={setPage}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
       />
     </>
   );
