@@ -178,41 +178,14 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
         <span className="text-lg font-black text-[#0f48aa]">Koster Keunen</span>
       </div>
 
-      {isReadOnly && (
-        <div className="mx-3 mt-3 px-3 py-2 rounded-[4px] bg-[#fdecea] border border-[#f3b8b3]" data-testid="disabled-actor-banner">
-          <p className="text-xs text-[#ba550c] font-bold">{t('topbar.actorDisabledReadOnly')}</p>
-        </div>
-      )}
-
-      <nav className="flex-1 overflow-y-auto pt-3 flex flex-col gap-1" onClick={onCloseMobile}>
-        {NAV_ITEMS.map((item) =>
-          item.children ? (
-            <NavGroup key={item.key} item={item} currentPath={window.location.pathname} t={t} />
-          ) : (
-            <div className="px-3" key={item.key}>
-              <NavLink
-                to={item.to}
-                end
-                data-testid={`sidebar-nav-${item.key}`}
-                onClick={handleNavClick}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-full text-[14px] transition-colors ${
-                    isActive ? 'bg-[#0f48aa] text-white font-bold' : 'text-[#032b71] font-normal hover:bg-white/60'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <NavIcon Icon={item.icon} active={isActive} />
-                    <span>{t(item.labelKey)}</span>
-                  </>
-                )}
-              </NavLink>
-            </div>
-          )
-        )}
-      </nav>
-
+      {/* Real gap found via the newest audit (UF5): this actor switcher
+          used to sit at the very bottom of the sidebar, below every nav
+          item -- for anyone managing multiple actor contexts, the one
+          control that changes which company's data you're even looking
+          at was the single easiest thing in the whole sidebar to miss.
+          Moved to right after the logo, matching the same convention
+          most similar workspace/org switchers use (Slack, Notion, and
+          others all put this at the very top, not the bottom). */}
       <div className="p-3">
         <p className="text-xs text-[#5a6f9a] px-1 mb-1.5">{t('topbar.myActor')}</p>
         {myActors.length > 1 ? (
@@ -267,6 +240,41 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
           </div>
         )}
       </div>
+
+      {isReadOnly && (
+        <div className="mx-3 mt-3 px-3 py-2 rounded-[4px] bg-[#fdecea] border border-[#f3b8b3]" data-testid="disabled-actor-banner">
+          <p className="text-xs text-[#ba550c] font-bold">{t('topbar.actorDisabledReadOnly')}</p>
+        </div>
+      )}
+
+      <nav className="flex-1 overflow-y-auto pt-3 flex flex-col gap-1" onClick={onCloseMobile}>
+        {NAV_ITEMS.map((item) =>
+          item.children ? (
+            <NavGroup key={item.key} item={item} currentPath={window.location.pathname} t={t} />
+          ) : (
+            <div className="px-3" key={item.key}>
+              <NavLink
+                to={item.to}
+                end
+                data-testid={`sidebar-nav-${item.key}`}
+                onClick={handleNavClick}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-full text-[14px] transition-colors ${
+                    isActive ? 'bg-[#0f48aa] text-white font-bold' : 'text-[#032b71] font-normal hover:bg-white/60'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <NavIcon Icon={item.icon} active={isActive} />
+                    <span>{t(item.labelKey)}</span>
+                  </>
+                )}
+              </NavLink>
+            </div>
+          )
+        )}
+      </nav>
       </aside>
     </>
   );
