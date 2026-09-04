@@ -3,6 +3,8 @@ import '@/App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { UnsavedChangesProvider } from '@/contexts/UnsavedChangesContext';
+import { TourProvider } from '@/contexts/TourContext';
+import TourOverlay from '@/components/common/TourOverlay';
 import { Toaster } from '@/components/ui/toaster';
 import Login from '@/pages/Login';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -152,7 +154,10 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <UnsavedChangesProvider>
-            <AppRoutes />
+            <TourProvider>
+              <AppRoutes />
+              <TourOverlay />
+            </TourProvider>
           </UnsavedChangesProvider>
         </BrowserRouter>
         <Toaster />

@@ -21,6 +21,23 @@ export function useUpdateMyProfile() {
   });
 }
 
+// Marks the onboarding tour as seen, closing UF1: no onboarding
+// guidance existed anywhere for a new organization's first real login.
+// A dedicated mutation rather than reusing useUpdateMyProfile above,
+// which requires username/language_preference every call -- this needs
+// to fire on its own, from wherever the tour ends or gets dismissed.
+export function useMarkOnboardingSeen() {
+  return useMutation({
+    mutationFn: async (userId) => {
+      const { error } = await supabase
+        .from('user_accounts')
+        .update({ has_seen_onboarding: true })
+        .eq('id', userId);
+      if (error) throw error;
+    },
+  });
+}
+
 // Uses Supabase Auth's own updateUser -- works for an already-logged-in
 // person changing their own password directly, no email/reset-link flow
 // needed (that flow already exists separately for forgot-password).
