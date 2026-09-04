@@ -14,6 +14,7 @@ import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
 import SummaryField from '@/components/common/SummaryField';
+import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const EMPTY_DESTINATION_ROW = { converted_product: '', quantity: '', unit: 'Kg' };
@@ -95,6 +96,22 @@ export default function ProcessStockForm() {
     && form.transaction_date && selectedBatches.length > 0
     && form.destinations.every((r) => r.converted_product && r.quantity)
     && !outputExceedsConsumption;
+
+  // Real gap found via independent audit (C5): the button was simply
+  // disabled with zero indication of what was missing. Computes the
+  // actual list of what's still needed -- deliberately excludes
+  // outputExceedsConsumption, which already has its own clear, dedicated
+  // warning message directly on the form (a real business-rule
+  // violation, not a blank field, so it needs its own explanation
+  // rather than a generic "still needed" entry).
+  const missingFields = [
+    !form.standard && t('contractWizard.standard'),
+    !form.source_product && t('processForm.sourceProduct'),
+    !form.source_quantity && t('processForm.sourceQuantity'),
+    !form.transaction_date && t('receiveForm.transactionDate'),
+    selectedBatches.length === 0 && t('batchPicker.title'),
+    !form.destinations.every((r) => r.converted_product && r.quantity) && t('processForm.convertedProduct'),
+  ].filter(Boolean);
 
   // Real dead-end found live: picking a Standard + Product combination
   // with zero real Raw Material stock behind it (e.g. "Sustainable" when
@@ -308,9 +325,12 @@ export default function ProcessStockForm() {
                   button now only advances to that review step -- the
                   real processStock.mutateAsync() call moves to the
                   Confirm button on step 2, below. */}
-              <Button type="button" data-testid="process-review" disabled={!valid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={() => setStep(2)}>
-                {t('contractWizard.reviewAndConfirm')}
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                <Button type="button" data-testid="process-review" disabled={!valid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={() => setStep(2)}>
+                  {t('contractWizard.reviewAndConfirm')}
+                </Button>
+                {!outputExceedsConsumption && <MissingFieldsHint missingFields={missingFields} testId="process-missing-fields" />}
+              </div>
             </div>
 
             <BatchPickerModal

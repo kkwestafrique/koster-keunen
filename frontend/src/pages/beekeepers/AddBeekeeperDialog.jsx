@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RequiredLabel from '@/components/common/RequiredLabel';
+import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 import AddressFields from '@/components/common/AddressFields';
 import PhoneInput from '@/components/common/PhoneInput';
 import { STANDARDS, COMMITMENT_OF_BEEKEEPER, HIVE_SPREAD_CROPS } from '@/data/regions';
@@ -240,6 +241,21 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
   const step1Valid = form.full_name && addressValid && form.dial_code && form.contact_number;
   const charterRequired = form.standards.includes('Sustainable');
   const step2Valid = form.gender && form.standards.length > 0 && form.commitment.length > 0 && (!charterRequired || form.charter_signed);
+
+  // Real gap found via independent audit (C5): the button was simply
+  // disabled with zero indication of what was missing. Computes the
+  // actual list of what's still needed for each step's own gate.
+  const step1MissingFields = [
+    !form.full_name && t('forms.beekeeperFullName'),
+    !addressValid && t('forms.village'),
+    (!form.dial_code || !form.contact_number) && t('actorProfile.contactNumber'),
+  ].filter(Boolean);
+  const step2MissingFields = [
+    !form.gender && t('forms.gender'),
+    form.standards.length === 0 && t('forms.addStandards'),
+    form.commitment.length === 0 && t('forms.commitmentOfBeekeeper'),
+    charterRequired && !form.charter_signed && t('forms.sustainableBeekeeperCharter'),
+  ].filter(Boolean);
 
   const reset = () => { setForm(EMPTY); setStep(STEP_BASIC); setMultiMode(false); };
   const handleClose = () => { reset(); onOpenChange(false); };
@@ -528,17 +544,23 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
             {step === STEP_BASIC && (
               <>
                 <Button type="button" variant="ghost" className="text-[#0f48aa]" onClick={handleClose}>{t('common.cancel')}</Button>
-                <Button type="button" data-testid="bk-wizard-next-1" disabled={!step1Valid} onClick={() => setStep(STEP_CONNECTION)} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
-                  {t('forms.nextConnectionDetails')}
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                  <Button type="button" data-testid="bk-wizard-next-1" disabled={!step1Valid} onClick={() => setStep(STEP_CONNECTION)} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
+                    {t('forms.nextConnectionDetails')}
+                  </Button>
+                  <MissingFieldsHint missingFields={step1MissingFields} testId="bk-wizard-step1-missing" />
+                </div>
               </>
             )}
             {step === STEP_CONNECTION && (
               <>
                 <Button type="button" variant="outline" className="border-[#0f48aa] text-[#0f48aa]" onClick={() => setStep(STEP_BASIC)}>{t('common.back')}</Button>
-                <Button type="button" data-testid="bk-wizard-next-2" disabled={!step2Valid} onClick={() => setStep(STEP_HIVE)} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
-                  {t('forms.nextHiveDetails')}
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                  <Button type="button" data-testid="bk-wizard-next-2" disabled={!step2Valid} onClick={() => setStep(STEP_HIVE)} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
+                    {t('forms.nextHiveDetails')}
+                  </Button>
+                  <MissingFieldsHint missingFields={step2MissingFields} testId="bk-wizard-step2-missing" />
+                </div>
               </>
             )}
             {step === STEP_HIVE && (
