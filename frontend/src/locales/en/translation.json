@@ -487,7 +487,8 @@
     "totalHivesByCrop": "Total hives by crop",
     "hiveTotalsMustMatch": "these two totals must match to save",
     "otherTypeManually": "Other (type manually)",
-    "organisationNamePlaceholder": "Enter organisation name"
+    "organisationNamePlaceholder": "Enter organisation name",
+    "stillNeeded": "Still needed: {{fields}}"
   },
   "contractWizard": {
     "stepDetails": "Contract details",

@@ -487,7 +487,8 @@
     "totalHivesByCrop": "Total des ruches par culture",
     "hiveTotalsMustMatch": "ces deux totaux doivent correspondre pour enregistrer",
     "otherTypeManually": "Autre (saisir manuellement)",
-    "organisationNamePlaceholder": "Saisir le nom de l'organisation"
+    "organisationNamePlaceholder": "Saisir le nom de l'organisation",
+    "stillNeeded": "Encore nécessaire : {{fields}}"
   },
   "contractWizard": {
     "stepDetails": "Détails du contrat",

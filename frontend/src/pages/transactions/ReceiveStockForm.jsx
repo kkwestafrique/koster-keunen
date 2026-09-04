@@ -17,6 +17,7 @@ import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import SummaryField from '@/components/common/SummaryField';
+import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 
 const EMPTY_PRODUCT_ROW = { product: '', quantity: '', unit: 'Kg', price: '' };
 
@@ -73,6 +74,16 @@ export default function ReceiveStockForm() {
 
   const singleValid = form.standard && form.beekeeper_id
     && form.transaction_date && form.products.every((p) => p.product && p.quantity);
+
+  // Real gap found via independent audit (C5): the button was simply
+  // disabled with zero indication of what was missing. Computes the
+  // actual list of what's still needed, rather than just a boolean.
+  const singleMissingFields = [
+    !form.standard && t('contractWizard.standard'),
+    !form.beekeeper_id && t('receiveForm.beekeeperFullName'),
+    !form.transaction_date && t('receiveForm.transactionDate'),
+    !form.products.every((p) => p.product && p.quantity) && t('contractWizard.products'),
+  ].filter(Boolean);
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -235,9 +246,12 @@ export default function ReceiveStockForm() {
                 <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/transactions')}>
                   {t('contractWizard.back')}
                 </Button>
-                <Button type="button" data-testid="receive-review" disabled={!singleValid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={() => setStep(2)}>
-                  {t('contractWizard.reviewAndConfirm')}
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                  <Button type="button" data-testid="receive-review" disabled={!singleValid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={() => setStep(2)}>
+                    {t('contractWizard.reviewAndConfirm')}
+                  </Button>
+                  <MissingFieldsHint missingFields={singleMissingFields} testId="receive-missing-fields" />
+                </div>
               </div>
             </>
           )}

@@ -15,6 +15,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
 import SummaryField from '@/components/common/SummaryField';
+import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 // Send stock form (Transactions > Send). Per the live-site audit, Send has
@@ -98,6 +99,20 @@ export default function SendStockForm() {
 
   const valid = isAdmin && form.standard && form.destination_actor_id && form.product
     && form.quantity && form.transaction_date && selectedBatches.length > 0;
+
+  // Real gap found via independent audit (C5): the button was simply
+  // disabled with zero indication of what was missing. Computes the
+  // actual list of what's still needed -- deliberately excludes the
+  // isAdmin check above, since that's a permission gate a user can't
+  // resolve by filling in a field, not a form-completion gap.
+  const missingFields = [
+    !form.standard && t('contractWizard.standard'),
+    !form.destination_actor_id && t('sendForm.destinationActor'),
+    !form.product && t('contractWizard.product'),
+    !form.quantity && t('sendForm.quantityRequired'),
+    !form.transaction_date && t('receiveForm.transactionDate'),
+    selectedBatches.length === 0 && t('batchPicker.title'),
+  ].filter(Boolean);
 
   // Same real dead-end found live in Process Stock, applies identically
   // here -- surfacing the check directly on the main form rather than
@@ -308,9 +323,12 @@ export default function SendStockForm() {
           <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/send')}>
             {t('contractWizard.back')}
           </Button>
-          <Button type="button" data-testid="send-review" disabled={!valid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={() => setStep(2)}>
-            {t('contractWizard.reviewAndConfirm')}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button type="button" data-testid="send-review" disabled={!valid} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]" onClick={() => setStep(2)}>
+              {t('contractWizard.reviewAndConfirm')}
+            </Button>
+            {isAdmin && <MissingFieldsHint missingFields={missingFields} testId="send-missing-fields" />}
+          </div>
         </div>
 
         <BatchPickerModal
