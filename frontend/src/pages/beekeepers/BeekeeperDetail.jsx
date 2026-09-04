@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ChevronLeft } from 'lucide-react';
 import { useBeekeeper } from '@/hooks/useBeekeepers';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import HeaderCard from './HeaderCard';
 import DetailsTab from './DetailsTab';
 import OverviewTab from './OverviewTab';
@@ -24,6 +25,7 @@ export default function BeekeeperDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: bk, isLoading } = useBeekeeper(id);
+  usePageTitle(bk?.full_name);
 
   if (isLoading || !bk) {
     return (

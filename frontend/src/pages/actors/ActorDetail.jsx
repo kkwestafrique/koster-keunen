@@ -11,6 +11,7 @@ import { useActor } from '@/hooks/useActors';
 import { useConnectionBetween, useUpdateConnectionStatus } from '@/hooks/useConnections';
 import { useActorTransactions } from '@/hooks/useTransactions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -24,6 +25,7 @@ export default function ActorDetail() {
   const { profile } = useAuth();
   const { canEdit } = usePermissions();
   const { data: actor, isLoading } = useActor(id);
+  usePageTitle(actor?.contact_name);
   const { data: connection } = useConnectionBetween(profile?.current_actor_id, id);
   const updateConnectionStatus = useUpdateConnectionStatus();
   const { data: transactions = [] } = useActorTransactions(id);
