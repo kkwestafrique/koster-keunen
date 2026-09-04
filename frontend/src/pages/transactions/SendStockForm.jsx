@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -73,6 +73,14 @@ export default function SendStockForm() {
   const isAdmin = role === 'Admin';
 
   const [saving, setSaving] = useState(false);
+  // Real gap from the newest audit, applying the same fix already
+  // built for Receive Stock: disabled={saving} alone has a real race
+  // -- React's re-render (which actually updates the DOM's disabled
+  // attribute) isn't synchronous, so a genuinely fast double-click can
+  // fire handleSubmit twice before the button visually disables. A ref
+  // updates immediately, not on the next render, closing that gap
+  // regardless of render timing.
+  const submittingRef = useRef(false);
   const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming
   const [batchPickerOpen, setBatchPickerOpen] = useState(false);
   const [selectedBatches, setSelectedBatches] = useState([]);
@@ -141,6 +149,8 @@ export default function SendStockForm() {
   const totalAvailableForStandard = availableForStandard.reduce((sum, b) => sum + Number(b.quantity_available || 0), 0);
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSaving(true);
     try {
       const [createdRow] = await createTransaction.mutateAsync({
@@ -181,6 +191,7 @@ export default function SendStockForm() {
     } catch (err) {
       toast({ title: t('sendForm.createFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   };

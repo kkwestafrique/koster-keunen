@@ -227,6 +227,13 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
   const [multiMode, setMultiMode] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  // Real gap from the newest audit, same fix already built for the
+  // transaction-creating forms: disabled={saving} alone has a real
+  // race -- a genuinely fast double-click can fire handleFinalSubmit
+  // twice before React's next render actually disables the button. A
+  // ref updates immediately, closing that gap regardless of render
+  // timing.
+  const submittingRef = useRef(false);
   const findOrCreateVillage = useFindOrCreateVillage();
   const createBeekeeper = useCreateBeekeeper();
   const { data: actors = [] } = useAllActorsLite();
@@ -292,6 +299,8 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
   };
 
   const handleFinalSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSaving(true);
     try {
       const village_id = await findOrCreateVillage.mutateAsync({
@@ -329,6 +338,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
     } catch (err) {
       toast({ title: t('forms.beekeeperCreateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   };

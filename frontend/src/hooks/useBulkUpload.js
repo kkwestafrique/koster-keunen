@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/lib/supabaseClient';
@@ -282,6 +282,11 @@ export function useBulkUpload(templateKey) {
   const [parseError, setParseError] = useState(null);
   const [result, setResult] = useState(null);
   const [isHistorical, setIsHistorical] = useState(false);
+  // Same real gap and fix as the transaction forms: disabled={uploading}
+  // alone has a known race (React's re-render isn't synchronous), and
+  // this hook is shared by 3 different callers, so fixing it once here
+  // protects all of them consistently.
+  const submittingRef = useRef(false);
 
   const loadFile = useCallback(async (file) => {
     setFileName(file.name);
@@ -312,6 +317,8 @@ export function useBulkUpload(templateKey) {
   const errorCount = rows.length - validCount;
 
   const submit = useCallback(async (options = {}) => {
+    if (submittingRef.current) return { inserted: 0, failed: 0 };
+    submittingRef.current = true;
     setUploading(true);
     const validRows = rows.filter((r) => r.errors.length === 0).map((r) => ({
       ...r.data,

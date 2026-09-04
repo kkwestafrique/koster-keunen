@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -50,6 +50,12 @@ export default function ProcessStockForm() {
   const [mode, setMode] = useState('Processing'); // 'Processing' | 'Merging'
   const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming
   const [saving, setSaving] = useState(false);
+  // Real gap from the newest audit, same fix already built for Receive
+  // and Send Stock: disabled={saving} alone has a real race -- a
+  // genuinely fast double-click can fire handleSubmit twice before
+  // React's next render actually disables the button. A ref updates
+  // immediately, closing that gap regardless of render timing.
+  const submittingRef = useRef(false);
   const [batchPickerOpen, setBatchPickerOpen] = useState(false);
   const [selectedBatches, setSelectedBatches] = useState([]);
   const [form, setForm] = useState({
@@ -145,6 +151,8 @@ export default function ProcessStockForm() {
   const totalAvailableForStandard = availableForStandard.reduce((sum, b) => sum + Number(b.quantity_available || 0), 0);
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSaving(true);
     try {
       // CRITICAL fix (BUG-01): this used to create the transaction row
@@ -169,6 +177,7 @@ export default function ProcessStockForm() {
     } catch (err) {
       toast({ title: t('processForm.createFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   };

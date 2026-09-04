@@ -43,6 +43,12 @@ export default function ContractWizard() {
 
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+  // Real gap from the newest audit, same fix already built for the
+  // transaction-creating forms: disabled={saving} alone has a real
+  // race -- a genuinely fast double-click can fire handleSubmit twice
+  // before React's next render actually disables the button. A ref
+  // updates immediately, closing that gap regardless of render timing.
+  const submittingRef = useRef(false);
   const [contractFile, setContractFile] = useState(null);
   const fileInputRef = useRef(null);
   const [form, setForm] = useState({
@@ -190,6 +196,8 @@ export default function ContractWizard() {
   ].filter(Boolean);
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSaving(true);
     try {
       let attachment_url = null;
@@ -245,6 +253,7 @@ export default function ContractWizard() {
     } catch (err) {
       toast({ title: t('contractWizard.createFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   };

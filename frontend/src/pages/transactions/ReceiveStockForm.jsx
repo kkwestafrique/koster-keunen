@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -38,6 +38,7 @@ export default function ReceiveStockForm() {
   const [mode, setMode] = useState('single');
   const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming (single mode only -- multiple/bulk mode already has its own review table before import)
   const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
   const [form, setForm] = useState({
     standard: '',
     village_id: '',
@@ -105,6 +106,16 @@ export default function ReceiveStockForm() {
   ].filter(Boolean);
 
   const handleSubmit = async () => {
+    // Real gap from the newest audit: "Duplicate stock submission --
+    // Untested." The disabled={saving} button attribute alone has a
+    // real, known race: React's re-render (which actually updates the
+    // DOM's disabled attribute) isn't synchronous, so a genuinely fast
+    // double-click can fire this handler twice before the button
+    // visually disables. A ref updates immediately, not on the next
+    // render, so this guard closes that gap regardless of render
+    // timing.
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSaving(true);
     try {
       await createTransaction.mutateAsync({
@@ -125,6 +136,7 @@ export default function ReceiveStockForm() {
     } catch (err) {
       toast({ title: t('receiveForm.createFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   };
