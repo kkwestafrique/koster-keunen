@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
 import SummaryField from '@/components/common/SummaryField';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
+import { useUnsavedChanges, useConfirmedNavigate } from '@/contexts/UnsavedChangesContext';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const EMPTY_DESTINATION_ROW = { converted_product: '', quantity: '', unit: 'Kg' };
@@ -56,6 +57,18 @@ export default function ProcessStockForm() {
     destinations: [{ ...EMPTY_DESTINATION_ROW }],
     transaction_date: '',
   });
+
+  // Real gap found via independent audit (UF4): partially completing
+  // this form and clicking Back or a sidebar link silently discarded
+  // everything typed.
+  const { setHasUnsavedChanges } = useUnsavedChanges();
+  const confirmedNavigate = useConfirmedNavigate();
+  useEffect(() => {
+    const hasRealInput = !!(form.standard || form.source_product || form.source_quantity || form.transaction_date
+      || form.destinations.some((d) => d.converted_product || d.quantity));
+    setHasUnsavedChanges(hasRealInput);
+  }, [form, setHasUnsavedChanges]);
+  useEffect(() => () => setHasUnsavedChanges(false), [setHasUnsavedChanges]);
 
   const handleModeChange = (v) => {
     setMode(v);
@@ -162,7 +175,7 @@ export default function ProcessStockForm() {
     <AppLayout hideDefaultHeader>
       <button
         data-testid="process-breadcrumb-back"
-        onClick={() => navigate('/process')}
+        onClick={() => confirmedNavigate(() => navigate('/process'))}
         className="flex items-center gap-1 text-sm font-bold text-[#0f48aa] mb-3 hover:underline"
       >
         <ChevronLeft className="h-4 w-4" /> {t('common.back')}
@@ -316,7 +329,7 @@ export default function ProcessStockForm() {
             </div>
 
             <div className="flex justify-between mt-2">
-              <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/process')}>
+              <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => confirmedNavigate(() => navigate('/process'))}>
                 {t('contractWizard.back')}
               </Button>
               {/* Direct request: a preview/review step before the real

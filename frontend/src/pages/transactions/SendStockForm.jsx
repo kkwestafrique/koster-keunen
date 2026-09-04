@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import BatchPickerModal from '@/components/common/BatchPickerModal';
 import SummaryField from '@/components/common/SummaryField';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
+import { useUnsavedChanges, useConfirmedNavigate } from '@/contexts/UnsavedChangesContext';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 // Send stock form (Transactions > Send). Per the live-site audit, Send has
@@ -87,6 +88,19 @@ export default function SendStockForm() {
     // a contract behind them at all.
     contract_id: '',
   });
+
+  // Real gap found via independent audit (UF4): partially completing
+  // this form and clicking Back or a sidebar link silently discarded
+  // everything typed. Every field here starts genuinely empty, unlike
+  // Receive Stock's currency default, so any non-empty field means
+  // real input.
+  const { setHasUnsavedChanges } = useUnsavedChanges();
+  const confirmedNavigate = useConfirmedNavigate();
+  useEffect(() => {
+    const hasRealInput = Object.values(form).some((v) => !!v);
+    setHasUnsavedChanges(hasRealInput);
+  }, [form, setHasUnsavedChanges]);
+  useEffect(() => () => setHasUnsavedChanges(false), [setHasUnsavedChanges]);
 
   const { data: linkableContracts = [] } = useContractsForLinking('Send', form.destination_actor_id);
 
@@ -173,7 +187,7 @@ export default function SendStockForm() {
     <AppLayout hideDefaultHeader>
       <button
         data-testid="send-breadcrumb-back"
-        onClick={() => navigate('/send')}
+        onClick={() => confirmedNavigate(() => navigate('/send'))}
         className="flex items-center gap-1 text-sm font-bold text-[#0f48aa] mb-3 hover:underline"
       >
         <ChevronLeft className="h-4 w-4" /> {t('common.back')}
@@ -320,7 +334,7 @@ export default function SendStockForm() {
         )}
 
         <div className="flex justify-between mt-6">
-          <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/send')}>
+          <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => confirmedNavigate(() => navigate('/send'))}>
             {t('contractWizard.back')}
           </Button>
           <div className="flex flex-col items-end gap-1">
