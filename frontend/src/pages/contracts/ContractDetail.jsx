@@ -338,6 +338,7 @@ export default function ContractDetail() {
   const { id: contractCode } = useParams();
   const navigate = useNavigate();
   const { data: contract, isLoading } = useContract(contractCode);
+  usePageTitle(contract?.contract_code || contractCode);
   const { canEdit, canViewChangeHistory } = usePermissions();
   const [updateOpen, setUpdateOpen] = useState(false);
   const { isReadOnly, currentActor } = useActingActor();
