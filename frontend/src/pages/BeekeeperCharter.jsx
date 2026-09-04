@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Gap 1: the Sustainable Beekeeper Charter page didn't exist at all.
 // Content transcribed from the project's own Charter reference
@@ -106,6 +107,7 @@ function SectionHeading({ id, children }) {
 
 export default function BeekeeperCharter() {
   const { t } = useTranslation();
+  usePageTitle('Charter Sustainable beekeeping');
 
   return (
     <AppLayout hideDefaultHeader>

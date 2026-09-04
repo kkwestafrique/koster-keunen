@@ -8,6 +8,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useStock, useTransactionForStock } from '@/hooks/useStocks';
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
 import { usePermissions } from '@/hooks/usePermissions';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { formatDateTime } from '@/lib/dateFormat';
 
 // Gap 2: there was no way to click into a single stock batch to see its
@@ -20,6 +21,7 @@ export default function StockDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { data: stock, isLoading } = useStock(id);
+  usePageTitle(stock?.product);
   const { data: originTransaction } = useTransactionForStock(id);
   const { canViewChangeHistory } = usePermissions();
 

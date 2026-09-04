@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { formatDate } from '@/lib/dateFormat';
 
@@ -58,6 +59,7 @@ function BatchChips({ batches, testId }) {
 
 export default function TransactionDetail() {
   const { t } = useTranslation();
+  usePageTitle(t('transactionDetail.title'));
   const { id: transactionCode } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
