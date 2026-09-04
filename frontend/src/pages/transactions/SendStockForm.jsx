@@ -17,6 +17,7 @@ import BatchPickerModal from '@/components/common/BatchPickerModal';
 import SummaryField from '@/components/common/SummaryField';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 import { useUnsavedChanges, useConfirmedNavigate } from '@/contexts/UnsavedChangesContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 // Send stock form (Transactions > Send). Per the live-site audit, Send has
@@ -46,6 +47,7 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 // any of this Send work started.
 export default function SendStockForm() {
   const { t } = useTranslation();
+  usePageTitle(t('sendForm.title'));
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isReadOnly, currentActor } = useActingActor();

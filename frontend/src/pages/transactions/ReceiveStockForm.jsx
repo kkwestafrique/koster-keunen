@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import SummaryField from '@/components/common/SummaryField';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useUnsavedChanges, useConfirmedNavigate } from '@/contexts/UnsavedChangesContext';
 
 const EMPTY_PRODUCT_ROW = { product: '', quantity: '', unit: 'Kg', price: '' };
@@ -27,6 +28,7 @@ const EMPTY_PRODUCT_ROW = { product: '', quantity: '', unit: 'Kg', price: '' };
 // Multiple transaction (Excel template download + upload).
 export default function ReceiveStockForm() {
   const { t } = useTranslation();
+  usePageTitle(t('receiveForm.title'));
   const navigate = useNavigate();
   const { toast } = useToast();
   const createTransaction = useCreateTransaction();

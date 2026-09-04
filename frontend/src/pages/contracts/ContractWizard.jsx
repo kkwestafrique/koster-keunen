@@ -11,6 +11,7 @@ import StandardBadge from '@/components/common/StandardBadge';
 import SummaryField from '@/components/common/SummaryField';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 import { useUnsavedChanges, useConfirmedNavigate } from '@/contexts/UnsavedChangesContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Plus, Trash2 } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useCountries } from '@/hooks/useReferenceData';
@@ -30,6 +31,7 @@ const EMPTY_PRODUCT_ROW = { product: '', expected_quantity: '', unit: 'Kg', pric
 // Step 1 Contract details -> Step 2 Contract summary. Not a modal.
 export default function ContractWizard() {
   const { t } = useTranslation();
+  usePageTitle(t('contractWizard.title'));
   const navigate = useNavigate();
   const { toast } = useToast();
   const { supplyChainId, profile } = useAuth();

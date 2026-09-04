@@ -16,6 +16,7 @@ import BatchPickerModal from '@/components/common/BatchPickerModal';
 import SummaryField from '@/components/common/SummaryField';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 import { useUnsavedChanges, useConfirmedNavigate } from '@/contexts/UnsavedChangesContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
 const EMPTY_DESTINATION_ROW = { converted_product: '', quantity: '', unit: 'Kg' };
@@ -40,6 +41,7 @@ const EMPTY_DESTINATION_ROW = { converted_product: '', quantity: '', unit: 'Kg' 
 // Processing, not Merging.
 export default function ProcessStockForm() {
   const { t } = useTranslation();
+  usePageTitle(t('processForm.title'));
   const navigate = useNavigate();
   const { toast } = useToast();
   const processStock = useProcessStock();
