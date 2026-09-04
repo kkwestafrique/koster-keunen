@@ -11,6 +11,7 @@ import { useConstants } from '@/hooks/useConstants';
 import { useActingActor } from '@/hooks/useActors';
 import { formatDate } from '@/lib/dateFormat';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Gap 13: pageSize default was 5 -- the same default the real platform's
 // own audit flagged as a real usability problem (398 beekeepers = 80
@@ -25,6 +26,7 @@ const FILTER_DEFAULTS = { search: '', product: '', loggedBy: '', page: 1, pageSi
 // TransactionsList's shared shape, which was the bug this replaces.
 export default function ProcessingTransactionsList() {
   const { t } = useTranslation();
+  usePageTitle(t('processForm.listTitle'));
   const navigate = useNavigate();
   const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
   const { search, product, loggedBy, page, pageSize } = filters;

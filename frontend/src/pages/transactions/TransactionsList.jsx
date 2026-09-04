@@ -12,6 +12,7 @@ import { useConstants } from '@/hooks/useConstants';
 import { useActingActor } from '@/hooks/useActors';
 import { formatDate } from '@/lib/dateFormat';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Gap 13: pageSize default was 5 -- the same default the real platform's
 // own audit flagged as a real usability problem (398 beekeepers = 80
@@ -26,6 +27,7 @@ const FILTER_DEFAULTS = { search: '', product: '', loggedBy: '', source: '', sta
 // Product and a "logged by" person filter instead.
 export default function TransactionsList({ direction, title, actionLabel, testId }) {
   const { t } = useTranslation();
+  usePageTitle(title);
   const navigate = useNavigate();
   const NEW_ROUTES = {
     Received: '/transactions/received/new',

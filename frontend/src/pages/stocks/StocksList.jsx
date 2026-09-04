@@ -12,12 +12,14 @@ import { useStocks } from '@/hooks/useStocks';
 import { useConstants } from '@/hooks/useConstants';
 import { useAllVillagesLite } from '@/hooks/useVillages';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const FILTER_DEFAULTS = { search: '', product: '', standard: '', village: '', dateFrom: '', dateTo: '', page: 1, pageSize: 5 };
 
 // Shared list for Stocks > Raw material / Final product / Loss.
 export default function StocksList({ stockType, title, actionLabel, testId }) {
   const { t } = useTranslation();
+  usePageTitle(title);
   const navigate = useNavigate();
   const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
   const { search, product, standard, village, dateFrom, dateTo, page, pageSize } = filters;

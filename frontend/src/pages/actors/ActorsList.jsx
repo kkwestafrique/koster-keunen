@@ -13,6 +13,7 @@ import ActorFormDialog from '@/pages/actors/ActorFormDialog';
 import { ACTOR_TYPES } from '@/data/regions';
 import { useActorTypes } from '@/hooks/useActorTypes';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Matches the live site's Actor Type filter exactly — 'Buyer' is a valid
 // actor_type value elsewhere in the app but is not offered here or in the
@@ -29,6 +30,7 @@ const FILTER_DEFAULTS = { search: '', actorType: '', status: '', page: 1, pageSi
 
 export default function ActorsList({ title, testId }) {
   const { t } = useTranslation();
+  usePageTitle(title || t('actorsList.title'));
   const { profile } = useAuth();
   const { data: actorTypeOptions = ACTOR_TYPE_FILTER_OPTIONS } = useActorTypes();
   const [filters, setFilters] = useUrlFilters(FILTER_DEFAULTS);
