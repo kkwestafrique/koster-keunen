@@ -488,7 +488,8 @@
     "hiveTotalsMustMatch": "ces deux totaux doivent correspondre pour enregistrer",
     "otherTypeManually": "Autre (saisir manuellement)",
     "organisationNamePlaceholder": "Saisir le nom de l'organisation",
-    "stillNeeded": "Encore nécessaire : {{fields}}"
+    "stillNeeded": "Encore nécessaire : {{fields}}",
+    "unsavedChangesWarning": "Vous avez des modifications non enregistrées. Quitter cette page et les perdre ?"
   },
   "contractWizard": {
     "stepDetails": "Détails du contrat",

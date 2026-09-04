@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUnsavedChanges } from '@/contexts/UnsavedChangesContext';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -76,6 +77,14 @@ function NavIcon({ Icon, active }) {
 }
 
 function NavGroup({ item, currentPath, t }) {
+  const { hasUnsavedChanges, setHasUnsavedChanges } = useUnsavedChanges();
+  const handleNavClick = (e) => {
+    if (hasUnsavedChanges && !window.confirm(t('forms.unsavedChangesWarning'))) {
+      e.preventDefault();
+      return;
+    }
+    setHasUnsavedChanges(false);
+  };
   const isChildActive = item.children.some((c) => currentPath.startsWith(c.to));
   const [open, setOpen] = useState(isChildActive);
 
@@ -103,6 +112,7 @@ function NavGroup({ item, currentPath, t }) {
               key={child.to}
               to={child.to}
               data-testid={`sidebar-nav-${item.key}-${child.labelKey}`}
+              onClick={handleNavClick}
               className={({ isActive }) =>
                 `px-3 py-1.5 rounded-[4px] text-[13px] transition-colors ${
                   isActive ? 'text-[#0f48aa] font-bold' : 'text-[#032b71] font-normal hover:bg-white/60'
@@ -123,6 +133,15 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
   const { profile, switchActor } = useAuth();
   const { toast } = useToast();
   const { myActors, currentActor, isReadOnly } = useActingActor();
+  const { hasUnsavedChanges, setHasUnsavedChanges } = useUnsavedChanges();
+
+  const handleNavClick = (e) => {
+    if (hasUnsavedChanges && !window.confirm(t('forms.unsavedChangesWarning'))) {
+      e.preventDefault();
+      return;
+    }
+    setHasUnsavedChanges(false);
+  };
 
   const handleSwitch = async (actorId) => {
     try {
@@ -175,6 +194,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
                 to={item.to}
                 end
                 data-testid={`sidebar-nav-${item.key}`}
+                onClick={handleNavClick}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-full text-[14px] transition-colors ${
                     isActive ? 'bg-[#0f48aa] text-white font-bold' : 'text-[#032b71] font-normal hover:bg-white/60'

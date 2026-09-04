@@ -2,6 +2,7 @@ import React from 'react';
 import '@/App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { UnsavedChangesProvider } from '@/contexts/UnsavedChangesContext';
 import { Toaster } from '@/components/ui/toaster';
 import Login from '@/pages/Login';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -150,7 +151,9 @@ function App() {
     <div className="App">
       <AuthProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <UnsavedChangesProvider>
+            <AppRoutes />
+          </UnsavedChangesProvider>
         </BrowserRouter>
         <Toaster />
       </AuthProvider>

@@ -488,7 +488,8 @@
     "hiveTotalsMustMatch": "these two totals must match to save",
     "otherTypeManually": "Other (type manually)",
     "organisationNamePlaceholder": "Enter organisation name",
-    "stillNeeded": "Still needed: {{fields}}"
+    "stillNeeded": "Still needed: {{fields}}",
+    "unsavedChangesWarning": "You have unsaved changes. Leave this page and lose them?"
   },
   "contractWizard": {
     "stepDetails": "Contract details",
