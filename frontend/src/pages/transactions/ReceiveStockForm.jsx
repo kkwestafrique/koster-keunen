@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import SummaryField from '@/components/common/SummaryField';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
+import { useUnsavedChanges, useConfirmedNavigate } from '@/contexts/UnsavedChangesContext';
 
 const EMPTY_PRODUCT_ROW = { product: '', quantity: '', unit: 'Kg', price: '' };
 
@@ -43,6 +44,22 @@ export default function ReceiveStockForm() {
     products: [{ ...EMPTY_PRODUCT_ROW }],
     transaction_date: '',
   });
+
+  // Real gap found via independent audit (UF4): partially completing
+  // this exact form and clicking Back or a sidebar link silently
+  // discarded everything typed. Real unsaved input is anything beyond
+  // the untouched defaults above -- currency starts at a real,
+  // non-empty default ('NGN'), so it's deliberately excluded from this
+  // check; picking a currency alone isn't really "data entered" in the
+  // way filling in a real field is.
+  const { setHasUnsavedChanges } = useUnsavedChanges();
+  const confirmedNavigate = useConfirmedNavigate();
+  useEffect(() => {
+    const hasRealInput = !!(form.standard || form.village_id || form.beekeeper_id || form.transaction_date
+      || form.products.some((p) => p.product || p.quantity));
+    setHasUnsavedChanges(hasRealInput);
+  }, [form, setHasUnsavedChanges]);
+  useEffect(() => () => setHasUnsavedChanges(false), [setHasUnsavedChanges]);
 
   // Real dead-end found live: the Village filter used to list every
   // village in the whole supply chain (useAllVillagesLite), regardless
@@ -119,7 +136,7 @@ export default function ReceiveStockForm() {
           form. */}
       <button
         data-testid="receive-breadcrumb-back"
-        onClick={() => navigate('/transactions')}
+        onClick={() => confirmedNavigate(() => navigate('/transactions'))}
         className="flex items-center gap-1 text-sm font-bold text-[#0f48aa] mb-3 hover:underline"
       >
         <ChevronLeft className="h-4 w-4" /> {t('common.back')}
@@ -243,7 +260,7 @@ export default function ReceiveStockForm() {
               </Button>
 
               <div className="flex justify-between mt-4">
-                <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/transactions')}>
+                <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => confirmedNavigate(() => navigate('/transactions'))}>
                   {t('contractWizard.back')}
                 </Button>
                 <div className="flex flex-col items-end gap-1">
