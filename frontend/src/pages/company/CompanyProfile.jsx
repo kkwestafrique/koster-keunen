@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
+import { useUnsavedChanges } from '@/contexts/UnsavedChangesContext';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import DetailField from '@/components/common/DetailField';
@@ -66,6 +67,26 @@ export default function CompanyProfile() {
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({ name: '', email: '', role: '' });
+
+  // Real gap found via independent audit (UF4): partially filling this
+  // dialog and dismissing it (Cancel, Escape, or the backdrop) silently
+  // discarded it, with no warning. Learned from a real bug caught while
+  // wiring the same guard into AddBeekeeperDialog: a single close
+  // function, checked first, used by every real dismiss path -- not
+  // separate implementations for Cancel vs. the Dialog element's own
+  // onOpenChange, which could quietly drift apart or let one bypass
+  // the other.
+  const { hasUnsavedChanges, setHasUnsavedChanges } = useUnsavedChanges();
+  useEffect(() => {
+    setHasUnsavedChanges(!!(inviteForm.name || inviteForm.email || inviteForm.role));
+  }, [inviteForm, setHasUnsavedChanges]);
+  useEffect(() => () => setHasUnsavedChanges(false), [setHasUnsavedChanges]);
+  const attemptCloseInvite = () => {
+    if (hasUnsavedChanges && !window.confirm(t('forms.unsavedChangesWarning'))) return;
+    setHasUnsavedChanges(false);
+    setInviteOpen(false);
+    setInviteForm({ name: '', email: '', role: '' });
+  };
   const [editRoleFor, setEditRoleFor] = useState(null); // member object
   const [roleValue, setRoleValue] = useState('');
 
@@ -112,8 +133,8 @@ export default function CompanyProfile() {
     try {
       await inviteMember.mutateAsync({ actorId, ...inviteForm });
       toast({ title: t('companyProfile.memberInvited') });
-      setInviteOpen(false);
-      setInviteForm({ name: '', email: '', role: '' });
+      setHasUnsavedChanges(false);
+      attemptCloseInvite();
     } catch (err) {
       toast({ title: t('companyProfile.inviteFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }
@@ -479,7 +500,7 @@ export default function CompanyProfile() {
       </div>
 
       {/* Invite member dialog */}
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+      <Dialog open={inviteOpen} onOpenChange={(v) => { if (v) setInviteOpen(v); else attemptCloseInvite(); }}>
         <DialogContent className="max-w-md bg-white" data-testid="invite-member-dialog">
           <DialogHeader>
             <DialogTitle className="text-[#032b71] font-black">{t('companyProfile.inviteMember')}</DialogTitle>
@@ -508,7 +529,7 @@ export default function CompanyProfile() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => setInviteOpen(false)}>{t('common.cancel')}</Button>
+            <Button variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={attemptCloseInvite}>{t('common.cancel')}</Button>
             <div className="flex flex-col items-end gap-1">
               <Button
                 data-testid="invite-submit"

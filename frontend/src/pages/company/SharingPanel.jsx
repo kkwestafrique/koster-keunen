@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RequiredLabel from '@/components/common/RequiredLabel';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
+import { useUnsavedChanges } from '@/contexts/UnsavedChangesContext';
 import { Plus, X } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
@@ -40,6 +41,24 @@ function ShareAccessDialog({ open, onOpenChange }) {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ email: '', module: '', permissionLevel: '' });
 
+  // Real gap found via independent audit (UF4): partially filling this
+  // dialog and dismissing it (Cancel, Escape, or the backdrop) silently
+  // discarded it. Same single-close-path pattern used consistently
+  // across every other form using this guard, after a real bug was
+  // found and fixed while wiring AddBeekeeperDialog: one function,
+  // checked first, used by every real dismiss path.
+  const { hasUnsavedChanges, setHasUnsavedChanges } = useUnsavedChanges();
+  useEffect(() => {
+    setHasUnsavedChanges(!!(form.email || form.module || form.permissionLevel));
+  }, [form, setHasUnsavedChanges]);
+  useEffect(() => () => setHasUnsavedChanges(false), [setHasUnsavedChanges]);
+  const attemptClose = () => {
+    if (hasUnsavedChanges && !window.confirm(t('forms.unsavedChangesWarning'))) return;
+    setHasUnsavedChanges(false);
+    setForm({ email: '', module: '', permissionLevel: '' });
+    onOpenChange(false);
+  };
+
   const valid = form.email && form.module && form.permissionLevel;
   // Real gap found via independent audit (C5): the button was simply
   // disabled with zero indication of what was missing.
@@ -58,8 +77,8 @@ function ShareAccessDialog({ open, onOpenChange }) {
         permissionLevel: form.permissionLevel,
       });
       toast({ title: t('sharing.grantCreated') });
-      setForm({ email: '', module: '', permissionLevel: '' });
-      onOpenChange(false);
+      setHasUnsavedChanges(false);
+      attemptClose();
     } catch (err) {
       // Surfaces the RPC's own real error message (e.g. "No account found
       // for that email") rather than a generic failure — the RPC already
@@ -71,7 +90,7 @@ function ShareAccessDialog({ open, onOpenChange }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (v) onOpenChange(v); else attemptClose(); }}>
       <DialogContent className="max-w-md bg-white">
         <DialogHeader>
           <DialogTitle className="text-[#032b71] font-black">{t('sharing.shareAccess')}</DialogTitle>
@@ -119,7 +138,7 @@ function ShareAccessDialog({ open, onOpenChange }) {
         </div>
 
         <DialogFooter className="mt-2">
-          <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={attemptClose}>
             {t('common.cancel')}
           </Button>
           <div className="flex flex-col items-end gap-1">
