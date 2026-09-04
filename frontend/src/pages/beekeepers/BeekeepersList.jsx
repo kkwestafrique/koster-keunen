@@ -37,7 +37,7 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
 
   const { data: villages = [] } = useAllVillagesLite();
 
-  const { data, isLoading } = useBeekeepers({
+  const { data, isLoading, isError, refetch } = useBeekeepers({
     page,
     pageSize,
     search,
@@ -123,6 +123,8 @@ export default function BeekeepersList({ fixedStatus, title, testId }) {
         showFirstLast
         onPageChange={setPage}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyMessage={t('common.noRecordsFound')}
         onRowClick={(row) => navigate(`/beekeepers/${row.id}`)}
       />

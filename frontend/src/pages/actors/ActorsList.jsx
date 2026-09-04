@@ -53,7 +53,7 @@ export default function ActorsList({ title, testId }) {
   // where browsing everyone is a genuine, distinct, deliberate need.
   const connectedOnly = true;
 
-  const { data, isLoading } = useActors({
+  const { data, isLoading, isError, refetch } = useActors({
     page,
     pageSize,
     search,
@@ -147,6 +147,8 @@ export default function ActorsList({ title, testId }) {
         showFirstLast={false}
         onPageChange={setPage}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyMessage={t('common.noRecordsFound')}
         onRowClick={(row) => navigate(`/actors/${row.id}`)}
       />

@@ -33,7 +33,7 @@ export default function VerificationQueue() {
   usePageTitle(t('verification.title'));
   const { toast } = useToast();
   const { canApprove, canDelete } = usePermissions();
-  const { data: claims = [], isLoading } = usePendingClaims();
+  const { data: claims = [], isLoading, isError, refetch } = usePendingClaims();
   const verifyClaim = useVerifyClaim();
   const rejectClaim = useRejectClaim();
   const deleteClaim = useDeleteClaim();
@@ -154,6 +154,8 @@ export default function VerificationQueue() {
         page={1}
         pageSize={claims.length || 1}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyMessage={t('verification.noPendingClaims')}
       />
 

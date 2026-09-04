@@ -38,7 +38,7 @@ export default function VillagesList() {
   const { toast } = useToast();
   const deleteVillage = useDeleteVillage();
 
-  const { data, isLoading } = useVillages({ page, search });
+  const { data, isLoading, isError, refetch } = useVillages({ page, search });
 
   const handleDelete = async () => {
     try {
@@ -115,6 +115,8 @@ export default function VillagesList() {
         page={page}
         onPageChange={setPage}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
       />
 
       <VillageFormDialog open={formOpen} onOpenChange={setFormOpen} />

@@ -44,7 +44,7 @@ export default function ConnectionsList() {
   const setYear = (v) => setFilters({ year: v, page: 1 });
   const [formOpen, setFormOpen] = useState(false);
 
-  const { data, isLoading } = useConnections({ page, pageSize, search, status, year });
+  const { data, isLoading, isError, refetch } = useConnections({ page, pageSize, search, status, year });
   const { profile } = useAuth();
   const { canApprove, canDelete } = usePermissions();
   const { toast } = useToast();
@@ -172,6 +172,8 @@ export default function ConnectionsList() {
         onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onPageChange={setPage}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
       />
 
       <ConnectionFormDialog open={formOpen} onOpenChange={setFormOpen} />
