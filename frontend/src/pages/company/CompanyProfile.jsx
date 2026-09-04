@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import DetailField from '@/components/common/DetailField';
@@ -124,6 +125,16 @@ export default function CompanyProfile() {
   // the disabled check only tested for a non-empty string. A real
   // format check, not just presence.
   const inviteEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteForm.email);
+  // Real gap found via independent audit (C5): Name and Role had no
+  // feedback at all when missing -- only email's invalid-format case
+  // already had its own message. Email is deliberately only included
+  // here when genuinely empty; the invalid-format case keeps its
+  // existing, more specific message rather than being duplicated here.
+  const inviteMissingFields = [
+    !inviteForm.name && t('companyProfile.memberFullName'),
+    !inviteForm.email && t('companyProfile.memberEmail'),
+    !inviteForm.role && t('companyProfile.memberRole'),
+  ].filter(Boolean);
   const submitRoleEdit = async () => {
     try {
       await updateRole.mutateAsync({ id: editRoleFor.id, actorId, role: roleValue });
@@ -498,14 +509,17 @@ export default function CompanyProfile() {
           </div>
           <DialogFooter>
             <Button variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => setInviteOpen(false)}>{t('common.cancel')}</Button>
-            <Button
-              data-testid="invite-submit"
-              disabled={!inviteForm.name || !inviteEmailValid || !inviteForm.role || inviteMember.isPending}
-              className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
-              onClick={submitInvite}
-            >
-              {inviteMember.isPending ? t('forms.saving') : t('companyProfile.sendInvite')}
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              <Button
+                data-testid="invite-submit"
+                disabled={!inviteForm.name || !inviteEmailValid || !inviteForm.role || inviteMember.isPending}
+                className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+                onClick={submitInvite}
+              >
+                {inviteMember.isPending ? t('forms.saving') : t('companyProfile.sendInvite')}
+              </Button>
+              {inviteEmailValid && <MissingFieldsHint missingFields={inviteMissingFields} testId="invite-missing-fields" />}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

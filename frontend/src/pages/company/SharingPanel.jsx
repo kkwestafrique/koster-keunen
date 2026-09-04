@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RequiredLabel from '@/components/common/RequiredLabel';
+import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 import { Plus, X } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
@@ -40,6 +41,13 @@ function ShareAccessDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ email: '', module: '', permissionLevel: '' });
 
   const valid = form.email && form.module && form.permissionLevel;
+  // Real gap found via independent audit (C5): the button was simply
+  // disabled with zero indication of what was missing.
+  const missingFields = [
+    !form.email && t('sharing.personEmail'),
+    !form.module && t('sharing.module'),
+    !form.permissionLevel && t('sharing.permissionLevel'),
+  ].filter(Boolean);
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -114,15 +122,18 @@ function ShareAccessDialog({ open, onOpenChange }) {
           <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => onOpenChange(false)}>
             {t('common.cancel')}
           </Button>
-          <Button
-            type="button"
-            data-testid="sharing-submit"
-            disabled={!valid || saving}
-            onClick={handleSubmit}
-            className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
-          >
-            {saving ? t('forms.saving') : t('sharing.shareAccess')}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              type="button"
+              data-testid="sharing-submit"
+              disabled={!valid || saving}
+              onClick={handleSubmit}
+              className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+            >
+              {saving ? t('forms.saving') : t('sharing.shareAccess')}
+            </Button>
+            <MissingFieldsHint missingFields={missingFields} testId="sharing-missing-fields" />
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
