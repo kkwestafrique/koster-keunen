@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StandardBadge from '@/components/common/StandardBadge';
 import SummaryField from '@/components/common/SummaryField';
+import MissingFieldsHint from '@/components/common/MissingFieldsHint';
 import { Plus, Trash2 } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useCountries } from '@/hooks/useReferenceData';
@@ -140,6 +141,21 @@ export default function ContractWizard() {
       p.product && Number(p.expected_quantity) > 0
       && (p.price === '' || p.price == null || Number(p.price) >= 0)
     );
+
+  // Real gap found via independent audit (C5): the button was simply
+  // disabled with zero indication of what was missing. Computes the
+  // actual list of what's still needed, matching detailsValid's real
+  // checks exactly -- including the product-line conditions (a real
+  // product selected, a real positive expected quantity), summarized
+  // as one entry rather than per-row detail given this can be a
+  // repeating list.
+  const detailsMissingFields = [
+    !form.year && t('contractWizard.year'),
+    !form.standard && t('contractWizard.standard'),
+    !form.currency && t('contractWizard.currency'),
+    !form.signature_date && t('contractWizard.signatureDate'),
+    !form.products.every((p) => p.product && Number(p.expected_quantity) > 0) && t('contractWizard.products'),
+  ].filter(Boolean);
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -350,15 +366,18 @@ export default function ContractWizard() {
                 <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/contracts')}>
                   {t('contractWizard.back')}
                 </Button>
-                <Button
-                  type="button"
-                  data-testid="contract-continue"
-                  disabled={!detailsValid}
-                  className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
-                  onClick={() => setStep(2)}
-                >
-                  {t('contractWizard.continue')}
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                  <Button
+                    type="button"
+                    data-testid="contract-continue"
+                    disabled={!detailsValid}
+                    className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+                    onClick={() => setStep(2)}
+                  >
+                    {t('contractWizard.continue')}
+                  </Button>
+                  <MissingFieldsHint missingFields={detailsMissingFields} testId="contract-missing-fields" />
+                </div>
               </div>
             </div>
           ) : (
