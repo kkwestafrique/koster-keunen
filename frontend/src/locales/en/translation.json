@@ -105,7 +105,8 @@
     "setupFailed": "Failed to set up your password",
     "linkExpiredTitle": "Invite link expired!!",
     "tryAgain": "Try again?",
-    "login": "Login"
+    "login": "Login",
+    "pageTitle": "Set Up Password"
   },
   "dashboard": {
     "title": "Dashboard",

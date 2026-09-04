@@ -2,6 +2,7 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/lib/supabaseClient';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import { Lock, KeyRound, Link2Off, Eye, EyeOff } from 'lucide-react';
 // of the plain reset copy.
 export default function SetUpPassword() {
   const { t } = useTranslation();
+  usePageTitle(t('setUpPassword.pageTitle'));
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
   const [validLink, setValidLink] = useState(false);

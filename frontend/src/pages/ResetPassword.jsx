@@ -2,6 +2,7 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/lib/supabaseClient';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 // that would just fail on submit.
 export default function ResetPassword() {
   const { t } = useTranslation();
+  usePageTitle(t('resetPassword.title'));
   const navigate = useNavigate();
   const { toast } = useToast();
   const [checking, setChecking] = useState(true);

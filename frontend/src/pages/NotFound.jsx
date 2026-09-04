@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Real bug found via independent audit (BUG-42): "Unknown routes
 // redirect silently to the dashboard; there is no 404 page." Someone
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 // doesn't exist."
 export default function NotFound() {
   const { t } = useTranslation();
+  usePageTitle(t('notFound.title'));
   const navigate = useNavigate();
   return (
     <AppLayout hideDefaultHeader>

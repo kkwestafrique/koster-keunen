@@ -2,6 +2,7 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { supabase } from '@/lib/supabaseClient';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ const LANGUAGES = [
 // /reset-password, which is where Supabase's recovery link lands the person.
 export default function ForgotPassword() {
   const { t, i18n } = useTranslation();
+  usePageTitle(t('forgotPassword.title'));
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);

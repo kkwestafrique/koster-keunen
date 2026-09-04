@@ -105,7 +105,8 @@
     "setupFailed": "Échec de la configuration du mot de passe",
     "linkExpiredTitle": "Le lien d'invitation a expiré !!",
     "tryAgain": "Réessayer ?",
-    "login": "Connexion"
+    "login": "Connexion",
+    "pageTitle": "Configurer le mot de passe"
   },
   "dashboard": {
     "title": "Tableau de bord",

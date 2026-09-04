@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇬🇧' },
@@ -54,6 +55,7 @@ function LanguageSwitcher() {
 
 export default function Login() {
   const { t } = useTranslation();
+  usePageTitle(t('login.title'));
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
