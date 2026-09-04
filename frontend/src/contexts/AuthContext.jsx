@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { identifyUser, resetIdentity } from '@/lib/posthog';
 import i18n from 'i18next';
+import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 const AuthContext = createContext(null);
 
@@ -11,6 +13,21 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null); // row from user_accounts
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
+  // Real gap found via the newest audit: session expiry redirected to
+  // login with zero explanation -- indistinguishable from a random,
+  // unexplained navigation bug. Distinguishing "the token genuinely
+  // expired" from "the person explicitly clicked Logout" needs the
+  // PRIOR session state and whether this specific transition was
+  // requested by signOut() itself -- both tracked via refs rather than
+  // the session state variable directly, since onAuthStateChange below
+  // is registered once in a useEffect and would otherwise see a stale
+  // closure over session's value, the same class of bug found and
+  // fixed earlier this session while wiring AddBeekeeperDialog's close
+  // guard.
+  const hadSessionRef = useRef(false);
+  const isExplicitSignOutRef = useRef(false);
+  const { toast } = useToast();
+  const { t } = useTranslation();
 
   const loadProfile = useCallback(async (userId) => {
     if (!userId) {
@@ -45,16 +62,29 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      hadSessionRef.current = !!data.session;
       loadProfile(data.session?.user?.id).finally(() => setLoading(false));
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      // Real gap found via the newest audit: session expiry redirected
+      // to login with zero explanation. A real, involuntary expiry is
+      // exactly this transition -- we genuinely had a session, and now
+      // we don't, and it wasn't this app itself calling signOut(). An
+      // explicit Logout click (or the existing forced-logout-on-role-
+      // change path below) sets isExplicitSignOutRef first, so this
+      // never fires for either of those real, intentional cases.
+      if (hadSessionRef.current && !currentSession && !isExplicitSignOutRef.current) {
+        toast({ title: t('auth.sessionExpiredTitle'), description: t('auth.sessionExpiredDescription') });
+      }
+      isExplicitSignOutRef.current = false;
+      hadSessionRef.current = !!currentSession;
       setSession(currentSession);
       loadProfile(currentSession?.user?.id);
     });
 
     return () => subscription.subscription.unsubscribe();
-  }, [loadProfile]);
+  }, [loadProfile, toast, t]);
 
   // Gap 11: previously nothing detected a role change mid-session at all
   // -- someone's screen could keep showing buttons for a role they no
@@ -78,6 +108,7 @@ export function AuthProvider({ children }) {
           const oldRole = payload.old?.role;
           const newRole = payload.new?.role;
           if (oldRole && newRole && oldRole !== newRole) {
+            toast({ title: t('auth.roleChangedTitle'), description: t('auth.roleChangedDescription') });
             signOut();
           }
         }
@@ -87,7 +118,7 @@ export function AuthProvider({ children }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, toast, t]);
 
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -97,6 +128,7 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
+    isExplicitSignOutRef.current = true;
     await supabase.auth.signOut();
     resetIdentity();
   };

@@ -896,5 +896,11 @@
     "title": "Page not found",
     "description": "The page you're looking for doesn't exist or may have been moved.",
     "goToDashboard": "Go to Dashboard"
+  },
+  "auth": {
+    "sessionExpiredTitle": "Session expired",
+    "sessionExpiredDescription": "Your session has expired. Please log in again.",
+    "roleChangedTitle": "Your role has changed",
+    "roleChangedDescription": "Please log in again to continue with your updated permissions."
   }
 }

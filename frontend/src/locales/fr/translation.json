@@ -896,5 +896,11 @@
     "title": "Page introuvable",
     "description": "La page que vous recherchez n'existe pas ou a peut-être été déplacée.",
     "goToDashboard": "Aller au tableau de bord"
+  },
+  "auth": {
+    "sessionExpiredTitle": "Session expirée",
+    "sessionExpiredDescription": "Votre session a expiré. Veuillez vous reconnecter.",
+    "roleChangedTitle": "Votre rôle a changé",
+    "roleChangedDescription": "Veuillez vous reconnecter pour continuer avec vos permissions mises à jour."
   }
 }
