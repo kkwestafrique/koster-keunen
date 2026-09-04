@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import RequiredLabel from '@/components/common/RequiredLabel';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
+import { useUnsavedChanges } from '@/contexts/UnsavedChangesContext';
 import AddressFields from '@/components/common/AddressFields';
 import PhoneInput from '@/components/common/PhoneInput';
 import { STANDARDS, COMMITMENT_OF_BEEKEEPER, HIVE_SPREAD_CROPS } from '@/data/regions';
@@ -229,6 +230,20 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
   const findOrCreateVillage = useFindOrCreateVillage();
   const createBeekeeper = useCreateBeekeeper();
   const { data: actors = [] } = useAllActorsLite();
+
+  // Real gap found via independent audit (UF4): partially completing
+  // this dialog and dismissing it (Cancel, Escape, or clicking the
+  // backdrop) silently discarded everything entered, with no warning.
+  // Tracked via the shared context (not just a local check) so the
+  // sidebar's own links also correctly warn while this dialog has real
+  // unsaved input open, matching every other form using this same
+  // infrastructure.
+  const { hasUnsavedChanges, setHasUnsavedChanges } = useUnsavedChanges();
+  useEffect(() => {
+    setHasUnsavedChanges(JSON.stringify(form) !== JSON.stringify(EMPTY));
+  }, [form, setHasUnsavedChanges]);
+  useEffect(() => () => setHasUnsavedChanges(false), [setHasUnsavedChanges]);
+
   const { toast } = useToast();
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
@@ -258,7 +273,23 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
   ].filter(Boolean);
 
   const reset = () => { setForm(EMPTY); setStep(STEP_BASIC); setMultiMode(false); };
-  const handleClose = () => { reset(); onOpenChange(false); };
+  // Real bug found and fixed while wiring UF4's guard into this dialog:
+  // the previous handleClose called reset() unconditionally BEFORE
+  // onOpenChange(false) -- meaning even if a confirmation had been
+  // added around the close itself, the data would already be wiped by
+  // the time that check could ever say no. And since handleClose called
+  // the component's own onOpenChange prop directly (not the wrapped
+  // version on the <Dialog> element below), the explicit Cancel button
+  // was bypassing any confirmation check entirely -- only Escape/
+  // backdrop dismissal would have ever seen it. One single close path
+  // now, checked first, used by Cancel, Escape, backdrop, and the
+  // dialog element's own onOpenChange -- nothing can skip it.
+  const attemptClose = () => {
+    if (hasUnsavedChanges && !window.confirm(t('forms.unsavedChangesWarning'))) return;
+    setHasUnsavedChanges(false);
+    reset();
+    onOpenChange(false);
+  };
 
   const handleFinalSubmit = async () => {
     setSaving(true);
@@ -293,7 +324,8 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
         village_id,
       });
       toast({ title: t('forms.beekeeperCreated'), description: t('forms.beekeeperCreatedDescription', { name: form.full_name }) });
-      handleClose();
+      setHasUnsavedChanges(false);
+      attemptClose();
     } catch (err) {
       toast({ title: t('forms.beekeeperCreateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     } finally {
@@ -304,7 +336,10 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
   const stepTitle = step === STEP_BASIC ? t('forms.basicDetails') : step === STEP_CONNECTION ? t('forms.connectionDetails') : t('forms.hiveDetails');
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => { if (v) onOpenChange(v); else attemptClose(); }}
+    >
       <DialogContent className="max-w-4xl bg-white max-h-[90vh] overflow-y-auto" data-testid="add-beekeeper-dialog">
         <DialogHeader>
           <DialogTitle className="text-[#032b71] font-black">{t('forms.addBeekeeper')}</DialogTitle>
@@ -314,7 +349,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
         <div className="flex gap-6 items-start">
           <div className="flex-1 flex flex-col gap-4">
             {multiMode ? (
-              <MultiUploadBody onDone={handleClose} />
+              <MultiUploadBody onDone={attemptClose} />
             ) : (
               <>
                 {step === STEP_BASIC && (
@@ -543,7 +578,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
           <DialogFooter className="mt-2">
             {step === STEP_BASIC && (
               <>
-                <Button type="button" variant="ghost" className="text-[#0f48aa]" onClick={handleClose}>{t('common.cancel')}</Button>
+                <Button type="button" variant="ghost" className="text-[#0f48aa]" onClick={attemptClose}>{t('common.cancel')}</Button>
                 <div className="flex flex-col items-end gap-1">
                   <Button type="button" data-testid="bk-wizard-next-1" disabled={!step1Valid} onClick={() => setStep(STEP_CONNECTION)} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
                     {t('forms.nextConnectionDetails')}

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import StandardBadge from '@/components/common/StandardBadge';
 import SummaryField from '@/components/common/SummaryField';
 import MissingFieldsHint from '@/components/common/MissingFieldsHint';
+import { useUnsavedChanges, useConfirmedNavigate } from '@/contexts/UnsavedChangesContext';
 import { Plus, Trash2 } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useCountries } from '@/hooks/useReferenceData';
@@ -52,6 +53,22 @@ export default function ContractWizard() {
     comments: '',
     signature_date: '',
   });
+
+  // Real gap found via independent audit (UF4): partially completing
+  // this form and clicking Back or a sidebar link silently discarded
+  // everything typed. Advancing from Step 2 (Summary) back to Step 1
+  // doesn't lose any data at all -- it's just switching which step is
+  // displayed, the form state persists -- so that internal step change
+  // deliberately isn't part of this check at all.
+  const { setHasUnsavedChanges } = useUnsavedChanges();
+  const confirmedNavigate = useConfirmedNavigate();
+  useEffect(() => {
+    const hasRealInput = !!(form.year || form.standard || form.supplier_actor_id || form.currency
+      || form.advance_amount_paid || form.comments || form.signature_date
+      || form.products.some((p) => p.product || p.expected_quantity || p.price));
+    setHasUnsavedChanges(hasRealInput);
+  }, [form, setHasUnsavedChanges]);
+  useEffect(() => () => setHasUnsavedChanges(false), [setHasUnsavedChanges]);
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -376,7 +393,7 @@ export default function ContractWizard() {
               </div>
 
               <div className="col-span-full flex justify-between mt-2">
-                <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => navigate('/contracts')}>
+                <Button type="button" variant="outline" className="border-[#cfd8e6] text-[#032b71]" onClick={() => confirmedNavigate(() => navigate('/contracts'))}>
                   {t('contractWizard.back')}
                 </Button>
                 <div className="flex flex-col items-end gap-1">
