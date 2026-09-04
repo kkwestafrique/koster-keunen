@@ -40,7 +40,7 @@ export default function ProcessingTransactionsList() {
   const { data: products = [] } = useConstants('product_type');
   const { data: loggers = [] } = useTransactionLoggers();
 
-  const { data, isLoading } = useTransactions({ direction: 'Processing', page, pageSize, search, product, loggedBy });
+  const { data, isLoading, isError, refetch } = useTransactions({ direction: 'Processing', page, pageSize, search, product, loggedBy });
 
   const columns = [
     { key: 'transaction_date', label: t('transactions.date'), render: (row) => formatDate(row.transaction_date) },
@@ -112,6 +112,8 @@ export default function ProcessingTransactionsList() {
         onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onPageChange={setPage}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyMessage={t('common.noRecordsFound')}
         onRowClick={(row) => navigate(`/transactions/processing/${row.transaction_code}`)}
       />

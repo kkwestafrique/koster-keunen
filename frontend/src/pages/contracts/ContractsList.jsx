@@ -47,7 +47,7 @@ export default function ContractsList() {
 
   const { data: countries = [] } = useCountries();
 
-  const { data, isLoading } = useContracts({ page, pageSize, search, country, contractType });
+  const { data, isLoading, isError, refetch } = useContracts({ page, pageSize, search, country, contractType });
 
   const columns = [
     { key: 'year', sortable: true, label: t('contracts.year') },
@@ -180,6 +180,8 @@ export default function ContractsList() {
         onPageChange={setPage}
         onRowClick={(row) => navigate(`/contracts/${row.contract_code}`)}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyMessage={t('common.noContractsFound')}
       />
     </AppLayout>

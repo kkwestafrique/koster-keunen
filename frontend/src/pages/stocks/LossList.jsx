@@ -29,7 +29,7 @@ export default function LossList() {
   const setPageSize = (v) => setFilters({ pageSize: v, page: 1 });
 
   const { data: products = [] } = useConstants('product_type');
-  const { data, isLoading } = useLossRecords({ page, pageSize, product, search });
+  const { data, isLoading, isError, refetch } = useLossRecords({ page, pageSize, product, search });
 
   const columns = [
     { key: 'transaction_date', label: t('transactions.date'), render: (row) => formatDate(row.transaction_date) },
@@ -96,6 +96,8 @@ export default function LossList() {
         onPageChange={setPage}
         onRowClick={(row) => navigate(`/transactions/processing/${row.transaction_code}`)}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyMessage={t('lossList.noLossRecorded')}
       />
     </AppLayout>

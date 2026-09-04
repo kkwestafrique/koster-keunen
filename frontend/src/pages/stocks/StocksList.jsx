@@ -36,7 +36,7 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
   const { data: standards = [] } = useConstants('standard');
   const { data: villages = [] } = useAllVillagesLite();
 
-  const { data, isLoading } = useStocks({ stockType, page, pageSize, search, product, standard, village, dateFrom, dateTo });
+  const { data, isLoading, isError, refetch } = useStocks({ stockType, page, pageSize, search, product, standard, village, dateFrom, dateTo });
   const rows = data?.rows || [];
 
   // Per the live-site audit: only Raw material supports Receive stock.
@@ -179,6 +179,8 @@ export default function StocksList({ stockType, title, actionLabel, testId }) {
         onRowClick={(row) => navigate(`/stocks/detail/${row.id}`)}
         onPageChange={setPage}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyMessage={t('common.noRecordsFound')}
       />
     </AppLayout>

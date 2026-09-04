@@ -20,7 +20,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 export default function ProductsList() {
   const { t } = useTranslation();
   usePageTitle(t('productsList.title'));
-  const { data: products = [], isLoading } = useConstants('product_type');
+  const { data: products = [], isLoading, isError, refetch } = useConstants('product_type');
 
   const columns = [
     { key: 'sort_order', label: '#', render: (row) => row.sort_order },
@@ -40,6 +40,8 @@ export default function ProductsList() {
         page={1}
         pageSize={products.length || 1}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
       />
     </AppLayout>
   );

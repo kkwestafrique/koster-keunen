@@ -47,7 +47,7 @@ export default function TransactionsList({ direction, title, actionLabel, testId
   const { data: products = [] } = useConstants('product_type');
   const { data: loggers = [] } = useTransactionLoggers();
 
-  const { data, isLoading } = useTransactions({ direction, page, pageSize, search, product, loggedBy, source, status });
+  const { data, isLoading, isError, refetch } = useTransactions({ direction, page, pageSize, search, product, loggedBy, source, status });
 
   const columns = [
     { key: 'transaction_date', label: t('transactions.date'), render: (row) => formatDate(row.transaction_date) },
@@ -157,6 +157,8 @@ export default function TransactionsList({ direction, title, actionLabel, testId
         onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
         onPageChange={setPage}
         loading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyMessage={t('common.noRecordsFound')}
         onRowClick={(row) => navigate(`/transactions/${direction.toLowerCase()}/${row.transaction_code}`)}
       />
