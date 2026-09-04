@@ -136,7 +136,19 @@ export default function ContractWizard() {
   // number. Price stays optional (an intentionally nullable "TBD"
   // value elsewhere in this flow), but if one is entered, it can't be
   // negative either.
-  const detailsValid = form.year && form.standard && form.currency && form.signature_date
+  // Real gap found and confirmed while adding the missing-fields hint
+  // below: this check never actually required a supplier to be
+  // selected at all. Confirmed directly this wasn't just a theoretical
+  // risk -- the database allows contracts.actor_id to be NULL, and the
+  // actual submit code explicitly sends null when no supplier was ever
+  // chosen (actor_id: form.supplier_actor_id || null). A contract is
+  // fundamentally an agreement between two parties; one with no real
+  // counterparty at all doesn't just look incomplete on the Summary
+  // step (which already showed "Supplier: —" as a fallback) -- it's a
+  // contract nothing could ever be meaningfully linked to. No existing
+  // contracts currently have a null actor_id, so this was a real but
+  // not-yet-triggered risk, not a live data problem.
+  const detailsValid = form.year && form.standard && form.supplier_actor_id && form.currency && form.signature_date
     && form.products.every((p) =>
       p.product && Number(p.expected_quantity) > 0
       && (p.price === '' || p.price == null || Number(p.price) >= 0)
@@ -152,6 +164,7 @@ export default function ContractWizard() {
   const detailsMissingFields = [
     !form.year && t('contractWizard.year'),
     !form.standard && t('contractWizard.standard'),
+    form.standard && !form.supplier_actor_id && t('contractWizard.supplier'),
     !form.currency && t('contractWizard.currency'),
     !form.signature_date && t('contractWizard.signatureDate'),
     !form.products.every((p) => p.product && Number(p.expected_quantity) > 0) && t('contractWizard.products'),
