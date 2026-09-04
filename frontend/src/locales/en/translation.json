@@ -298,7 +298,9 @@
     "noDataAvailable": "No data available.",
     "back": "Back",
     "templateDownloaded": "Template downloaded.",
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "loadFailed": "Something went wrong loading this data.",
+    "retry": "Retry"
   },
   "beekeeperDetail": {
     "title": "Beekeeper profile",

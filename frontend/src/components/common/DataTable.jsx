@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableHeader,
@@ -43,6 +44,8 @@ export default function DataTable({
   onPageChange,
   onRowClick,
   loading,
+  isError,
+  onRetry,
   emptyMessage,
   testId = 'data-table',
 }) {
@@ -119,7 +122,28 @@ export default function DataTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading ? (
+          {isError ? (
+            // Real gap found via the newest audit checklist: "API
+            // failures show inline error with retry." Confirmed
+            // directly this genuinely didn't exist -- DataTable had no
+            // error prop at all, so a real failed request (network
+            // drop, a rejected query, a server error) either left the
+            // table stuck on "Loading..." forever, or (once isLoading
+            // settled to false with zero rows) rendered exactly like a
+            // genuinely empty dataset -- misleading either way, since
+            // there was no way to tell "nothing here" apart from
+            // "something went wrong fetching this."
+            <TableRow>
+              <TableCell colSpan={columns.length} className="text-center py-8" data-testid="data-table-error">
+                <p className="text-[#ba550c] font-medium mb-2">{t('common.loadFailed')}</p>
+                {onRetry && (
+                  <Button type="button" variant="outline" size="sm" data-testid={`${testId}-retry`} onClick={onRetry} className="border-[#ba550c] text-[#ba550c]">
+                    {t('common.retry')}
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          ) : loading ? (
             <TableRow>
               <TableCell colSpan={columns.length} className="text-center py-8 text-[#5a6f9a]">
                 {t('common.loading')}

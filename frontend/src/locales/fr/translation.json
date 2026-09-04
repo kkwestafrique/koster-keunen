@@ -298,7 +298,9 @@
     "noDataAvailable": "Aucune donnée disponible.",
     "back": "Retour",
     "templateDownloaded": "Modèle téléchargé.",
-    "skipToContent": "Passer au contenu principal"
+    "skipToContent": "Passer au contenu principal",
+    "loadFailed": "Une erreur s'est produite lors du chargement de ces données.",
+    "retry": "Réessayer"
   },
   "beekeeperDetail": {
     "title": "Profil de l'apiculteur",
