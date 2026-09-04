@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { identifyUser, resetIdentity } from '@/lib/posthog';
+import i18n from 'i18next';
 
 const AuthContext = createContext(null);
 
@@ -23,6 +24,23 @@ export function AuthProvider({ children }) {
       .maybeSingle();
     if (!error) setProfile(data);
   }, []);
+
+  // Real, remaining half of Gap 3 (see useMyProfile.js): the value
+  // itself was fixed to actually persist to the database, but nothing
+  // ever read it back and applied it on load. i18next's own local
+  // caching (same browser) made this easy to miss during quick manual
+  // testing -- confirmed directly that AuthContext never touched i18n
+  // at all, meaning a real saved preference would never actually show
+  // up on a genuinely new device or browser, only whatever that
+  // browser's own local cache or default detection happened to pick.
+  // Same 'English'/'French' -> 'en'/'fr' mapping already used in
+  // UserProfile.jsx, kept in sync with that page's own logic rather
+  // than introduced as a second, potentially-diverging version.
+  useEffect(() => {
+    if (!profile?.language_preference) return;
+    const code = profile.language_preference === 'French' ? 'fr' : profile.language_preference === 'English' ? 'en' : null;
+    if (code && code !== i18n.language) i18n.changeLanguage(code);
+  }, [profile?.language_preference]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
