@@ -54,7 +54,12 @@ export default function ContractsList() {
     {
       key: 'supplier_name',
       label: t('contracts.supplierName'),
-      render: (row) => row.actors?.contact_name || row.actors?.traceability_code || '—',
+      // Same real gap and fix as ActorsList's contact_name column --
+      // confirmed against live data, a genuinely long real name exists.
+      render: (row) => {
+        const name = row.actors?.contact_name || row.actors?.traceability_code || '—';
+        return <span className="block max-w-[180px] truncate" title={name}>{name}</span>;
+      },
     },
     { key: 'country', label: t('contracts.country') },
     { key: 'contract_type', label: t('contracts.type') },

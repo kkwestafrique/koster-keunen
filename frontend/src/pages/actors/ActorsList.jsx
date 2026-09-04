@@ -65,7 +65,19 @@ export default function ActorsList({ title, testId }) {
 
   const columns = [
     { key: 'traceability_code', sortable: true, label: t('actorsList.traceabilityCode') },
-    { key: 'contact_name', sortable: true, label: t('actorsList.actorName') },
+    {
+      key: 'contact_name',
+      sortable: true,
+      label: t('actorsList.actorName'),
+      // Real gap confirmed against live data: a real actor name
+      // ("Women in Beekeeping Association", 31 characters) exists
+      // right now with no truncation at all -- table cells have no
+      // width constraint by default, so a long name could crowd or
+      // unevenly wrap a row. Truncates with the browser's own native
+      // title tooltip on hover, so the full name is still always
+      // available, just not always fully visible inline.
+      render: (row) => <span className="block max-w-[220px] truncate" title={row.contact_name}>{row.contact_name}</span>,
+    },
     { key: 'actor_type', label: t('actorsList.actorType') },
     { key: 'country', label: t('actorsList.country') },
     {

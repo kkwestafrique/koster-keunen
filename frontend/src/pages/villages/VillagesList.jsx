@@ -59,7 +59,11 @@ export default function VillagesList() {
   };
 
   const columns = [
-    { key: 'name', label: t('villagesList.village') },
+    {
+      key: 'name',
+      label: t('villagesList.village'),
+      render: (row) => <span className="block max-w-[200px] truncate" title={row.name}>{row.name}</span>,
+    },
     { key: 'country', label: t('villagesList.country') },
     { key: 'state_region', label: t('villagesList.region') },
     { key: 'lga_municipality', label: t('villagesList.lga') },
