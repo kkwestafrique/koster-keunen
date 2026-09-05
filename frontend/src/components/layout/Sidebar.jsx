@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUnsavedChanges } from '@/contexts/UnsavedChangesContext';
 import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -147,7 +148,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
     try {
       await switchActor(actorId);
     } catch (err) {
-      toast({ title: t('topbar.switchFailed'), description: err.message, variant: 'destructive' });
+      toast({ title: t('topbar.switchFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
     }
   };
 
