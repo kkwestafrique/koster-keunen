@@ -121,11 +121,25 @@ export function useUpdateExport() {
 export function useDeleteExport() {
   const { supplyChainId } = useAuth();
   const queryClient = useQueryClient();
+  const queryKey = ['exports', supplyChainId];
   return useMutation({
     mutationFn: async (id) => {
       const { error } = await supabase.from('exports').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['exports', supplyChainId] }),
+    // Real, genuine cache-level optimistic delete -- safe here (unlike
+    // Villages/Connections, which use a local "pending" set instead)
+    // because this is a simple, non-paginated flat list with no total
+    // count or page-boundary math that could be gotten subtly wrong.
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, (old) => (old || []).filter((e) => e.id !== id));
+      return { previous };
+    },
+    onError: (err, id, context) => {
+      if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
   });
 }

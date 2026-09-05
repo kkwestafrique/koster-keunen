@@ -112,15 +112,33 @@ export function useRejectClaim() {
 // whose side effect (updating the entity's standards array via
 // verify_claim()) wouldn't be undone by deleting the claim row itself.
 export function useDeleteClaim() {
+  const { supplyChainId } = useAuth();
   const queryClient = useQueryClient();
+  const pendingKey = ['pending-claims', supplyChainId];
   return useMutation({
     mutationFn: async (claimId) => {
       const { error } = await supabase.from('claims').delete().eq('id', claimId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    // Real, genuine cache-level optimistic delete on pending-claims --
+    // the exact list actually being viewed during this action, and a
+    // simple, non-paginated flat list, same safe shape as exports.
+    // claims (the separate per-entity history view, not visible during
+    // this action) stays a normal, pessimistic background
+    // reconciliation via onSettled below -- no optimistic update
+    // needed for a view nobody's looking at right now.
+    onMutate: async (claimId) => {
+      await queryClient.cancelQueries({ queryKey: pendingKey });
+      const previous = queryClient.getQueryData(pendingKey);
+      queryClient.setQueryData(pendingKey, (old) => (old || []).filter((c) => c.id !== claimId));
+      return { previous };
+    },
+    onError: (err, claimId, context) => {
+      if (context?.previous) queryClient.setQueryData(pendingKey, context.previous);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['claims'] });
-      queryClient.invalidateQueries({ queryKey: ['pending-claims'] });
+      queryClient.invalidateQueries({ queryKey: pendingKey });
     },
   });
 }
