@@ -43,6 +43,80 @@ const TRANSACTION_REPORTS = [
   { key: 'sent', modal: 'dateProducts', table: 'transactions', direction: 'Send' },
 ];
 
+// Real gap found during a fresh review of this page: the export used
+// Object.keys(rows[0]) directly, dumping every raw database column as
+// its own literal name (supply_chain_id, created_at, and so on), and
+// every foreign key as a bare, meaningless UUID (e.g. actor_id:
+// "33333333-...") instead of the actual supplier or beekeeper name --
+// exactly the kind of thing a real reader reviewing this report
+// outside the app (or a parent company being shown it) has no way to
+// make sense of.
+//
+// Real select strings, not invented: matches the exact join syntax
+// already proven working elsewhere in this app for these same four
+// tables (useBeekeepers.js, useContracts.js, useTransactions.js),
+// rather than guessing at relationship names this file has never
+// queried before.
+const TABLE_SELECT = {
+  beekeepers: '*, villages(name), actors!beekeepers_actor_id_fkey(contact_name, traceability_code)',
+  actors: '*',
+  contracts: '*, actors(traceability_code, contact_name)',
+  transactions: '*, actors(traceability_code, contact_name), beekeepers(traceability_code, full_name), user_accounts(username)',
+};
+
+// Purely internal columns with no meaning to a real reader outside the
+// app -- dropped from every export regardless of table. Raw foreign
+// key id columns are dropped per-table below, once their readable
+// name has been resolved from the join.
+const ALWAYS_DROP = ['id', 'supply_chain_id'];
+
+function humanizeKey(key) {
+  return key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Flattens one raw joined row into a clean, human-labeled export row --
+// resolves each table's real foreign keys to the actual name already
+// joined in above, and drops both the raw id and the now-redundant
+// nested join object.
+function flattenReportRow(table, row) {
+  const clean = { ...row };
+  if (table === 'beekeepers') {
+    clean['Village'] = row.villages?.name ?? '';
+    clean['Producer Organisation'] = row.actors?.contact_name ?? '';
+    delete clean.villages;
+    delete clean.actors;
+    delete clean.village_id;
+    delete clean.actor_id;
+    delete clean.linked_producer_organisation_id;
+  } else if (table === 'contracts') {
+    clean['Supplier'] = row.actors?.contact_name ?? row.actors?.traceability_code ?? '';
+    delete clean.actors;
+    delete clean.actor_id;
+    delete clean.owning_actor_id;
+  } else if (table === 'transactions') {
+    clean['Actor'] = row.actors?.contact_name ?? '';
+    clean['Beekeeper'] = row.beekeepers?.full_name ?? '';
+    clean['Logged By'] = row.user_accounts?.username ?? '';
+    delete clean.actors;
+    delete clean.beekeepers;
+    delete clean.user_accounts;
+    delete clean.actor_id;
+    delete clean.beekeeper_id;
+    delete clean.owning_actor_id;
+    delete clean.destination_actor_id;
+    delete clean.logged_by;
+  }
+  ALWAYS_DROP.forEach((k) => delete clean[k]);
+  const labeled = {};
+  Object.keys(clean).forEach((k) => {
+    // Already-human labels added above (Village, Supplier, etc.) are
+    // kept as-is; only raw snake_case database columns get humanized.
+    labeled[/^[a-z_]+$/.test(k) ? humanizeKey(k) : k] = clean[k];
+  });
+  return labeled;
+}
+
+
 function MultiCheck({ options, allLabel, value, onChange, testIdPrefix }) {
   const allSelected = value.length === 0;
   return (
@@ -121,7 +195,7 @@ export default function Report() {
     }
 
     try {
-      let query = supabase.from(activeReport.table).select('*').eq('supply_chain_id', supplyChainId);
+      let query = supabase.from(activeReport.table).select(TABLE_SELECT[activeReport.table]).eq('supply_chain_id', supplyChainId);
       if (activeReport.status) query = query.eq('status', activeReport.status);
       if (activeReport.direction) query = query.eq('direction', activeReport.direction);
       if (activeReport.counterpart) query = query.not(activeReport.counterpart, 'is', null);
@@ -164,8 +238,8 @@ export default function Report() {
       const { data, error } = await query;
       if (error) throw error;
 
-      const rows = data || [];
-      if (rows.length === 0) {
+      const rawRows = data || [];
+      if (rawRows.length === 0) {
         toast({ title: t('report.noData') });
         if (exportRow) {
           await updateExport.mutateAsync({ id: exportRow.id, status: 'Failed', error_message: 'No matching records', completed_at: new Date().toISOString() });
@@ -173,6 +247,7 @@ export default function Report() {
         return;
       }
 
+      const rows = rawRows.map((row) => flattenReportRow(activeReport.table, row));
       const columns = Object.keys(rows[0]).map((k) => ({ key: k, label: k }));
       const blob = csvBlobFromRows(rows, columns);
       downloadBlob(blob, fileName);
