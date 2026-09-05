@@ -37,12 +37,27 @@ export default function VillagesList() {
   const { canDelete } = usePermissions();
   const { toast } = useToast();
   const deleteVillage = useDeleteVillage();
+  // Real, deliberate optimistic UI: the row disappears the instant
+  // delete is confirmed, rather than waiting for the server round-trip.
+  // Tracked as a local set of "pending" ids rather than mutating the
+  // paginated query cache directly -- a delete needs to also update
+  // the total count and could shift page boundaries (a row from the
+  // next page pulling up), and getting that pagination math subtly
+  // wrong would be a worse, more confusing bug than the brief wait
+  // this replaces. The real cache still updates normally once the
+  // server confirms; this only controls what's visually shown in the
+  // meantime.
+  const [pendingDeleteIds, setPendingDeleteIds] = useState(new Set());
 
   const { data, isLoading, isError, refetch } = useVillages({ page, search });
+  const visibleRows = (data?.rows || []).filter((r) => !pendingDeleteIds.has(r.id));
 
   const handleDelete = async () => {
+    const id = deleteTarget.id;
+    setPendingDeleteIds((prev) => new Set(prev).add(id));
+    setDeleteTarget(null);
     try {
-      await deleteVillage.mutateAsync(deleteTarget.id);
+      await deleteVillage.mutateAsync(id);
       toast({ title: t('villagesList.deleteSuccess') });
     } catch (err) {
       // Real, deliberate design: the database's own foreign key
@@ -53,8 +68,13 @@ export default function VillagesList() {
       // same friendly-error translation already used everywhere else
       // in the app rather than a raw Postgres message.
       toast({ title: t('villagesList.deleteFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
-    } finally {
-      setDeleteTarget(null);
+      // Real rollback: the delete was rejected, so the row needs to
+      // reappear rather than stay hidden forever.
+      setPendingDeleteIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -110,7 +130,7 @@ export default function VillagesList() {
       <DataTable
         testId="villages-table"
         columns={columns}
-        rows={data?.rows || []}
+        rows={visibleRows}
         total={data?.total || 0}
         page={page}
         onPageChange={setPage}

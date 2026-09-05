@@ -53,6 +53,7 @@ export function useNotifications() {
 export function useMarkNotificationRead() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  const queryKey = ['notifications', profile?.current_actor_id];
   return useMutation({
     mutationFn: async (notificationId) => {
       const { error } = await supabase
@@ -61,13 +62,32 @@ export function useMarkNotificationRead() {
         .eq('id', notificationId);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications', profile?.current_actor_id] }),
+    // Real, deliberate optimistic UI: marking a notification read has
+    // no financial, inventory, or compliance risk at all -- the exact
+    // opposite of this app's core transactional mutations (Process/
+    // Send/Receive Stock, transaction approvals), which stay
+    // server-confirmed because real inventory mass-balance and
+    // approval-workflow rules genuinely need the server's own
+    // validation before the UI can honestly say something happened.
+    onMutate: async (notificationId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, (old) =>
+        (old || []).map((n) => (n.id === notificationId ? { ...n, read_at: new Date().toISOString() } : n))
+      );
+      return { previous };
+    },
+    onError: (err, notificationId, context) => {
+      if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
   });
 }
 
 export function useMarkAllNotificationsRead() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  const queryKey = ['notifications', profile?.current_actor_id];
   return useMutation({
     mutationFn: async () => {
       const { error } = await supabase
@@ -77,6 +97,16 @@ export function useMarkAllNotificationsRead() {
         .is('read_at', null);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications', profile?.current_actor_id] }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
+      const now = new Date().toISOString();
+      queryClient.setQueryData(queryKey, (old) => (old || []).map((n) => (n.read_at ? n : { ...n, read_at: now })));
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
   });
 }

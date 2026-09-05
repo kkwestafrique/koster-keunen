@@ -51,6 +51,12 @@ export default function ConnectionsList() {
   const approveConnection = useApproveConnection();
   const deleteConnection = useDeleteConnection();
   const [deleteTarget, setDeleteTarget] = useState(null);
+  // Same real, deliberate optimistic-UI pattern as VillagesList: a
+  // local set of "pending" ids, not a direct paginated-cache edit --
+  // avoids getting total-count/page-boundary math subtly wrong for a
+  // brief-wait improvement that doesn't need that risk.
+  const [pendingDeleteIds, setPendingDeleteIds] = useState(new Set());
+  const visibleRows = (data?.rows || []).filter((r) => !pendingDeleteIds.has(r.id));
 
   const handleApprove = async (connectionId) => {
     try {
@@ -62,13 +68,19 @@ export default function ConnectionsList() {
   };
 
   const handleDelete = async () => {
+    const id = deleteTarget.id;
+    setPendingDeleteIds((prev) => new Set(prev).add(id));
+    setDeleteTarget(null);
     try {
-      await deleteConnection.mutateAsync(deleteTarget.id);
+      await deleteConnection.mutateAsync(id);
       toast({ title: t('connectionsList.deleteSuccess') });
     } catch (err) {
       toast({ title: t('connectionsList.deleteFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
-    } finally {
-      setDeleteTarget(null);
+      setPendingDeleteIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -165,7 +177,7 @@ export default function ConnectionsList() {
       <DataTable
         testId="connections-table"
         columns={columns}
-        rows={data?.rows || []}
+        rows={visibleRows}
         total={data?.total || 0}
         page={page}
         pageSize={pageSize}
