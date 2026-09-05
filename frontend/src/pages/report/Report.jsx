@@ -297,7 +297,7 @@ export default function Report() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="text-[#5a6f9a] block">{t('report.standards')} *</span>
+                <span className="text-[#5a6f9a] block">{t('report.standards')}</span>
                 <MultiCheck
                   options={STANDARDS}
                   allLabel={t('report.allStandards')}

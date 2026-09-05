@@ -151,7 +151,7 @@ export default function BulkUploads() {
             data-testid="bulk-tab-connections"
             className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#0f48aa] data-[state=active]:bg-transparent data-[state=active]:text-[#0f48aa] data-[state=active]:shadow-none text-[#5a6f9a] font-bold"
           >
-            {t('nav.connections')}
+            {t('bulkUploads.beekeepersTab')}
           </TabsTrigger>
           <TabsTrigger
             value="transactions"
@@ -162,6 +162,18 @@ export default function BulkUploads() {
           </TabsTrigger>
         </TabsList>
 
+        {/* Real gap found and fixed: this tab genuinely shows the
+            history of beekeeper uploads, not connections at all --
+            confirmed via bulk_uploads.upload_type, which only allows a
+            fixed set of database values, and beekeeper uploads were
+            mapped onto the existing 'Connections' value rather than
+            given their own. Relabeled what's actually displayed
+            (bulkUploads.beekeepersTab) without touching the underlying
+            tab value or upload_type string below -- changing either of
+            those would mean either a database migration across every
+            existing historical row, or auditing every other place that
+            filters by upload_type = 'Connections', for a fix that's
+            purely about what a person sees, not what's stored. */}
         <TabsContent value="connections">
           <UploadHistoryTable uploadType="Connections" showProgress={false} testId="bulk-connections-table" />
         </TabsContent>

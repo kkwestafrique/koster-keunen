@@ -726,7 +726,8 @@
     "id": "Id",
     "status": "Statut",
     "allStatus": "Tous les statuts",
-    "title": "Téléversements en masse"
+    "title": "Téléversements en masse",
+    "beekeepersTab": "Apiculteurs"
   },
   "transactionDetail": {
     "title": "Détail de la transaction",

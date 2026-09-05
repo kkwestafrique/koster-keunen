@@ -726,7 +726,8 @@
     "id": "Id",
     "status": "Status",
     "allStatus": "All status",
-    "title": "Bulk Uploads"
+    "title": "Bulk Uploads",
+    "beekeepersTab": "Beekeepers"
   },
   "transactionDetail": {
     "title": "Transaction Detail",
