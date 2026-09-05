@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableHeader,
@@ -144,11 +145,23 @@ export default function DataTable({
               </TableCell>
             </TableRow>
           ) : loading ? (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="text-center py-8 text-[#5a6f9a]">
-                {t('common.loading')}
-              </TableCell>
-            </TableRow>
+            // Real gap from the performance audit: every loading state
+            // in the app was plain "Loading..." text, not something
+            // that mirrors the real layout. A skeleton that matches
+            // the actual column count and row height means the table
+            // looks like it's already there rather than like the user
+            // is waiting for it to be built -- and since it's the same
+            // shape as the real rows about to replace it, there's no
+            // layout shift when data actually arrives.
+            Array.from({ length: Math.min(pageSize, 5) }).map((_, i) => (
+              <TableRow key={i} className="border-b border-[#cfd8e6]">
+                {columns.map((col) => (
+                  <TableCell key={col.key} className="py-3">
+                    <Skeleton className="h-4 w-full max-w-[160px]" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
           ) : rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={columns.length} className="text-center py-8 text-[#5a6f9a]" data-testid="data-table-empty">

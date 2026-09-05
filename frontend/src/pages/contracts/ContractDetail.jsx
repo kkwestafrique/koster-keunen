@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Pencil, Plus } from 'lucide-react';
+import DetailPageSkeleton from '@/components/common/DetailPageSkeleton';
 import { useContract, useUpdateContractGroup, useContractDeliveries, useCreateContractDelivery, useContractFulfillment } from '@/hooks/useContracts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -370,7 +371,7 @@ export default function ContractDetail() {
   if (isLoading) {
     return (
       <AppLayout hideDefaultHeader>
-        <p className="text-[#5a6f9a]">{t('common.loading')}</p>
+        <DetailPageSkeleton testId="contract-detail-skeleton" />
       </AppLayout>
     );
   }

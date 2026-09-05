@@ -7,6 +7,7 @@ import ActorHeaderCard from '@/components/common/ActorHeaderCard';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { ChevronLeft } from 'lucide-react';
+import DetailPageSkeleton from '@/components/common/DetailPageSkeleton';
 import { useActor } from '@/hooks/useActors';
 import { useConnectionBetween, useUpdateConnectionStatus } from '@/hooks/useConnections';
 import { useActorTransactions } from '@/hooks/useTransactions';
@@ -54,7 +55,7 @@ export default function ActorDetail() {
   if (isLoading || !actor) {
     return (
       <AppLayout hideDefaultHeader>
-        <p className="text-[#5a6f9a]">{t('common.loading')}</p>
+        <DetailPageSkeleton testId="actor-detail-skeleton" />
       </AppLayout>
     );
   }

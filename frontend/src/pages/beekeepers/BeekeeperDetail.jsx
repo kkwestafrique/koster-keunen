@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ChevronLeft } from 'lucide-react';
+import DetailPageSkeleton from '@/components/common/DetailPageSkeleton';
 import { useBeekeeper } from '@/hooks/useBeekeepers';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import HeaderCard from './HeaderCard';
@@ -30,7 +31,7 @@ export default function BeekeeperDetail() {
   if (isLoading || !bk) {
     return (
       <AppLayout title={t('beekeeperDetail.title')}>
-        <p className="text-[#5a6f9a]">{t('common.loading')}</p>
+        <DetailPageSkeleton testId="beekeeper-detail-skeleton" />
       </AppLayout>
     );
   }

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, Paperclip } from 'lucide-react';
+import DetailPageSkeleton from '@/components/common/DetailPageSkeleton';
 import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction, useLinkedTransactionStatus } from '@/hooks/useTransactions';
 import { uploadMediaFile, supabase, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
@@ -96,7 +97,7 @@ export default function TransactionDetail() {
   if (isLoading) {
     return (
       <AppLayout hideDefaultHeader>
-        <p className="text-[#5a6f9a]">{t('common.loading')}</p>
+        <DetailPageSkeleton testId="transaction-detail-skeleton" />
       </AppLayout>
     );
   }

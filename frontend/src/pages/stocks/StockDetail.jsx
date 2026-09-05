@@ -5,6 +5,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import DetailField from '@/components/common/DetailField';
 import StandardBadge from '@/components/common/StandardBadge';
 import { ChevronLeft } from 'lucide-react';
+import DetailPageSkeleton from '@/components/common/DetailPageSkeleton';
 import { useStock, useTransactionForStock } from '@/hooks/useStocks';
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -25,7 +26,7 @@ export default function StockDetail() {
   const { data: originTransaction } = useTransactionForStock(id);
   const { canViewChangeHistory } = usePermissions();
 
-  if (isLoading) return <AppLayout hideDefaultHeader><p className="text-[#5a6f9a]">{t('common.loading')}</p></AppLayout>;
+  if (isLoading) return <AppLayout hideDefaultHeader><DetailPageSkeleton testId="stock-detail-skeleton" /></AppLayout>;
   if (!stock) return <AppLayout hideDefaultHeader><p className="text-[#5a6f9a]">{t('common.notFound')}</p></AppLayout>;
 
   return (
