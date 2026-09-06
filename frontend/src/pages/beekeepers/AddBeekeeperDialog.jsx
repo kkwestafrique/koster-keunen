@@ -102,7 +102,7 @@ function MultiUploadBody({ onDone }) {
   const [downloaded, setDownloaded] = useState(false);
   const [phase, setPhase] = useState('idle'); // idle | processing | done
   const [progress, setProgress] = useState(0);
-  const { rows, validCount, errorCount, loadFile, submit } = useBulkUpload('beekeepers');
+  const { rows, validCount, errorCount, loadFile, submit, unrecognizedColumns } = useBulkUpload('beekeepers');
 
   const handleDownload = () => {
     downloadTemplate('beekeepers', 'beekeepers-template.xlsx');
@@ -195,6 +195,22 @@ function MultiUploadBody({ onDone }) {
             <p className="text-sm text-[#032b71]" data-testid="bk-wizard-leave-page-note">
               {t('forms.leavePageNote')}
             </p>
+          )}
+
+          {/* Real gap found and fixed: nothing ever told a person their
+              file might be the wrong one entirely (e.g. a downloaded
+              report used by mistake instead of the real upload
+              template) -- unrecognized columns were just silently
+              ignored, with zero indication anything was wrong. Shown
+              before the valid/error summary since this is a sign to
+              double-check the whole file, not just fix a few rows. */}
+          {done && unrecognizedColumns.length > 0 && (
+            <div className="bg-[#fff8e6] border border-[#e6c34d] rounded-[5px] p-3 text-sm" data-testid="bk-wizard-unrecognized-columns">
+              <p className="text-[#032b71] font-bold">{t('forms.unrecognizedColumnsTitle')}</p>
+              <p className="text-xs text-[#5a6f9a] mt-1">
+                {t('forms.unrecognizedColumnsBody', { columns: unrecognizedColumns.join(', ') })}
+              </p>
+            </div>
           )}
 
           {done && (

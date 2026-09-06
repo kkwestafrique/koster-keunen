@@ -78,6 +78,15 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
             <p className="text-sm text-[#ba550c] font-bold" data-testid="contracts-bulk-parse-error">{bulkUpload.parseError}</p>
           )}
 
+          {bulkUpload.unrecognizedColumns.length > 0 && (
+            <div className="bg-[#fff8e6] border border-[#e6c34d] rounded-[5px] p-3 text-sm" data-testid="contracts-bulk-unrecognized-columns">
+              <p className="text-[#032b71] font-bold">{t('forms.unrecognizedColumnsTitle')}</p>
+              <p className="text-xs text-[#5a6f9a] mt-1">
+                {t('forms.unrecognizedColumnsBody', { columns: bulkUpload.unrecognizedColumns.join(', ') })}
+              </p>
+            </div>
+          )}
+
           {bulkUpload.rows.length > 0 && (
             <div>
               <p className="text-sm text-[#032b71] mb-2">

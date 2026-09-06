@@ -394,6 +394,15 @@ export default function ReceiveStockForm() {
                   </p>
                 )}
 
+                {bulkUpload.unrecognizedColumns.length > 0 && (
+                  <div className="mt-2 bg-[#fff8e6] border border-[#e6c34d] rounded-[5px] p-3 text-sm" data-testid="receive-bulk-unrecognized-columns">
+                    <p className="text-[#032b71] font-bold">{t('forms.unrecognizedColumnsTitle')}</p>
+                    <p className="text-xs text-[#5a6f9a] mt-1">
+                      {t('forms.unrecognizedColumnsBody', { columns: bulkUpload.unrecognizedColumns.join(', ') })}
+                    </p>
+                  </div>
+                )}
+
                 {bulkUpload.rows.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm text-[#032b71] mb-2">

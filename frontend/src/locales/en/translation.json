@@ -492,7 +492,9 @@
     "otherTypeManually": "Other (type manually)",
     "organisationNamePlaceholder": "Enter organisation name",
     "stillNeeded": "Still needed: {{fields}}",
-    "unsavedChangesWarning": "You have unsaved changes. Leave this page and lose them?"
+    "unsavedChangesWarning": "You have unsaved changes. Leave this page and lose them?",
+    "unrecognizedColumnsTitle": "This file has columns we don’t recognize",
+    "unrecognizedColumnsBody": "Unrecognized: {{columns}}. If you’re using a downloaded report instead of the real upload template, download the template again and use that instead."
   },
   "contractWizard": {
     "stepDetails": "Contract details",

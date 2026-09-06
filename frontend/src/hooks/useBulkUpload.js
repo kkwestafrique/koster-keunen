@@ -147,13 +147,51 @@ async function fetchLookups(supplyChainId, templateKey) {
   return lookups;
 }
 
+// Real gap found and fixed: header matching was exact and case-sensitive
+// (row[col.label] ?? row[col.key]), so a file with "Full Name" instead of
+// the template's own "Full name" would silently fail to match at all --
+// the field would be treated as empty, showing a confusing "required"
+// error for data that was genuinely there, just under a slightly
+// different-cased header. Normalizes case and collapses whitespace before
+// comparing, so small real-world formatting differences (a report
+// exported with Title Case headers, a header with extra trailing spaces)
+// don't silently break an otherwise-valid upload.
+function normalizeHeader(s) {
+  return String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function buildNormalizedRowLookup(row) {
+  const map = new Map();
+  Object.keys(row).forEach((k) => map.set(normalizeHeader(k), row[k]));
+  return map;
+}
+
+function getRowValue(rowLookup, col) {
+  return rowLookup.get(normalizeHeader(col.label)) ?? rowLookup.get(normalizeHeader(col.key)) ?? '';
+}
+
+// Real gap found and fixed: nothing ever told a person their file might
+// be the wrong one entirely (e.g. a downloaded report used by mistake
+// instead of the real upload template) -- columns the template doesn't
+// recognize were just silently ignored, with zero indication anything
+// was wrong.
+function detectUnrecognizedColumns(rawRows, template) {
+  if (rawRows.length === 0) return [];
+  const knownNormalized = new Set(
+    template.columns.flatMap((c) => [normalizeHeader(c.label), normalizeHeader(c.key)])
+  );
+  const realHeaders = Object.keys(rawRows[0]);
+  return realHeaders.filter((h) => !knownNormalized.has(normalizeHeader(h)));
+}
+
 function validateRows(rows, template, lookups, isHistorical) {
   return rows.map((row, index) => {
     const errors = [];
     const cleaned = {};
+    const rowLookup = buildNormalizedRowLookup(row);
 
     template.columns.forEach((col) => {
-      let value = row[col.label] ?? row[col.key] ?? '';
+      let value = getRowValue(rowLookup, col);
       if (typeof value === 'string') value = value.trim();
 
       if (col.required && (value === '' || value === undefined || value === null)) {
@@ -282,6 +320,7 @@ export function useBulkUpload(templateKey) {
   const [parseError, setParseError] = useState(null);
   const [result, setResult] = useState(null);
   const [isHistorical, setIsHistorical] = useState(false);
+  const [unrecognizedColumns, setUnrecognizedColumns] = useState([]);
   // Same real gap and fix as the transaction forms: disabled={uploading}
   // alone has a known race (React's re-render isn't synchronous), and
   // this hook is shared by 3 different callers, so fixing it once here
@@ -292,12 +331,14 @@ export function useBulkUpload(templateKey) {
     setFileName(file.name);
     setResult(null);
     setParseError(null);
+    setUnrecognizedColumns([]);
     setParsing(true);
     try {
       const [rawRows, lookups] = await Promise.all([
         parseFile(file),
         fetchLookups(supplyChainId, templateKey),
       ]);
+      setUnrecognizedColumns(detectUnrecognizedColumns(rawRows, template));
       setRows(validateRows(rawRows, template, lookups, isHistorical));
     } catch (err) {
       // parseFile rejects (e.g. non-.xlsx file) with a real Error. Store it
@@ -525,6 +566,7 @@ export function useBulkUpload(templateKey) {
     setResult(null);
     setParseError(null);
     setParsing(false);
+    setUnrecognizedColumns([]);
   }, []);
 
   return {
@@ -539,6 +581,7 @@ export function useBulkUpload(templateKey) {
     result,
     isHistorical,
     setIsHistorical,
+    unrecognizedColumns,
     loadFile,
     submit,
     reset,

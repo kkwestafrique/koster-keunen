@@ -492,7 +492,9 @@
     "otherTypeManually": "Autre (saisir manuellement)",
     "organisationNamePlaceholder": "Saisir le nom de l'organisation",
     "stillNeeded": "Encore nécessaire : {{fields}}",
-    "unsavedChangesWarning": "Vous avez des modifications non enregistrées. Quitter cette page et les perdre ?"
+    "unsavedChangesWarning": "Vous avez des modifications non enregistrées. Quitter cette page et les perdre ?",
+    "unrecognizedColumnsTitle": "Ce fichier contient des colonnes non reconnues",
+    "unrecognizedColumnsBody": "Non reconnues : {{columns}}. Si vous utilisez un rapport téléchargé au lieu du vrai modèle d'importation, téléchargez à nouveau le modèle et utilisez-le à la place."
   },
   "contractWizard": {
     "stepDetails": "Détails du contrat",
