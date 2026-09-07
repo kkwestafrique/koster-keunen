@@ -135,7 +135,17 @@
     "categoryAggregator": "Aggregator",
     "categoryLocalPartner": "Local Partner",
     "categoryBuyer": "Buyer",
-    "filterHintTransactions": "Filter by year to view your transaction overview."
+    "filterHintTransactions": "Filter by year to view your transaction overview.",
+    "season": {
+      "localPartners": "Local Partners",
+      "countries": "Countries",
+      "aggregators": "Aggregators",
+      "producerOrganisations": "Producer Organisations",
+      "villages": "Villages",
+      "beekeepers": "Beekeepers",
+      "beehives": "Beehives"
+    },
+    "seasonTab": "Season"
   },
   "actorsList": {
     "title": "Actors",

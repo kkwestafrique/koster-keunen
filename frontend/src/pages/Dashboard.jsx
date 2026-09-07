@@ -17,6 +17,8 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useContractYears } from '@/hooks/useContracts';
+import { useSeasonMetrics } from '@/hooks/useSeasonMetrics';
+import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
   return (
@@ -107,6 +109,7 @@ export default function Dashboard() {
   const { data: actorCounts } = useActorTypeCounts({ country });
   const { data: bkAgg } = useBeekeeperAggregates({ country });
   const { data: txSummary } = useDashboardTransactionSummary({ year });
+  const { data: seasonMetrics } = useSeasonMetrics({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -194,6 +197,17 @@ export default function Dashboard() {
               }`}
             >
               {t('dashboard.transactionOverview')}
+            </button>
+            <button
+              data-testid="dashboard-tab-season"
+              onClick={() => setTab('season')}
+              className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
+                tab === 'season'
+                  ? 'bg-white text-[#0f48aa] border-[#0f48aa]'
+                  : 'bg-[#e8ecf3] text-[#5a6f9a] border-transparent'
+              }`}
+            >
+              {t('dashboard.seasonTab')}
             </button>
           </div>
 
@@ -309,7 +323,7 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </ChartCard>
             </div>
-          ) : (
+          ) : tab === 'transactions' ? (
             <div className="flex flex-wrap gap-6" data-testid="dashboard-charts-transactions">
               <ChartCard title={t('dashboard.transactionOverview')} testId="chart-transactions-by-direction">
                 {txSummary && txSummary.total > 0 ? (
@@ -348,6 +362,39 @@ export default function Dashboard() {
                   <p className="text-sm text-[#5a6f9a] text-center py-16">{t('common.noRecordsFound')}</p>
                 )}
               </ChartCard>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6" data-testid="dashboard-season-page">
+              {/* Builds the "Initial row" (7 Potential KPI cards) and
+                  "Achieve row" (7 % gauges) specified in the Power BI
+                  handoff document, using this app's own real, live
+                  data. "Achieved" is defined explicitly in
+                  useSeasonMetrics.js: an actor with at least one real
+                  transaction in the selected year. The rest of the
+                  source document's Season page (currency-converted
+                  purchase totals, monthly/cumulative charts, Process &
+                  Stocks) is a deliberately separate, later piece, not
+                  part of this first build. */}
+              <div className="flex flex-wrap gap-4" data-testid="season-potential-row">
+                <StatCard label={t('dashboard.season.localPartners')} value={seasonMetrics?.potential.localPartners} testId="season-stat-local-partners" />
+                <StatCard label={t('dashboard.season.countries')} value={seasonMetrics?.potential.countries} testId="season-stat-countries" />
+                <StatCard label={t('dashboard.season.aggregators')} value={seasonMetrics?.potential.aggregators} testId="season-stat-aggregators" />
+                <StatCard label={t('dashboard.season.producerOrganisations')} value={seasonMetrics?.potential.producerOrganisations} testId="season-stat-po" />
+                <StatCard label={t('dashboard.season.villages')} value={seasonMetrics?.potential.villages} testId="season-stat-villages" />
+                <StatCard label={t('dashboard.season.beekeepers')} value={seasonMetrics?.potential.beekeepers} testId="season-stat-beekeepers" />
+                <StatCard label={t('dashboard.season.beehives')} value={seasonMetrics?.potential.beehives} testId="season-stat-beehives" />
+              </div>
+              {seasonMetrics && (
+                <div className="flex flex-wrap gap-4" data-testid="season-achieved-row">
+                  <GaugeCard label={t('dashboard.season.localPartners')} achieved={seasonMetrics.achieved.localPartners} potential={seasonMetrics.potential.localPartners} testId="season-gauge-local-partners" />
+                  <GaugeCard label={t('dashboard.season.countries')} achieved={seasonMetrics.achieved.countries} potential={seasonMetrics.potential.countries} testId="season-gauge-countries" />
+                  <GaugeCard label={t('dashboard.season.aggregators')} achieved={seasonMetrics.achieved.aggregators} potential={seasonMetrics.potential.aggregators} testId="season-gauge-aggregators" />
+                  <GaugeCard label={t('dashboard.season.producerOrganisations')} achieved={seasonMetrics.achieved.producerOrganisations} potential={seasonMetrics.potential.producerOrganisations} testId="season-gauge-po" />
+                  <GaugeCard label={t('dashboard.season.villages')} achieved={seasonMetrics.achieved.villages} potential={seasonMetrics.potential.villages} testId="season-gauge-villages" />
+                  <GaugeCard label={t('dashboard.season.beekeepers')} achieved={seasonMetrics.achieved.beekeepers} potential={seasonMetrics.potential.beekeepers} testId="season-gauge-beekeepers" />
+                  <GaugeCard label={t('dashboard.season.beehives')} achieved={seasonMetrics.achieved.beehives} potential={seasonMetrics.potential.beehives} testId="season-gauge-beehives" />
+                </div>
+              )}
             </div>
           )}
         </div>
