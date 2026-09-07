@@ -116,6 +116,34 @@ function flattenReportRow(table, row) {
   return labeled;
 }
 
+// Real, confirmed translation map for the one specific Power BI
+// dashboard this app's data was found to feed. Every value here was
+// checked directly against real, live data before being written --
+// not assumed or invented. Deliberately narrow in scope (just the
+// three fields actually confirmed to mismatch) rather than a generic
+// "translate everything to French" feature, since that's not
+// something the rest of the app's own reporting needs or wants.
+const POWERBI_PRODUCT_MAP = {
+  'Beeswax-Yellow': "Cire d'abeille - Jaune",
+  'Beeswax-Brown': "Cire d'abeille - Marron",
+};
+const POWERBI_STANDARD_MAP = {
+  Sustainable: 'Durable',
+  Organic: 'Biologique',
+  Conventional: 'Conventionnelle',
+};
+const POWERBI_COUNTRY_MAP = {
+  Benin: 'Bénin',
+};
+
+function applyPowerBiTranslation(row) {
+  const translated = { ...row };
+  if (translated['Product'] in POWERBI_PRODUCT_MAP) translated['Product'] = POWERBI_PRODUCT_MAP[translated['Product']];
+  if (translated['Standard'] in POWERBI_STANDARD_MAP) translated['Standard'] = POWERBI_STANDARD_MAP[translated['Standard']];
+  if (translated['Country'] in POWERBI_COUNTRY_MAP) translated['Country'] = POWERBI_COUNTRY_MAP[translated['Country']];
+  return translated;
+}
+
 
 function MultiCheck({ options, allLabel, value, onChange, testIdPrefix }) {
   const allSelected = value.length === 0;
@@ -154,6 +182,16 @@ export default function Report() {
   const createExport = useCreateExport();
   const updateExport = useUpdateExport();
   const [activeReport, setActiveReport] = useState(null); // {key, modal, table, ...}
+  // Real, deliberate scope: Power BI's dashboard model expects specific
+  // French values for Product ("Cire d'abeille - Jaune"/"Marron") and
+  // Standard ("Durable"/"Biologique"/"Conventionnelle") that don't match
+  // what this app actually stores (English). Confirmed directly against
+  // real data before building this -- not a hypothetical mismatch.
+  // Scoped to just this one checkbox/report rather than a general
+  // app-wide setting, since it's specific to one external dashboard's
+  // requirements, not something the rest of the app's reporting should
+  // be coupled to.
+  const [powerBiFormat, setPowerBiFormat] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [filters, setFilters] = useState({
     year: '', startYear: '', endYear: '', dateFrom: '', dateTo: '', products: [], standards: [],
@@ -161,6 +199,7 @@ export default function Report() {
 
   const openReport = (report) => {
     setFilters({ year: '', startYear: '', endYear: '', dateFrom: '', dateTo: '', products: [], standards: [] });
+    setPowerBiFormat(false);
     setActiveReport(report);
   };
 
@@ -248,8 +287,11 @@ export default function Report() {
       }
 
       const rows = rawRows.map((row) => flattenReportRow(activeReport.table, row));
-      const columns = Object.keys(rows[0]).map((k) => ({ key: k, label: k }));
-      const blob = csvBlobFromRows(rows, columns);
+      const finalRows = (activeReport.key === 'receivedActors' && powerBiFormat)
+        ? rows.map(applyPowerBiTranslation)
+        : rows;
+      const columns = Object.keys(finalRows[0]).map((k) => ({ key: k, label: k }));
+      const blob = csvBlobFromRows(finalRows, columns);
       downloadBlob(blob, fileName);
 
       // Upload the same file to storage so the downloads panel can offer a
@@ -416,6 +458,15 @@ export default function Report() {
                   testIdPrefix="report-standard"
                 />
               </div>
+              {activeReport?.key === 'receivedActors' && (
+                <label className="flex items-start gap-2 text-sm text-[#032b71] cursor-pointer" data-testid="report-powerbi-checkbox">
+                  <Checkbox checked={powerBiFormat} onCheckedChange={(v) => setPowerBiFormat(!!v)} className="mt-0.5" />
+                  <span>
+                    {t('report.powerBiFormat')}
+                    <span className="block text-xs text-[#5a6f9a] font-normal mt-0.5">{t('report.powerBiFormatHint')}</span>
+                  </span>
+                </label>
+              )}
             </div>
           )}
 

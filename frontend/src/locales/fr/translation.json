@@ -716,7 +716,9 @@
     "dateFrom": "Date de début",
     "dateTo": "Date de fin",
     "title": "Rapports",
-    "exportRestricted": "Seuls les administrateurs et les membres peuvent générer des exports"
+    "exportRestricted": "Seuls les administrateurs et les membres peuvent générer des exports",
+    "powerBiFormat": "Traduire pour le tableau de bord Power BI",
+    "powerBiFormatHint": "Convertit les noms de produits et de normes vers les valeurs françaises attendues par le tableau de bord Power BI (ex. \"Beeswax-Yellow\" → \"Cire d’abeille - Jaune\")."
   },
   "bulkUploads": {
     "fileName": "Nom du fichier",

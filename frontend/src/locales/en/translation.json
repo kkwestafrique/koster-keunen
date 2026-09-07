@@ -716,7 +716,9 @@
     "dateFrom": "Start date",
     "dateTo": "End date",
     "title": "Reports",
-    "exportRestricted": "Only Admins and Members can generate exports"
+    "exportRestricted": "Only Admins and Members can generate exports",
+    "powerBiFormat": "Translate for Power BI dashboard",
+    "powerBiFormatHint": "Converts product and standard names to the French values the Power BI dashboard expects (e.g. \"Beeswax-Yellow\" → \"Cire d’abeille - Jaune\")."
   },
   "bulkUploads": {
     "fileName": "File name",
