@@ -144,7 +144,18 @@
       "producerOrganisations": "Producer Organisations",
       "villages": "Villages",
       "beekeepers": "Beekeepers",
-      "beehives": "Beehives"
+      "beehives": "Beehives",
+      "purchasesTitle": "Purchases / Receptions",
+      "row": "Product",
+      "situationKg": "Received (Kg)",
+      "contratKg": "Contracted (Kg)",
+      "pctContrat": "% of Contract",
+      "yoy": "vs Last Year",
+      "total": "TOTAL",
+      "cireMarron": "Beeswax - Brown",
+      "cireJaune": "Beeswax - Yellow",
+      "amountOfPurchase": "Amount of Purchase",
+      "missingRatesWarning": "Some transactions were excluded from this total — no exchange rate on file for: {{currencies}}. Add these rates on the Exchange Rates page."
     },
     "seasonTab": "Season"
   },

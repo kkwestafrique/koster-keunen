@@ -144,7 +144,18 @@
       "producerOrganisations": "Organisations de producteurs",
       "villages": "Villages",
       "beekeepers": "Apiculteurs",
-      "beehives": "Ruches"
+      "beehives": "Ruches",
+      "purchasesTitle": "Achats / Réceptions",
+      "row": "Produit",
+      "situationKg": "Reçu (Kg)",
+      "contratKg": "Contracté (Kg)",
+      "pctContrat": "% du contrat",
+      "yoy": "vs l'année précédente",
+      "total": "TOTAL",
+      "cireMarron": "Cire d'abeille - Marron",
+      "cireJaune": "Cire d'abeille - Jaune",
+      "amountOfPurchase": "Montant d'achat",
+      "missingRatesWarning": "Certaines transactions ont été exclues de ce total — aucun taux de change disponible pour : {{currencies}}. Ajoutez ces taux sur la page Taux de change."
     },
     "seasonTab": "Saison"
   },

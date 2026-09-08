@@ -18,6 +18,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Ba
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useContractYears } from '@/hooks/useContracts';
 import { useSeasonMetrics } from '@/hooks/useSeasonMetrics';
+import { useSeasonPurchases } from '@/hooks/useSeasonPurchases';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -110,6 +111,7 @@ export default function Dashboard() {
   const { data: bkAgg } = useBeekeeperAggregates({ country });
   const { data: txSummary } = useDashboardTransactionSummary({ year });
   const { data: seasonMetrics } = useSeasonMetrics({ year });
+  const { data: seasonPurchases } = useSeasonPurchases({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -393,6 +395,57 @@ export default function Dashboard() {
                   <GaugeCard label={t('dashboard.season.villages')} achieved={seasonMetrics.achieved.villages} potential={seasonMetrics.potential.villages} testId="season-gauge-villages" />
                   <GaugeCard label={t('dashboard.season.beekeepers')} achieved={seasonMetrics.achieved.beekeepers} potential={seasonMetrics.potential.beekeepers} testId="season-gauge-beekeepers" />
                   <GaugeCard label={t('dashboard.season.beehives')} achieved={seasonMetrics.achieved.beehives} potential={seasonMetrics.potential.beehives} testId="season-gauge-beehives" />
+                </div>
+              )}
+
+              {/* Purchases/Receptions section, per the Power BI handoff
+                  document's own table visual spec: TOTAL/Marron/Jaune
+                  rows showing quantity received, contract quantity,
+                  % of contract fulfilled, and year-over-year change on
+                  a year-to-date basis. */}
+              {seasonPurchases && (
+                <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-4" data-testid="season-purchases-table">
+                  <h3 className="text-sm font-bold text-[#032b71] mb-3">{t('dashboard.season.purchasesTitle')}</h3>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-[#5a6f9a] border-b border-[#cfd8e6]">
+                        <th className="py-2 font-medium">{t('dashboard.season.row')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.season.situationKg')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.season.contratKg')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.season.pctContrat')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.season.yoy')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { label: t('dashboard.season.total'), qty: seasonPurchases.qtyTotal, contract: seasonPurchases.contractTotal, pct: seasonPurchases.pctTotal, yoy: seasonPurchases.yoyTotal, testId: 'total' },
+                        { label: t('dashboard.season.cireMarron'), qty: seasonPurchases.qtyMarron, contract: seasonPurchases.contractMarron, pct: seasonPurchases.pctMarron, yoy: seasonPurchases.yoyMarron, testId: 'marron' },
+                        { label: t('dashboard.season.cireJaune'), qty: seasonPurchases.qtyJaune, contract: seasonPurchases.contractJaune, pct: seasonPurchases.pctJaune, yoy: seasonPurchases.yoyJaune, testId: 'jaune' },
+                      ].map((row) => (
+                        <tr key={row.testId} className="border-b border-[#f5f5f5] last:border-0" data-testid={`season-purchases-row-${row.testId}`}>
+                          <td className="py-2 font-medium text-[#032b71]">{row.label}</td>
+                          <td className="py-2 text-right text-[#032b71]">{row.qty.toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
+                          <td className="py-2 text-right text-[#5a6f9a]">{row.contract.toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
+                          <td className="py-2 text-right text-[#032b71] font-medium">{Math.round(row.pct * 100)}%</td>
+                          <td className={`py-2 text-right font-medium ${row.yoy >= 0 ? 'text-[#1e8e3e]' : 'text-[#ba550c]'}`}>
+                            {row.yoy >= 0 ? '▲' : '▼'} {Math.abs(Math.round(row.yoy * 100))}pt
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {seasonPurchases && (
+                <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5 flex flex-col gap-1 w-fit" data-testid="season-amount-card">
+                  <span className="text-xs text-[#5a6f9a]">{t('dashboard.season.amountOfPurchase')}</span>
+                  <span className="text-2xl font-black text-[#032b71]">{Math.round(seasonPurchases.amountXof).toLocaleString()} XOF</span>
+                  {seasonPurchases.missingRateCurrencies.length > 0 && (
+                    <p className="text-xs text-[#ba550c] mt-1" data-testid="season-missing-rates-warning">
+                      {t('dashboard.season.missingRatesWarning', { currencies: seasonPurchases.missingRateCurrencies.join(', ') })}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
