@@ -24,6 +24,7 @@ import { useSeasonStocks } from '@/hooks/useSeasonStocks';
 import { useIndicatorsQuality } from '@/hooks/useIndicatorsQuality';
 import { useIndicatorsYearly } from '@/hooks/useIndicatorsYearly';
 import { useIndicatorsLocalPartners } from '@/hooks/useIndicatorsLocalPartners';
+import { useBeekeepersInvolved } from '@/hooks/useBeekeepersInvolved';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -122,6 +123,7 @@ export default function Dashboard() {
   const { data: indicatorsQuality } = useIndicatorsQuality({ year });
   const { data: indicatorsYearly } = useIndicatorsYearly();
   const { data: indicatorsLocalPartners } = useIndicatorsLocalPartners({ year });
+  const { data: beekeepersInvolved } = useBeekeepersInvolved({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -809,6 +811,77 @@ export default function Dashboard() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Beekeepers Involved section -- confirmed via a real
+                  screenshot of the source dashboard, previously marked
+                  "Not started" in the original text handoff document
+                  with no real spec to build from at all. "Involved"
+                  matches the same definition used for "Achieved" on
+                  the Season page: real delivery activity in the
+                  selected year, not just existing in the system. */}
+              {beekeepersInvolved && (
+                <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5 flex flex-col gap-4" data-testid="beekeepers-involved-basics">
+                  <h3 className="text-sm font-bold text-[#032b71]">{t('dashboard.beekeepers.title')}</h3>
+                  <div className="flex flex-wrap gap-6 items-start">
+                    <div className="flex flex-col gap-3 flex-1 min-w-[280px]">
+                      <div className="flex items-center gap-2" data-testid="bk-total">
+                        <span className="text-2xl font-black text-[#032b71]">{beekeepersInvolved.total.count.toLocaleString()}</span>
+                        <span className={`text-xs font-bold ${beekeepersInvolved.total.delta >= 0 ? 'text-[#1e8e3e]' : 'text-[#ba550c]'}`}>
+                          {beekeepersInvolved.total.delta >= 0 ? '▲' : '▼'} {Math.abs(beekeepersInvolved.total.delta)}
+                        </span>
+                        <span className="text-xs text-[#5a6f9a]">{t('dashboard.beekeepers.totalInvolved')}</span>
+                      </div>
+                      <div className="border-t border-dashed border-[#cfd8e6] pt-3 flex flex-col gap-2 pl-3">
+                        {[
+                          { label: t('dashboard.beekeepers.involvedWax'), data: beekeepersInvolved.wax, testId: 'wax' },
+                          { label: t('dashboard.beekeepers.involvedYellow'), data: beekeepersInvolved.yellow, testId: 'yellow' },
+                          { label: t('dashboard.beekeepers.involvedBrown'), data: beekeepersInvolved.brown, testId: 'brown' },
+                          { label: t('dashboard.beekeepers.involvedCrude'), data: beekeepersInvolved.crude, testId: 'crude' },
+                          { label: t('dashboard.beekeepers.involvedHoney'), data: beekeepersInvolved.honey, testId: 'honey' },
+                        ].map((row) => (
+                          <div key={row.testId} className="flex items-center gap-2" data-testid={`bk-${row.testId}`}>
+                            <span className="text-base font-bold text-[#032b71]">{row.data.count.toLocaleString()}</span>
+                            <span className={`text-xs font-bold ${row.data.delta >= 0 ? 'text-[#1e8e3e]' : 'text-[#ba550c]'}`}>
+                              {row.data.delta >= 0 ? '▲' : '▼'} {Math.abs(row.data.delta)}
+                            </span>
+                            <span className="text-xs text-[#5a6f9a]">{row.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <ResponsiveContainer width={160} height={140}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: t('dashboard.beekeepers.female'), value: beekeepersInvolved.genderCounts.Female },
+                            { name: t('dashboard.beekeepers.male'), value: beekeepersInvolved.genderCounts.Male },
+                          ]}
+                          dataKey="value" nameKey="name" innerRadius={35} outerRadius={55} isAnimationActive={false}
+                        >
+                          <Cell fill="#1e8e3e" />
+                          <Cell fill="#0f48aa" />
+                        </Pie>
+                        <Legend wrapperStyle={{ fontSize: 11 }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    <div className="flex flex-col gap-3">
+                      <div className="bg-[#f5f5f5] border border-[#cfd8e6] rounded-[5px] px-4 py-3 text-center" data-testid="bk-youth">
+                        <span className="text-lg font-black text-[#032b71] block">{Math.round(beekeepersInvolved.youthRatio * 100)}%</span>
+                        <span className="text-xs text-[#5a6f9a]">{t('dashboard.beekeepers.youth')}</span>
+                      </div>
+                      <div className="flex flex-col gap-1" data-testid="bk-charter">
+                        <span className="text-xs text-[#5a6f9a]">{t('dashboard.beekeepers.charterSigned')}</span>
+                        <div className="w-40 h-3 bg-[#e8ecf3] rounded-full overflow-hidden">
+                          <div className="h-full bg-[#0f48aa]" style={{ width: `${Math.round(beekeepersInvolved.charterSignedRatio * 100)}%` }} />
+                        </div>
+                        <span className="text-sm font-bold text-[#032b71]">{beekeepersInvolved.charterSignedCount.toLocaleString()} ({Math.round(beekeepersInvolved.charterSignedRatio * 100)}%)</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
