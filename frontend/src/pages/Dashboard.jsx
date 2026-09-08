@@ -14,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, Line } from 'recharts';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useContractYears } from '@/hooks/useContracts';
 import { useSeasonMetrics } from '@/hooks/useSeasonMetrics';
 import { useSeasonPurchases } from '@/hooks/useSeasonPurchases';
+import { useSeasonMonthly } from '@/hooks/useSeasonMonthly';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -112,6 +113,7 @@ export default function Dashboard() {
   const { data: txSummary } = useDashboardTransactionSummary({ year });
   const { data: seasonMetrics } = useSeasonMetrics({ year });
   const { data: seasonPurchases } = useSeasonPurchases({ year });
+  const { data: seasonMonthly } = useSeasonMonthly({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -447,6 +449,48 @@ export default function Dashboard() {
                     </p>
                   )}
                 </div>
+              )}
+
+              {/* Section 5.4: monthly combo chart. Column = this
+                  year's % of the full-year contract received that
+                  month; line = the same month last year. Month order
+                  is real calendar order (Jan-Dec array), not
+                  alphabetical -- the exact axis-order bug the source
+                  document had to fix by hand. */}
+              {seasonMonthly && (
+                <ChartCard title={t('dashboard.season.monthlyChartTitle')} testId="season-monthly-chart">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <ComposedChart data={seasonMonthly.total} margin={{ left: 8, right: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
+                      <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <YAxis tickFormatter={(v) => `${Math.round(v * 100)}%`} tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <Tooltip formatter={(v) => `${Math.round(v * 100)}%`} />
+                      <Legend />
+                      <Bar dataKey="pctThisYear" name={t('dashboard.season.thisYear', { year })} fill="#0f48aa" radius={[4, 4, 0, 0]} />
+                      <Line type="monotone" dataKey="pctPrevYear" name={t('dashboard.season.lastYear', { year: Number(year) - 1 })} stroke="#ba550c" strokeWidth={2} dot={{ r: 3 }} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              )}
+
+              {/* Section 5.5: cumulative version of the same chart --
+                  a running total through each month, divided by the
+                  full-year contract, rather than each month in
+                  isolation. */}
+              {seasonMonthly && (
+                <ChartCard title={t('dashboard.season.cumulativeChartTitle')} testId="season-cumulative-chart">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <ComposedChart data={seasonMonthly.total} margin={{ left: 8, right: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
+                      <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <YAxis tickFormatter={(v) => `${Math.round(v * 100)}%`} tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <Tooltip formatter={(v) => `${Math.round(v * 100)}%`} />
+                      <Legend />
+                      <Bar dataKey="cumPctThisYear" name={t('dashboard.season.thisYear', { year })} fill="#0f48aa" radius={[4, 4, 0, 0]} />
+                      <Line type="monotone" dataKey="cumPctPrevYear" name={t('dashboard.season.lastYear', { year: Number(year) - 1 })} stroke="#ba550c" strokeWidth={2} dot={{ r: 3 }} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </ChartCard>
               )}
             </div>
           )}

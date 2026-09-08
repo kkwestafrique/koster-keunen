@@ -155,7 +155,11 @@
       "cireMarron": "Cire d'abeille - Marron",
       "cireJaune": "Cire d'abeille - Jaune",
       "amountOfPurchase": "Montant d'achat",
-      "missingRatesWarning": "Certaines transactions ont été exclues de ce total — aucun taux de change disponible pour : {{currencies}}. Ajoutez ces taux sur la page Taux de change."
+      "missingRatesWarning": "Certaines transactions ont été exclues de ce total — aucun taux de change disponible pour : {{currencies}}. Ajoutez ces taux sur la page Taux de change.",
+      "monthlyChartTitle": "Proportion de cire réceptionnée par mois",
+      "cumulativeChartTitle": "Proportion cumulée de cire réceptionnée",
+      "thisYear": "{{year}}",
+      "lastYear": "{{year}}"
     },
     "seasonTab": "Saison"
   },

@@ -155,7 +155,11 @@
       "cireMarron": "Beeswax - Brown",
       "cireJaune": "Beeswax - Yellow",
       "amountOfPurchase": "Amount of Purchase",
-      "missingRatesWarning": "Some transactions were excluded from this total — no exchange rate on file for: {{currencies}}. Add these rates on the Exchange Rates page."
+      "missingRatesWarning": "Some transactions were excluded from this total — no exchange rate on file for: {{currencies}}. Add these rates on the Exchange Rates page.",
+      "monthlyChartTitle": "Proportion of Beeswax Received by Month",
+      "cumulativeChartTitle": "Cumulative Proportion of Beeswax Received",
+      "thisYear": "{{year}}",
+      "lastYear": "{{year}}"
     },
     "seasonTab": "Season"
   },
