@@ -178,7 +178,11 @@
       "countryTableTitle": "Yellow Beeswax by Country",
       "country": "Country",
       "yellowKg": "Yellow (Kg)",
-      "yellowRatio": "% Yellow"
+      "yellowRatio": "% Yellow",
+      "contractTotal": "Contract(s)",
+      "completionRateTitle": "Completion Rate",
+      "achieved": "Achieved",
+      "remaining": "Remaining"
     }
   },
   "actorsList": {

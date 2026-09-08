@@ -640,6 +640,47 @@ export default function Dashboard() {
                   </table>
                 </div>
               )}
+
+              {/* Completion Rate donut. Real, documented bug in the
+                  source project's own first attempt at this, avoided
+                  here from the start: building the two donut slices
+                  from raw Qty/Contract values directly gives a
+                  meaningless ~49/51 split, since a donut normalizes
+                  its own slice values to sum to 100% of themselves --
+                  not the same as a true "% of contract" reading. Uses
+                  Completion Rate / Completion Rate Remaining instead,
+                  which correctly sum to exactly 100%. Reuses
+                  seasonPurchases.pctTotal (already fetched on this
+                  page) rather than a new query, since "Completion
+                  Rate" and that value are the same calculation.
+                  Deliberately does not include the source's own
+                  per-Local-Partner slicer -- its own document flags
+                  that as never confirmed working even in the original
+                  project. */}
+              {seasonPurchases && (
+                <div className="flex flex-wrap gap-4 items-stretch">
+                  <StatCard label={t('dashboard.indicators.contractTotal')} value={`${seasonPurchases.contractTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg`} testId="indicators-contract-card" />
+                  <ChartCard title={t('dashboard.indicators.completionRateTitle')} testId="indicators-completion-donut">
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: t('dashboard.indicators.achieved'), value: Math.min(seasonPurchases.pctTotal, 1) },
+                            { name: t('dashboard.indicators.remaining'), value: Math.max(1 - seasonPurchases.pctTotal, 0) },
+                          ]}
+                          dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} isAnimationActive={false}
+                        >
+                          <Cell fill="#0f48aa" />
+                          <Cell fill="#e8ecf3" />
+                        </Pie>
+                        <Legend />
+                        <Tooltip formatter={(v) => `${Math.round(v * 100)}%`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <p className="text-center text-2xl font-black text-[#032b71] -mt-4">{Math.round(seasonPurchases.pctTotal * 100)}%</p>
+                  </ChartCard>
+                </div>
+              )}
             </div>
           )}
         </div>

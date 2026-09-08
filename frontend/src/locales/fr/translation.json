@@ -178,7 +178,11 @@
       "countryTableTitle": "Cire jaune par pays",
       "country": "Pays",
       "yellowKg": "Jaune (Kg)",
-      "yellowRatio": "% Jaune"
+      "yellowRatio": "% Jaune",
+      "contractTotal": "Contrat(s)",
+      "completionRateTitle": "Taux d'exécution",
+      "achieved": "Réalisé",
+      "remaining": "Restant"
     }
   },
   "actorsList": {
