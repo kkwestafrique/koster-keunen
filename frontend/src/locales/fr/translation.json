@@ -182,7 +182,11 @@
       "contractTotal": "Contrat(s)",
       "completionRateTitle": "Taux d'exécution",
       "achieved": "Réalisé",
-      "remaining": "Restant"
+      "remaining": "Restant",
+      "yearlyTrendTitle": "Quantité / Contrat / Qualité annuels (6 dernières années)",
+      "contrat": "Contrat",
+      "quantite": "Quantité",
+      "qualite": "Qualité (% Jaune)"
     }
   },
   "actorsList": {

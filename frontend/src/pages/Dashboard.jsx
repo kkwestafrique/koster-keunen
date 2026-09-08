@@ -22,6 +22,7 @@ import { useSeasonPurchases } from '@/hooks/useSeasonPurchases';
 import { useSeasonMonthly } from '@/hooks/useSeasonMonthly';
 import { useSeasonStocks } from '@/hooks/useSeasonStocks';
 import { useIndicatorsQuality } from '@/hooks/useIndicatorsQuality';
+import { useIndicatorsYearly } from '@/hooks/useIndicatorsYearly';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -118,6 +119,7 @@ export default function Dashboard() {
   const { data: seasonMonthly } = useSeasonMonthly({ year });
   const { data: seasonStocks } = useSeasonStocks({ year });
   const { data: indicatorsQuality } = useIndicatorsQuality({ year });
+  const { data: indicatorsYearly } = useIndicatorsYearly();
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -680,6 +682,36 @@ export default function Dashboard() {
                     <p className="text-center text-2xl font-black text-[#032b71] -mt-4">{Math.round(seasonPurchases.pctTotal * 100)}%</p>
                   </ChartCard>
                 </div>
+              )}
+
+              {/* Yearly Quantité/Contrat/Qualité trend, last 6 real
+                  years with data -- deliberately independent of this
+                  page's own Year filter, per the source document's own
+                  "Edit interactions -> None" setup for this specific
+                  chart. "Contrat" is a hollow, outlined bar rendered
+                  behind "Quantité" (a solid bar), using a negative
+                  barGap to force full overlap rather than the usual
+                  side-by-side clustering -- so when the two values are
+                  close, it reads as one bar with a visible target
+                  line, matching the "bar-in-bar" effect the source
+                  needed a much more involved two-layered-visual
+                  workaround to achieve in Power BI. */}
+              {indicatorsYearly && indicatorsYearly.length > 0 && (
+                <ChartCard title={t('dashboard.indicators.yearlyTrendTitle')} testId="indicators-yearly-chart">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <ComposedChart data={indicatorsYearly} barGap="-100%" margin={{ left: 8, right: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
+                      <XAxis dataKey="year" tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <YAxis yAxisId="kg" tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <YAxis yAxisId="pct" orientation="right" tickFormatter={(v) => `${Math.round(v * 100)}%`} tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <Tooltip formatter={(v, name) => (name === t('dashboard.indicators.qualite') ? `${Math.round(v * 100)}%` : `${Number(v).toLocaleString()} kg`)} />
+                      <Legend />
+                      <Bar yAxisId="kg" dataKey="contract" name={t('dashboard.indicators.contrat')} fill="transparent" stroke="#032b71" strokeWidth={1.5} />
+                      <Bar yAxisId="kg" dataKey="qty" name={t('dashboard.indicators.quantite')} fill="#0f48aa" />
+                      <Line yAxisId="pct" type="monotone" dataKey="qualite" name={t('dashboard.indicators.qualite')} stroke="#ba550c" strokeWidth={2} dot={{ r: 3 }} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </ChartCard>
               )}
             </div>
           )}
