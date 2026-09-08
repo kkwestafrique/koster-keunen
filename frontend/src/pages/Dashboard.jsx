@@ -21,6 +21,7 @@ import { useSeasonMetrics } from '@/hooks/useSeasonMetrics';
 import { useSeasonPurchases } from '@/hooks/useSeasonPurchases';
 import { useSeasonMonthly } from '@/hooks/useSeasonMonthly';
 import { useSeasonStocks } from '@/hooks/useSeasonStocks';
+import { useIndicatorsQuality } from '@/hooks/useIndicatorsQuality';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -116,6 +117,7 @@ export default function Dashboard() {
   const { data: seasonPurchases } = useSeasonPurchases({ year });
   const { data: seasonMonthly } = useSeasonMonthly({ year });
   const { data: seasonStocks } = useSeasonStocks({ year });
+  const { data: indicatorsQuality } = useIndicatorsQuality({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -214,6 +216,17 @@ export default function Dashboard() {
               }`}
             >
               {t('dashboard.seasonTab')}
+            </button>
+            <button
+              data-testid="dashboard-tab-indicators"
+              onClick={() => setTab('indicators')}
+              className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
+                tab === 'indicators'
+                  ? 'bg-white text-[#0f48aa] border-[#0f48aa]'
+                  : 'bg-[#e8ecf3] text-[#5a6f9a] border-transparent'
+              }`}
+            >
+              {t('dashboard.indicatorsTab')}
             </button>
           </div>
 
@@ -369,7 +382,7 @@ export default function Dashboard() {
                 )}
               </ChartCard>
             </div>
-          ) : (
+          ) : tab === 'season' ? (
             <div className="flex flex-col gap-6" data-testid="dashboard-season-page">
               {/* Builds the "Initial row" (7 Potential KPI cards) and
                   "Achieve row" (7 % gauges) specified in the Power BI
@@ -554,6 +567,78 @@ export default function Dashboard() {
                     </ResponsiveContainer>
                   </ChartCard>
                 </>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6" data-testid="dashboard-indicators-page">
+              {/* Builds the Indicators page's 6.1 "Quantity & Quality"
+                  section basics from the Power BI handoff document:
+                  Standard split donut, Total Beeswax card, Yellow
+                  Beeswax card (both with year-over-year), and the
+                  country ratio table. The rest of 6.1 (Completion rate
+                  donut, the 6-year trend chart, the Local Partners'
+                  Performance table) and all of 6.2/6.3 are separate,
+                  later pieces, not part of this batch. */}
+              {indicatorsQuality && (
+                <div className="flex flex-wrap gap-4" data-testid="indicators-cards-row">
+                  <StatCard label={t('dashboard.indicators.totalBeeswax')} value={`${indicatorsQuality.totalBeeswax.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg`} testId="indicators-total-beeswax" />
+                  <div className="bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-1 justify-center" data-testid="indicators-total-beeswax-yoy">
+                    <span className={`text-sm font-bold ${indicatorsQuality.totalBeeswaxYoy >= 0 ? 'text-[#1e8e3e]' : 'text-[#ba550c]'}`}>
+                      {indicatorsQuality.totalBeeswaxYoy >= 0 ? '▲' : '▼'} {Math.abs(Math.round(indicatorsQuality.totalBeeswaxYoy * 100))}%
+                    </span>
+                    <span className="text-xs text-[#5a6f9a]">{t('dashboard.indicators.vsLastYear')}</span>
+                  </div>
+                  <StatCard label={t('dashboard.indicators.yellowBeeswax')} value={`${indicatorsQuality.totalYellow.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg (${Math.round(indicatorsQuality.yellowRatio * 100)}%)`} testId="indicators-yellow-beeswax" />
+                  <div className="bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-1 justify-center" data-testid="indicators-yellow-beeswax-yoy">
+                    <span className={`text-sm font-bold ${indicatorsQuality.yellowYoy >= 0 ? 'text-[#1e8e3e]' : 'text-[#ba550c]'}`}>
+                      {indicatorsQuality.yellowYoy >= 0 ? '▲' : '▼'} {Math.abs(Math.round(indicatorsQuality.yellowYoy * 100))}%
+                    </span>
+                    <span className="text-xs text-[#5a6f9a]">{t('dashboard.indicators.vsLastYear')}</span>
+                  </div>
+                </div>
+              )}
+
+              {indicatorsQuality && Object.keys(indicatorsQuality.byStandard).length > 0 && (
+                <ChartCard title={t('dashboard.indicators.standardSplitTitle')} testId="indicators-standard-donut">
+                  <ResponsiveContainer width="100%" height={240}>
+                    <PieChart>
+                      <Pie
+                        data={Object.entries(indicatorsQuality.byStandard).map(([name, value]) => ({ name, value }))}
+                        dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} isAnimationActive={false}
+                      >
+                        {Object.keys(indicatorsQuality.byStandard).map((name) => (
+                          <Cell key={name} fill={{ Sustainable: '#1e8e3e', Organic: '#0f48aa', Conventional: '#ba550c' }[name] || '#cfd8e6'} />
+                        ))}
+                      </Pie>
+                      <Legend />
+                      <Tooltip formatter={(v) => `${Number(v).toLocaleString()} kg`} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              )}
+
+              {indicatorsQuality && indicatorsQuality.countryTable.length > 0 && (
+                <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-4" data-testid="indicators-country-table">
+                  <h3 className="text-sm font-bold text-[#032b71] mb-3">{t('dashboard.indicators.countryTableTitle')}</h3>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-[#5a6f9a] border-b border-[#cfd8e6]">
+                        <th className="py-2 font-medium">{t('dashboard.indicators.country')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.indicators.yellowKg')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.indicators.yellowRatio')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {indicatorsQuality.countryTable.map((row) => (
+                        <tr key={row.country} className="border-b border-[#f5f5f5] last:border-0" data-testid={`indicators-country-row-${row.country}`}>
+                          <td className="py-2 font-medium text-[#032b71]">{row.country}</td>
+                          <td className="py-2 text-right text-[#5a6f9a]">{row.yellow.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                          <td className="py-2 text-right text-[#032b71] font-medium">{Math.round(row.ratio * 100)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           )}

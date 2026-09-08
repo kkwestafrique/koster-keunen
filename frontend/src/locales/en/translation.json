@@ -168,7 +168,18 @@
       "tauxPerte": "Loss Rate",
       "salesTitle": "Beeswax Sold"
     },
-    "seasonTab": "Season"
+    "seasonTab": "Season",
+    "indicatorsTab": "Indicators",
+    "indicators": {
+      "totalBeeswax": "Total Beeswax",
+      "vsLastYear": "vs last year",
+      "yellowBeeswax": "Yellow Beeswax",
+      "standardSplitTitle": "Quantity by Standard",
+      "countryTableTitle": "Yellow Beeswax by Country",
+      "country": "Country",
+      "yellowKg": "Yellow (Kg)",
+      "yellowRatio": "% Yellow"
+    }
   },
   "actorsList": {
     "title": "Actors",

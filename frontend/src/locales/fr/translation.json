@@ -168,7 +168,18 @@
       "tauxPerte": "Taux de perte",
       "salesTitle": "Cire vendue"
     },
-    "seasonTab": "Saison"
+    "seasonTab": "Saison",
+    "indicatorsTab": "Indicateurs",
+    "indicators": {
+      "totalBeeswax": "Cire totale",
+      "vsLastYear": "vs l'année précédente",
+      "yellowBeeswax": "Cire jaune",
+      "standardSplitTitle": "Quantité par norme",
+      "countryTableTitle": "Cire jaune par pays",
+      "country": "Pays",
+      "yellowKg": "Jaune (Kg)",
+      "yellowRatio": "% Jaune"
+    }
   },
   "actorsList": {
     "title": "Acteurs",
