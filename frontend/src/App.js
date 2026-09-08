@@ -32,6 +32,7 @@ import StocksList from '@/pages/stocks/StocksList';
 import LossList from '@/pages/stocks/LossList';
 import BulkUploads from '@/pages/bulkUploads/BulkUploads';
 import Report from '@/pages/report/Report';
+import ExchangeRates from '@/pages/exchangeRates/ExchangeRates';
 import UserProfile from '@/pages/UserProfile';
 import StockDetail from '@/pages/stocks/StockDetail';
 import VerificationQueue from '@/pages/verification/VerificationQueue';
@@ -136,6 +137,7 @@ function AppRoutes() {
 
       <Route path="/bulk-uploads" element={<ProtectedRoute><BulkUploads /></ProtectedRoute>} />
       <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+      <Route path="/exchange-rates" element={<ProtectedRoute><ExchangeRates /></ProtectedRoute>} />
       <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path="/stocks/detail/:id" element={<ProtectedRoute><StockDetail /></ProtectedRoute>} />
       <Route path="/verifications" element={<ProtectedRoute><VerificationQueue /></ProtectedRoute>} />

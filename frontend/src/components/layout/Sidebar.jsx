@@ -10,6 +10,7 @@ import {
   AlignJustify,
   FileSpreadsheet,
   PieChart,
+  DollarSign,
   Package,
   ShieldCheck,
   History,
@@ -71,6 +72,7 @@ const NAV_ITEMS = [
   { key: 'verifications', labelKey: 'nav.verifications', icon: ShieldCheck, to: '/verifications' },
   { key: 'activityLog', labelKey: 'nav.activityLog', icon: History, to: '/activity-log' },
   { key: 'report', labelKey: 'nav.report', icon: PieChart, to: '/report' },
+  { key: 'exchangeRates', labelKey: 'nav.exchangeRates', icon: DollarSign, to: '/exchange-rates' },
 ];
 
 function NavIcon({ Icon, active }) {

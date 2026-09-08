@@ -20,7 +20,8 @@
     "connections": "Connexions",
     "products": "Produits",
     "verifications": "Vérifications",
-    "activityLog": "Journal d'activité"
+    "activityLog": "Journal d'activité",
+    "exchangeRates": "Taux de change"
   },
   "topbar": {
     "myActor": "Mon acteur",
@@ -310,7 +311,8 @@
     "templateDownloaded": "Modèle téléchargé.",
     "skipToContent": "Passer au contenu principal",
     "loadFailed": "Une erreur s'est produite lors du chargement de ces données.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "delete": "Supprimer"
   },
   "beekeeperDetail": {
     "title": "Profil de l'apiculteur",
@@ -919,5 +921,23 @@
     "sessionExpiredDescription": "Votre session a expiré. Veuillez vous reconnecter.",
     "roleChangedTitle": "Votre rôle a changé",
     "roleChangedDescription": "Veuillez vous reconnecter pour continuer avec vos permissions mises à jour."
+  },
+  "exchangeRates": {
+    "title": "Taux de change",
+    "description": "Taux de change mensuels utilisés pour convertir les montants d'achat en XOF. Le XOF lui-même n'a jamais besoin de taux.",
+    "addRate": "Ajouter un taux",
+    "currency": "Devise",
+    "selectCurrency": "Sélectionner une devise",
+    "year": "Année",
+    "month": "Mois",
+    "rate": "Taux",
+    "rateToXof": "Taux vers XOF",
+    "saved": "Taux de change enregistré",
+    "saveFailed": "Impossible d'enregistrer le taux de change",
+    "deleteSuccess": "Taux de change supprimé",
+    "deleteFailed": "Impossible de supprimer le taux de change",
+    "confirmDeleteTitle": "Supprimer ce taux ?",
+    "confirmDeleteBody": "Ce taux ne sera plus utilisé pour convertir les montants d'achat pour cette devise/mois.",
+    "empty": "Aucun taux de change ajouté pour le moment."
   }
 }

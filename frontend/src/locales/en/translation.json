@@ -20,7 +20,8 @@
     "connections": "Connections",
     "products": "Products",
     "verifications": "Verifications",
-    "activityLog": "Activity log"
+    "activityLog": "Activity log",
+    "exchangeRates": "Exchange Rates"
   },
   "topbar": {
     "myActor": "My Actor",
@@ -310,7 +311,8 @@
     "templateDownloaded": "Template downloaded.",
     "skipToContent": "Skip to main content",
     "loadFailed": "Something went wrong loading this data.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "delete": "Delete"
   },
   "beekeeperDetail": {
     "title": "Beekeeper profile",
@@ -919,5 +921,23 @@
     "sessionExpiredDescription": "Your session has expired. Please log in again.",
     "roleChangedTitle": "Your role has changed",
     "roleChangedDescription": "Please log in again to continue with your updated permissions."
+  },
+  "exchangeRates": {
+    "title": "Exchange Rates",
+    "description": "Monthly exchange rates used to convert purchase amounts to XOF. XOF itself never needs a rate.",
+    "addRate": "Add Rate",
+    "currency": "Currency",
+    "selectCurrency": "Select currency",
+    "year": "Year",
+    "month": "Month",
+    "rate": "Rate",
+    "rateToXof": "Rate to XOF",
+    "saved": "Exchange rate saved",
+    "saveFailed": "Could not save exchange rate",
+    "deleteSuccess": "Exchange rate deleted",
+    "deleteFailed": "Could not delete exchange rate",
+    "confirmDeleteTitle": "Delete this rate?",
+    "confirmDeleteBody": "This rate will no longer be used to convert purchase amounts for this currency/month.",
+    "empty": "No exchange rates added yet."
   }
 }
