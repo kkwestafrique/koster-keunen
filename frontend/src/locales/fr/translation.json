@@ -159,7 +159,14 @@
       "monthlyChartTitle": "Proportion de cire réceptionnée par mois",
       "cumulativeChartTitle": "Proportion cumulée de cire réceptionnée",
       "thisYear": "{{year}}",
-      "lastYear": "{{year}}"
+      "lastYear": "{{year}}",
+      "stockRawMaterial": "Stock matière première",
+      "stockFinal": "Stock produits finis",
+      "lossRateTitle": "Taux de perte au traitement (cumulé)",
+      "entree": "Entrée (Kg)",
+      "sortie": "Sortie (Kg)",
+      "tauxPerte": "Taux de perte",
+      "salesTitle": "Cire vendue"
     },
     "seasonTab": "Saison"
   },

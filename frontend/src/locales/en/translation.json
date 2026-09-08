@@ -159,7 +159,14 @@
       "monthlyChartTitle": "Proportion of Beeswax Received by Month",
       "cumulativeChartTitle": "Cumulative Proportion of Beeswax Received",
       "thisYear": "{{year}}",
-      "lastYear": "{{year}}"
+      "lastYear": "{{year}}",
+      "stockRawMaterial": "Stock Raw Material",
+      "stockFinal": "Stock Final Products",
+      "lossRateTitle": "Processing Loss Rate (all-time)",
+      "entree": "In (Kg)",
+      "sortie": "Out (Kg)",
+      "tauxPerte": "Loss Rate",
+      "salesTitle": "Beeswax Sold"
     },
     "seasonTab": "Season"
   },

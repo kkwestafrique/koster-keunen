@@ -20,6 +20,7 @@ import { useContractYears } from '@/hooks/useContracts';
 import { useSeasonMetrics } from '@/hooks/useSeasonMetrics';
 import { useSeasonPurchases } from '@/hooks/useSeasonPurchases';
 import { useSeasonMonthly } from '@/hooks/useSeasonMonthly';
+import { useSeasonStocks } from '@/hooks/useSeasonStocks';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -114,6 +115,7 @@ export default function Dashboard() {
   const { data: seasonMetrics } = useSeasonMetrics({ year });
   const { data: seasonPurchases } = useSeasonPurchases({ year });
   const { data: seasonMonthly } = useSeasonMonthly({ year });
+  const { data: seasonStocks } = useSeasonStocks({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -491,6 +493,67 @@ export default function Dashboard() {
                     </ComposedChart>
                   </ResponsiveContainer>
                 </ChartCard>
+              )}
+
+              {/* Section 5.6: Process, Stocks & Sales. Stock Raw
+                  Material, Loss rate, and Stock Final are deliberately
+                  cumulative all-time (ignore the Year filter, per the
+                  source document's own confirmed business rule) --
+                  only Sales below respects the selected Year. */}
+              {seasonStocks && (
+                <>
+                  <div className="flex flex-wrap gap-4">
+                    <StatCard label={t('dashboard.season.stockRawMaterial')} value={`${seasonStocks.stockRawMaterial.total.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg`} testId="season-stock-raw" />
+                    <StatCard label={t('dashboard.season.stockFinal')} value={`${seasonStocks.stockFinal.total.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg`} testId="season-stock-final" />
+                  </div>
+
+                  <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-4" data-testid="season-loss-rate-table">
+                    <h3 className="text-sm font-bold text-[#032b71] mb-3">{t('dashboard.season.lossRateTitle')}</h3>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-xs text-[#5a6f9a] border-b border-[#cfd8e6]">
+                          <th className="py-2 font-medium">{t('dashboard.season.row')}</th>
+                          <th className="py-2 font-medium text-right">{t('dashboard.season.entree')}</th>
+                          <th className="py-2 font-medium text-right">{t('dashboard.season.sortie')}</th>
+                          <th className="py-2 font-medium text-right">{t('dashboard.season.tauxPerte')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { label: t('dashboard.season.total'), entree: seasonStocks.lossRate.entreeMarron + seasonStocks.lossRate.entreeJaune, sortie: seasonStocks.lossRate.sortieMarron + seasonStocks.lossRate.sortieJaune, taux: seasonStocks.lossRate.total, testId: 'total' },
+                          { label: t('dashboard.season.cireMarron'), entree: seasonStocks.lossRate.entreeMarron, sortie: seasonStocks.lossRate.sortieMarron, taux: seasonStocks.lossRate.marron, testId: 'marron' },
+                          { label: t('dashboard.season.cireJaune'), entree: seasonStocks.lossRate.entreeJaune, sortie: seasonStocks.lossRate.sortieJaune, taux: seasonStocks.lossRate.jaune, testId: 'jaune' },
+                        ].map((row) => (
+                          <tr key={row.testId} className="border-b border-[#f5f5f5] last:border-0" data-testid={`season-loss-rate-row-${row.testId}`}>
+                            <td className="py-2 font-medium text-[#032b71]">{row.label}</td>
+                            <td className="py-2 text-right text-[#032b71]">{row.entree.toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
+                            <td className="py-2 text-right text-[#5a6f9a]">{row.sortie.toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
+                            <td className={`py-2 text-right font-medium ${row.taux >= 0 ? 'text-[#ba550c]' : 'text-[#1e8e3e]'}`}>{Math.round(row.taux * 100)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <ChartCard title={t('dashboard.season.salesTitle')} testId="season-sales-donut" isEmpty={seasonStocks.sales.total === 0}>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: t('dashboard.season.cireMarron'), value: seasonStocks.sales.marron },
+                            { name: t('dashboard.season.cireJaune'), value: seasonStocks.sales.jaune },
+                          ]}
+                          dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} isAnimationActive={false}
+                        >
+                          <Cell fill="#7a4a1e" />
+                          <Cell fill="#e8b93a" />
+                        </Pie>
+                        <Legend />
+                        <Tooltip formatter={(v) => `${Number(v).toLocaleString()} kg`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+                </>
               )}
             </div>
           )}
