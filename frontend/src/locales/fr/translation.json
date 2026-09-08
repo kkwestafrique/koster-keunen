@@ -126,7 +126,14 @@
       "female": "Femmes",
       "male": "Hommes",
       "youth": "Jeunes (18-25 ans)",
-      "charterSigned": "Ont signé la charte « Apiculteur durable »"
+      "charterSigned": "Ont signé la charte « Apiculteur durable »",
+      "villagesInvolved": "Villages impliqués",
+      "groupementsInvolved": "Groupements impliqués",
+      "genderTrendTitle": "Apiculteurs impliqués par année (Hommes/Femmes)",
+      "hivesTraditional1": "Traditionnelle 1 entrée",
+      "hivesTraditional2": "Traditionnelle 2 entrées",
+      "hivesModern": "Moderne",
+      "hivesOther": "Autre"
     },
     "supplyChainOverview": "Aperçu de la chaîne d'approvisionnement",
     "transactionOverview": "Aperçu des transactions",

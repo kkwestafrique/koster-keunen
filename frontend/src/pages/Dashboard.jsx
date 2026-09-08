@@ -25,6 +25,7 @@ import { useIndicatorsQuality } from '@/hooks/useIndicatorsQuality';
 import { useIndicatorsYearly } from '@/hooks/useIndicatorsYearly';
 import { useIndicatorsLocalPartners } from '@/hooks/useIndicatorsLocalPartners';
 import { useBeekeepersInvolved } from '@/hooks/useBeekeepersInvolved';
+import { useBeekeepersTrends } from '@/hooks/useBeekeepersTrends';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -124,6 +125,7 @@ export default function Dashboard() {
   const { data: indicatorsYearly } = useIndicatorsYearly();
   const { data: indicatorsLocalPartners } = useIndicatorsLocalPartners({ year });
   const { data: beekeepersInvolved } = useBeekeepersInvolved({ year });
+  const { data: beekeepersTrends } = useBeekeepersTrends({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -882,6 +884,81 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Batch 3: Villages/Groupements, 6-year gender trend,
+                  hive-type breakdown -- confirmed via the same real
+                  screenshot. "Groupement" mapped to
+                  linked_producer_organisation_id (documented directly
+                  in useBeekeepersTrends.js), this app's real
+                  equivalent of a farmer group/cooperative. */}
+              {beekeepersTrends && (
+                <div className="flex flex-wrap gap-4">
+                  <div className="bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-1" data-testid="bk-villages-card">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-black text-[#032b71]">{beekeepersTrends.villages.count.toLocaleString()}</span>
+                      <span className={`text-xs font-bold ${beekeepersTrends.villages.delta >= 0 ? 'text-[#1e8e3e]' : 'text-[#ba550c]'}`}>
+                        {beekeepersTrends.villages.delta >= 0 ? '▲' : '▼'} {Math.abs(beekeepersTrends.villages.delta)}
+                      </span>
+                    </div>
+                    <span className="text-xs text-[#5a6f9a]">{t('dashboard.beekeepers.villagesInvolved')}</span>
+                  </div>
+                  <div className="bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-1" data-testid="bk-groupements-card">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-black text-[#032b71]">{beekeepersTrends.groupements.count.toLocaleString()}</span>
+                      <span className={`text-xs font-bold ${beekeepersTrends.groupements.delta >= 0 ? 'text-[#1e8e3e]' : 'text-[#ba550c]'}`}>
+                        {beekeepersTrends.groupements.delta >= 0 ? '▲' : '▼'} {Math.abs(beekeepersTrends.groupements.delta)}
+                      </span>
+                    </div>
+                    <span className="text-xs text-[#5a6f9a]">{t('dashboard.beekeepers.groupementsInvolved')}</span>
+                  </div>
+                </div>
+              )}
+
+              {beekeepersTrends && beekeepersTrends.genderTrend.length > 0 && (
+                <ChartCard title={t('dashboard.beekeepers.genderTrendTitle')} testId="bk-gender-trend-chart">
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={beekeepersTrends.genderTrend} margin={{ left: 8, right: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
+                      <XAxis dataKey="year" tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <YAxis tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="men" name={t('dashboard.beekeepers.male')} stackId="gender" fill="#0f48aa" />
+                      <Bar dataKey="women" name={t('dashboard.beekeepers.female')} stackId="gender" fill="#1e8e3e" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              )}
+
+              {beekeepersTrends && beekeepersTrends.hives.total > 0 && (
+                <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5 flex flex-wrap gap-6 items-center" data-testid="bk-hives-section">
+                  <div className="flex flex-wrap gap-4 flex-1 min-w-[280px]">
+                    <StatCard label={t('dashboard.beekeepers.hivesTraditional1')} value={beekeepersTrends.hives.traditional1.toLocaleString()} testId="bk-hives-t1" />
+                    <StatCard label={t('dashboard.beekeepers.hivesTraditional2')} value={beekeepersTrends.hives.traditional2.toLocaleString()} testId="bk-hives-t2" />
+                    <StatCard label={t('dashboard.beekeepers.hivesModern')} value={beekeepersTrends.hives.modern.toLocaleString()} testId="bk-hives-modern" />
+                    <StatCard label={t('dashboard.beekeepers.hivesOther')} value={beekeepersTrends.hives.other.toLocaleString()} testId="bk-hives-other" />
+                  </div>
+                  <ResponsiveContainer width={180} height={160}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: t('dashboard.beekeepers.hivesTraditional1'), value: beekeepersTrends.hives.traditional1 },
+                          { name: t('dashboard.beekeepers.hivesTraditional2'), value: beekeepersTrends.hives.traditional2 },
+                          { name: t('dashboard.beekeepers.hivesModern'), value: beekeepersTrends.hives.modern },
+                          { name: t('dashboard.beekeepers.hivesOther'), value: beekeepersTrends.hives.other },
+                        ]}
+                        dataKey="value" nameKey="name" innerRadius={0} outerRadius={65} isAnimationActive={false}
+                      >
+                        <Cell fill="#ba550c" />
+                        <Cell fill="#0f48aa" />
+                        <Cell fill="#1e8e3e" />
+                        <Cell fill="#5a6f9a" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
               )}
             </div>

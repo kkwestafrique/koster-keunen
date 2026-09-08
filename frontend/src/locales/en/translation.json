@@ -126,7 +126,14 @@
       "female": "Women",
       "male": "Men",
       "youth": "Youth (18-25)",
-      "charterSigned": "Signed the \"Sustainable Beekeeper\" charter"
+      "charterSigned": "Signed the \"Sustainable Beekeeper\" charter",
+      "villagesInvolved": "Villages involved",
+      "groupementsInvolved": "Groups involved",
+      "genderTrendTitle": "Involved Beekeepers by Year (Men/Women)",
+      "hivesTraditional1": "Traditional (1 entry)",
+      "hivesTraditional2": "Traditional (2 entries)",
+      "hivesModern": "Modern",
+      "hivesOther": "Other"
     },
     "supplyChainOverview": "Supply chain overview",
     "transactionOverview": "Transaction overview",
