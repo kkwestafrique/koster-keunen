@@ -570,6 +570,28 @@ export default function Dashboard() {
                       </PieChart>
                     </ResponsiveContainer>
                   </ChartCard>
+
+                  {/* "Livraison de cire par mois" -- deliberately left
+                      out of the first pass for lack of a concrete
+                      spec; a real screenshot of the source dashboard
+                      confirmed its exact shape, so it's built here now.
+                      Real months with zero deliveries render as real
+                      zero bars, not skipped -- matching the source's
+                      own chart, which shows every month even when 10
+                      of them are empty. */}
+                  <ChartCard title={t('dashboard.season.monthlyDeliveriesTitle')} testId="season-monthly-deliveries-chart">
+                    <ResponsiveContainer width="100%" height={240}>
+                      <BarChart data={seasonStocks.monthlyDeliveries} margin={{ left: 8, right: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
+                        <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                        <YAxis tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                        <Tooltip formatter={(v) => `${Number(v).toLocaleString()} kg`} />
+                        <Legend />
+                        <Bar dataKey="marron" name={t('dashboard.season.cireMarron')} stackId="deliveries" fill="#7a4a1e" />
+                        <Bar dataKey="jaune" name={t('dashboard.season.cireJaune')} stackId="deliveries" fill="#e8b93a" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
                 </>
               )}
             </div>

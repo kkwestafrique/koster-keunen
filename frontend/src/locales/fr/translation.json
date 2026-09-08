@@ -166,7 +166,8 @@
       "entree": "Entrée (Kg)",
       "sortie": "Sortie (Kg)",
       "tauxPerte": "Taux de perte",
-      "salesTitle": "Cire vendue"
+      "salesTitle": "Cire vendue",
+      "monthlyDeliveriesTitle": "Livraison de cire par mois"
     },
     "seasonTab": "Saison",
     "indicatorsTab": "Indicateurs",

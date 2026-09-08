@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const BROWN = 'Beeswax-Brown';
 const YELLOW = 'Beeswax-Yellow';
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function sumBy(rows, key, value, field) {
   return rows.filter((r) => r[key] === value).reduce((sum, r) => sum + (Number(r[field]) || 0), 0);
@@ -36,7 +37,7 @@ export function useSeasonStocks({ year, standard = [] } = {}) {
         .eq('supply_chain_id', supplyChainId).eq('direction', 'Processing');
       let sentAllTimeQuery = supabase.from('transactions').select('product, quantity, standard')
         .eq('supply_chain_id', supplyChainId).eq('direction', 'Send');
-      let sentPeriodQuery = supabase.from('transactions').select('product, quantity, standard')
+      let sentPeriodQuery = supabase.from('transactions').select('product, quantity, standard, transaction_date')
         .eq('supply_chain_id', supplyChainId).eq('direction', 'Send')
         .gte('transaction_date', `${year}-01-01`).lte('transaction_date', `${year}-12-31`);
 
@@ -96,6 +97,17 @@ export function useSeasonStocks({ year, standard = [] } = {}) {
           jaune: sumBy(sentPeriod.data, 'product', YELLOW, 'quantity'),
           total: sumBy(sentPeriod.data, 'product', BROWN, 'quantity') + sumBy(sentPeriod.data, 'product', YELLOW, 'quantity'),
         },
+        // "Livraison de cire par mois" -- real gap deliberately left
+        // out earlier for lack of a concrete spec, closed now that a
+        // real screenshot of the source dashboard confirmed its exact
+        // shape: a stacked monthly bar (Brown + Yellow) of deliveries
+        // for the selected year, months with zero deliveries included
+        // and shown as real zero bars, not skipped.
+        monthlyDeliveries: MONTH_NAMES.map((label, i) => ({
+          month: label,
+          marron: sumBy(sentPeriod.data.filter((r) => new Date(r.transaction_date).getMonth() === i), 'product', BROWN, 'quantity'),
+          jaune: sumBy(sentPeriod.data.filter((r) => new Date(r.transaction_date).getMonth() === i), 'product', YELLOW, 'quantity'),
+        })),
       };
     },
     enabled: !!supplyChainId,

@@ -166,7 +166,8 @@
       "entree": "In (Kg)",
       "sortie": "Out (Kg)",
       "tauxPerte": "Loss Rate",
-      "salesTitle": "Beeswax Sold"
+      "salesTitle": "Beeswax Sold",
+      "monthlyDeliveriesTitle": "Deliveries by Month"
     },
     "seasonTab": "Season",
     "indicatorsTab": "Indicators",
