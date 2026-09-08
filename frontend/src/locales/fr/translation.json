@@ -227,7 +227,13 @@
       "revenueWaxTitle": "Revenu moyen - Cire",
       "revenueHoneyTitle": "Revenu moyen - Miel",
       "perKg": "kg",
-      "kgPerBeekeeper": "kg / apiculteur"
+      "kgPerBeekeeper": "kg / apiculteur",
+      "contractVsActualTitle": "Contrat vs Réalisé",
+      "contractValue": "Valeur totale contrat(s)",
+      "realizedValue": "Valeur totale achats",
+      "advance": "Avance",
+      "completionRate": "Taux d'exécution",
+      "avgPriceLocalPartners": "Prix moyen partenaires locaux"
     }
   },
   "actorsList": {

@@ -227,7 +227,13 @@
       "revenueWaxTitle": "Avg. Income - Wax",
       "revenueHoneyTitle": "Avg. Income - Honey",
       "perKg": "kg",
-      "kgPerBeekeeper": "kg / beekeeper"
+      "kgPerBeekeeper": "kg / beekeeper",
+      "contractVsActualTitle": "Contract vs. Actual",
+      "contractValue": "Contract Value",
+      "realizedValue": "Actual Purchase Value",
+      "advance": "Advance",
+      "completionRate": "Completion Rate",
+      "avgPriceLocalPartners": "Avg. Price - Local Partners"
     }
   },
   "actorsList": {

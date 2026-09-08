@@ -27,6 +27,7 @@ import { useIndicatorsLocalPartners } from '@/hooks/useIndicatorsLocalPartners';
 import { useBeekeepersInvolved } from '@/hooks/useBeekeepersInvolved';
 import { useBeekeepersTrends } from '@/hooks/useBeekeepersTrends';
 import { useFinanceRevenue } from '@/hooks/useFinanceRevenue';
+import { useFinanceContracts } from '@/hooks/useFinanceContracts';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -128,6 +129,7 @@ export default function Dashboard() {
   const { data: beekeepersInvolved } = useBeekeepersInvolved({ year });
   const { data: beekeepersTrends } = useBeekeepersTrends({ year });
   const { data: financeRevenue } = useFinanceRevenue({ year });
+  const { data: financeContracts } = useFinanceContracts({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -1029,6 +1031,43 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Finance section, Batch 5: contract value vs actual
+                  purchase value (both in XOF), advance payment, and
+                  average price paid to Local Partners specifically --
+                  confirmed via the same real screenshot. Completes the
+                  Finance section. Real, honest gap: "Prime qualité"
+                  (quality premium) has no underlying field anywhere in
+                  this app's schema -- checked both contracts and
+                  transactions directly before concluding this. Left
+                  out entirely rather than invented from nothing. */}
+              {financeContracts && (
+                <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5 flex flex-col gap-4" data-testid="finance-contracts-section">
+                  <h3 className="text-sm font-bold text-[#032b71]">{t('dashboard.finance.contractVsActualTitle')}</h3>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="bg-[#f5f5f5] border border-[#cfd8e6] rounded-[5px] p-4 flex flex-col gap-1 min-w-[200px]" data-testid="finance-contract-value">
+                      <span className="text-xs text-[#5a6f9a]">{t('dashboard.finance.contractValue')}</span>
+                      <span className="text-xl font-black text-[#032b71]">{Math.round(financeContracts.contractValue).toLocaleString()} XOF</span>
+                      <span className="text-xs text-[#5a6f9a] mt-1">{t('dashboard.finance.advance')}: {Math.round(financeContracts.advance).toLocaleString()} XOF ({Math.round(financeContracts.advancePctOfContract * 100)}%)</span>
+                    </div>
+                    <div className="bg-[#f5f5f5] border border-[#cfd8e6] rounded-[5px] p-4 flex flex-col gap-1 min-w-[200px]" data-testid="finance-realized-value">
+                      <span className="text-xs text-[#5a6f9a]">{t('dashboard.finance.realizedValue')}</span>
+                      <span className="text-xl font-black text-[#032b71]">{Math.round(financeContracts.realizedValue).toLocaleString()} XOF</span>
+                      <span className="text-xs text-[#5a6f9a] mt-1">{t('dashboard.finance.advance')}: {Math.round(financeContracts.advance).toLocaleString()} XOF ({Math.round(financeContracts.advancePctOfRealized * 100)}%)</span>
+                    </div>
+                    <div className="bg-[#0f48aa] rounded-[5px] p-4 flex flex-col items-center justify-center gap-1 min-w-[140px]" data-testid="finance-completion-rate">
+                      <span className="text-2xl font-black text-white">{Math.round(financeContracts.completionRate * 100)}%</span>
+                      <span className="text-xs text-white/80 text-center">{t('dashboard.finance.completionRate')}</span>
+                    </div>
+                    <StatCard label={t('dashboard.finance.avgPriceLocalPartners')} value={`${Math.round(financeContracts.avgPriceLocalPartners).toLocaleString()} XOF/${t('dashboard.finance.perKg')}`} testId="finance-avg-price-lp" />
+                  </div>
+                  {financeContracts.missingRates.length > 0 && (
+                    <p className="text-xs text-[#ba550c]" data-testid="finance-contracts-missing-rates">
+                      {t('dashboard.season.missingRatesWarning', { currencies: financeContracts.missingRates.join(', ') })}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
