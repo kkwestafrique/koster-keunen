@@ -23,6 +23,7 @@ import { useSeasonMonthly } from '@/hooks/useSeasonMonthly';
 import { useSeasonStocks } from '@/hooks/useSeasonStocks';
 import { useIndicatorsQuality } from '@/hooks/useIndicatorsQuality';
 import { useIndicatorsYearly } from '@/hooks/useIndicatorsYearly';
+import { useIndicatorsLocalPartners } from '@/hooks/useIndicatorsLocalPartners';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -120,6 +121,7 @@ export default function Dashboard() {
   const { data: seasonStocks } = useSeasonStocks({ year });
   const { data: indicatorsQuality } = useIndicatorsQuality({ year });
   const { data: indicatorsYearly } = useIndicatorsYearly();
+  const { data: indicatorsLocalPartners } = useIndicatorsLocalPartners({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -712,6 +714,55 @@ export default function Dashboard() {
                     </ComposedChart>
                   </ResponsiveContainer>
                 </ChartCard>
+              )}
+
+              {/* Local Partners' Performance table (Top 20). Real
+                  business rules matched exactly from the source
+                  document: ranked/filtered to Top 20 by CONTRACT
+                  quantity (not delivered); Evolution (rank change) is
+                  based on DELIVERED quantity instead, explicitly
+                  different from the ranking basis; % Cire Jaune is
+                  each actor's own ratio, not a company-wide share.
+                  Flags use this app's own real, confirmed country
+                  spellings, not the source's own unverified list. */}
+              {indicatorsLocalPartners && indicatorsLocalPartners.length > 0 && (
+                <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-4 overflow-x-auto" data-testid="indicators-local-partners-table">
+                  <h3 className="text-sm font-bold text-[#032b71] mb-3">{t('dashboard.indicators.localPartnersTitle')}</h3>
+                  <table className="w-full text-sm min-w-[720px]">
+                    <thead>
+                      <tr className="text-left text-xs text-[#5a6f9a] border-b border-[#cfd8e6]">
+                        <th className="py-2 font-medium"></th>
+                        <th className="py-2 font-medium">{t('dashboard.indicators.actorName')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.indicators.evolution')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.season.contratKg')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.indicators.deliveredKg')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.indicators.pctAppro')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.season.pctContrat')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.indicators.yellowKg')}</th>
+                        <th className="py-2 font-medium text-right">{t('dashboard.indicators.yellowRatio')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {indicatorsLocalPartners.map((row) => (
+                        <tr key={row.actorId} className="border-b border-[#f5f5f5] last:border-0" data-testid={`indicators-lp-row-${row.actorId}`}>
+                          <td className="py-2">
+                            <img src={row.flagUrl} alt={row.country || ''} className="h-4 w-6 object-cover rounded-sm" />
+                          </td>
+                          <td className="py-2 font-medium text-[#032b71]">{row.name}</td>
+                          <td className={`py-2 text-right font-medium ${row.evolution > 0 ? 'text-[#1e8e3e]' : row.evolution < 0 ? 'text-[#ba550c]' : 'text-[#5a6f9a]'}`}>
+                            {row.evolution > 0 ? '▲' : row.evolution < 0 ? '▼' : '–'} {row.evolution !== 0 ? Math.abs(row.evolution) : ''}
+                          </td>
+                          <td className="py-2 text-right text-[#5a6f9a]">{row.contract.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                          <td className="py-2 text-right text-[#032b71]">{row.qty.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                          <td className="py-2 text-right text-[#5a6f9a]">{Math.round(row.pctAppro * 100)}%</td>
+                          <td className="py-2 text-right text-[#032b71] font-medium">{Math.round(row.pctContrat * 100)}%</td>
+                          <td className="py-2 text-right text-[#5a6f9a]">{row.qtyYellow.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                          <td className="py-2 text-right text-[#5a6f9a]">{Math.round(row.pctYellow * 100)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           )}

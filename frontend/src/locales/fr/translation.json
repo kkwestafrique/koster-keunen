@@ -186,7 +186,12 @@
       "yearlyTrendTitle": "Quantité / Contrat / Qualité annuels (6 dernières années)",
       "contrat": "Contrat",
       "quantite": "Quantité",
-      "qualite": "Qualité (% Jaune)"
+      "qualite": "Qualité (% Jaune)",
+      "localPartnersTitle": "Performance des partenaires locaux (Top 20)",
+      "actorName": "Partenaire local",
+      "evolution": "Évolution",
+      "deliveredKg": "Livré (Kg)",
+      "pctAppro": "% Appro"
     }
   },
   "actorsList": {
