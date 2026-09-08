@@ -57,7 +57,7 @@ export function useIndicatorsQuality({ year }) {
         if (r.product === YELLOW) byCountry[country].yellow += Number(r.quantity) || 0;
       });
       const countryTable = Object.entries(byCountry)
-        .map(([country, v]) => ({ country, yellow: v.yellow, ratio: v.total > 0 ? v.yellow / v.total : 0 }))
+        .map(([country, v]) => ({ country, total: v.total, yellow: v.yellow, ratio: v.total > 0 ? v.yellow / v.total : 0 }))
         .sort((a, b) => b.yellow - a.yellow);
 
       return {

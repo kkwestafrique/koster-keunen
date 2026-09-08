@@ -192,7 +192,8 @@
       "actorName": "Local Partner",
       "evolution": "Evolution",
       "deliveredKg": "Delivered (Kg)",
-      "pctAppro": "% Appro"
+      "pctAppro": "% Appro",
+      "countryPieTitle": "Received by Country"
     }
   },
   "actorsList": {

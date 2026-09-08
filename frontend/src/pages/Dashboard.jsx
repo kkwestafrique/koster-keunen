@@ -644,26 +644,51 @@ export default function Dashboard() {
               )}
 
               {indicatorsQuality && indicatorsQuality.countryTable.length > 0 && (
-                <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-4" data-testid="indicators-country-table">
-                  <h3 className="text-sm font-bold text-[#032b71] mb-3">{t('dashboard.indicators.countryTableTitle')}</h3>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-xs text-[#5a6f9a] border-b border-[#cfd8e6]">
-                        <th className="py-2 font-medium">{t('dashboard.indicators.country')}</th>
-                        <th className="py-2 font-medium text-right">{t('dashboard.indicators.yellowKg')}</th>
-                        <th className="py-2 font-medium text-right">{t('dashboard.indicators.yellowRatio')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {indicatorsQuality.countryTable.map((row) => (
-                        <tr key={row.country} className="border-b border-[#f5f5f5] last:border-0" data-testid={`indicators-country-row-${row.country}`}>
-                          <td className="py-2 font-medium text-[#032b71]">{row.country}</td>
-                          <td className="py-2 text-right text-[#5a6f9a]">{row.yellow.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                          <td className="py-2 text-right text-[#032b71] font-medium">{Math.round(row.ratio * 100)}%</td>
+                <div className="flex flex-wrap gap-4 items-stretch">
+                  {/* Real gap closed, confirmed via a real screenshot
+                      of the source dashboard: this pie chart (total
+                      quantity share by country) was previously left
+                      out for lack of a concrete spec -- the text
+                      handoff document's own words said it "wasn't
+                      fully specified in conversation." */}
+                  <ChartCard title={t('dashboard.indicators.countryPieTitle')} testId="indicators-country-pie">
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Pie
+                          data={indicatorsQuality.countryTable.map((row) => ({ name: row.country, value: row.total }))}
+                          dataKey="value" nameKey="name" innerRadius={0} outerRadius={90} isAnimationActive={false}
+                          label={({ name, percent }) => `${name} ${Math.round(percent * 100)}%`}
+                        >
+                          {indicatorsQuality.countryTable.map((row, i) => (
+                            <Cell key={row.country} fill={['#0f48aa', '#ba550c', '#1e8e3e', '#7a4a1e', '#e8b93a', '#5a6f9a', '#032b71'][i % 7]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(v) => `${Number(v).toLocaleString()} kg`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+
+                  <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-4 flex-1 min-w-[300px]" data-testid="indicators-country-table">
+                    <h3 className="text-sm font-bold text-[#032b71] mb-3">{t('dashboard.indicators.countryTableTitle')}</h3>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-xs text-[#5a6f9a] border-b border-[#cfd8e6]">
+                          <th className="py-2 font-medium">{t('dashboard.indicators.country')}</th>
+                          <th className="py-2 font-medium text-right">{t('dashboard.indicators.yellowKg')}</th>
+                          <th className="py-2 font-medium text-right">{t('dashboard.indicators.yellowRatio')}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {indicatorsQuality.countryTable.map((row) => (
+                          <tr key={row.country} className="border-b border-[#f5f5f5] last:border-0" data-testid={`indicators-country-row-${row.country}`}>
+                            <td className="py-2 font-medium text-[#032b71]">{row.country}</td>
+                            <td className="py-2 text-right text-[#5a6f9a]">{row.yellow.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                            <td className="py-2 text-right text-[#032b71] font-medium">{Math.round(row.ratio * 100)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
