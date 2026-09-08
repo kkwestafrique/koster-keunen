@@ -26,6 +26,7 @@ import { useIndicatorsYearly } from '@/hooks/useIndicatorsYearly';
 import { useIndicatorsLocalPartners } from '@/hooks/useIndicatorsLocalPartners';
 import { useBeekeepersInvolved } from '@/hooks/useBeekeepersInvolved';
 import { useBeekeepersTrends } from '@/hooks/useBeekeepersTrends';
+import { useFinanceRevenue } from '@/hooks/useFinanceRevenue';
 import GaugeCard from '@/components/common/GaugeCard';
 
 function StatCard({ label, value, testId }) {
@@ -126,6 +127,7 @@ export default function Dashboard() {
   const { data: indicatorsLocalPartners } = useIndicatorsLocalPartners({ year });
   const { data: beekeepersInvolved } = useBeekeepersInvolved({ year });
   const { data: beekeepersTrends } = useBeekeepersTrends({ year });
+  const { data: financeRevenue } = useFinanceRevenue({ year });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
@@ -959,6 +961,74 @@ export default function Dashboard() {
                       <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Finance section, Batch 4: hives per beekeeper,
+                  land-use breakdown, hive-type-holder %, and average
+                  income/price/quantity per beekeeper split by wax vs
+                  honey -- confirmed via the same real screenshot. */}
+              {financeRevenue && (
+                <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5 flex flex-col gap-4" data-testid="finance-revenue-section">
+                  <h3 className="text-sm font-bold text-[#032b71]">{t('dashboard.finance.title')}</h3>
+                  <div className="flex flex-wrap gap-6 items-start">
+                    <StatCard label={t('dashboard.finance.hivesPerBeekeeper')} value={financeRevenue.hivesPerBeekeeper.toFixed(1)} testId="finance-hives-per-bk" />
+
+                    <div className="flex flex-col gap-1.5 min-w-[200px]" data-testid="finance-land-use">
+                      <span className="text-xs text-[#5a6f9a] font-medium">{t('dashboard.finance.landUseTitle')}</span>
+                      {[
+                        { key: 'mango', label: t('dashboard.finance.landMango') },
+                        { key: 'cashew', label: t('dashboard.finance.landCashew') },
+                        { key: 'shea', label: t('dashboard.finance.landShea') },
+                        { key: 'forest', label: t('dashboard.finance.landForest') },
+                        { key: 'other', label: t('dashboard.finance.landOther') },
+                      ].map((row) => (
+                        <div key={row.key} className="flex items-center justify-between text-xs" data-testid={`finance-land-${row.key}`}>
+                          <span className="text-[#5a6f9a]">{row.label}</span>
+                          <span className="font-bold text-[#032b71]">{Math.round((financeRevenue.landUse[row.key] || 0) * 100)}%</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 min-w-[220px]" data-testid="finance-hive-holders">
+                      <span className="text-xs text-[#5a6f9a] font-medium">{t('dashboard.finance.hiveHoldersTitle')}</span>
+                      {[
+                        { key: 'traditional1', label: t('dashboard.beekeepers.hivesTraditional1') },
+                        { key: 'traditional2', label: t('dashboard.beekeepers.hivesTraditional2') },
+                        { key: 'modern', label: t('dashboard.beekeepers.hivesModern') },
+                        { key: 'other', label: t('dashboard.beekeepers.hivesOther') },
+                      ].map((row) => (
+                        <div key={row.key} className="flex items-center gap-2 text-xs" data-testid={`finance-holder-${row.key}`}>
+                          <span className="text-[#5a6f9a] w-24">{row.label}</span>
+                          <div className="flex-1 h-2 bg-[#e8ecf3] rounded-full overflow-hidden">
+                            <div className="h-full bg-[#0f48aa]" style={{ width: `${Math.round((financeRevenue.hiveTypeHolderRatio[row.key] || 0) * 100)}%` }} />
+                          </div>
+                          <span className="font-bold text-[#032b71] w-9 text-right">{Math.round((financeRevenue.hiveTypeHolderRatio[row.key] || 0) * 100)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4 border-t border-dashed border-[#cfd8e6] pt-4">
+                    {[
+                      { data: financeRevenue.wax, title: t('dashboard.finance.revenueWaxTitle'), testId: 'wax' },
+                      { data: financeRevenue.honey, title: t('dashboard.finance.revenueHoneyTitle'), testId: 'honey' },
+                    ].map((group) => (
+                      <div key={group.testId} className="bg-[#f5f5f5] border border-[#cfd8e6] rounded-[5px] p-4 flex flex-col gap-2 flex-1 min-w-[240px]" data-testid={`finance-revenue-${group.testId}`}>
+                        <span className="text-xs text-[#5a6f9a] font-bold">{group.title}</span>
+                        <span className="text-xl font-black text-[#032b71]">{Math.round(group.data.avgIncome).toLocaleString()} XOF</span>
+                        <div className="flex gap-4 text-xs text-[#5a6f9a]">
+                          <span>{Math.round(group.data.pricePerKg).toLocaleString()} XOF/{t('dashboard.finance.perKg')}</span>
+                          <span>{group.data.avgQty.toFixed(1)} {t('dashboard.finance.kgPerBeekeeper')}</span>
+                        </div>
+                        {group.data.missingRates.length > 0 && (
+                          <p className="text-xs text-[#ba550c]" data-testid={`finance-missing-rates-${group.testId}`}>
+                            {t('dashboard.season.missingRatesWarning', { currencies: group.data.missingRates.join(', ') })}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

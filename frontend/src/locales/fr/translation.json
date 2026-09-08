@@ -213,6 +213,21 @@
       "deliveredKg": "Livré (Kg)",
       "pctAppro": "% Appro",
       "countryPieTitle": "Réceptionné par pays"
+    },
+    "finance": {
+      "title": "Finances",
+      "hivesPerBeekeeper": "Ruches par apiculteur",
+      "landUseTitle": "Répartition par type de culture",
+      "landMango": "Plantation de manguiers",
+      "landCashew": "Plantation de cajou",
+      "landShea": "Parcs à Karité",
+      "landForest": "Forêt",
+      "landOther": "Autres",
+      "hiveHoldersTitle": "Apiculteurs ayant au moins 1 ruche",
+      "revenueWaxTitle": "Revenu moyen - Cire",
+      "revenueHoneyTitle": "Revenu moyen - Miel",
+      "perKg": "kg",
+      "kgPerBeekeeper": "kg / apiculteur"
     }
   },
   "actorsList": {

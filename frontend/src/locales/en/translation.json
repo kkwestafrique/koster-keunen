@@ -213,6 +213,21 @@
       "deliveredKg": "Delivered (Kg)",
       "pctAppro": "% Appro",
       "countryPieTitle": "Received by Country"
+    },
+    "finance": {
+      "title": "Finance",
+      "hivesPerBeekeeper": "Hives per Beekeeper",
+      "landUseTitle": "Land Use",
+      "landMango": "Mango plantation",
+      "landCashew": "Cashew plantation",
+      "landShea": "Shea parks",
+      "landForest": "Forest",
+      "landOther": "Other",
+      "hiveHoldersTitle": "Beekeepers with at Least 1 Hive",
+      "revenueWaxTitle": "Avg. Income - Wax",
+      "revenueHoneyTitle": "Avg. Income - Honey",
+      "perKg": "kg",
+      "kgPerBeekeeper": "kg / beekeeper"
     }
   },
   "actorsList": {
