@@ -175,6 +175,25 @@ export function AuthProvider({ children }) {
     // Yusuf or Chinedu Okafor, two different real actors under the same
     // login. Same root cause as every other entry in this list.
     queryClient.invalidateQueries({ queryKey: ['activity-log'] });
+    // Real gap reported directly: "when I switch actors the dashboard
+    // data stays the same." Same root cause as every entry above and
+    // the activity-log fix noted there -- these 12 query keys were all
+    // built in later sessions, after this invalidation list already
+    // existed, and were never added to it. All genuinely read data
+    // that can be scoped by current_actor_id via RLS (actors,
+    // beekeepers, transactions, contracts), so every one belongs here.
+    queryClient.invalidateQueries({ queryKey: ['actor-type-counts'] });
+    queryClient.invalidateQueries({ queryKey: ['season-metrics'] });
+    queryClient.invalidateQueries({ queryKey: ['season-purchases'] });
+    queryClient.invalidateQueries({ queryKey: ['season-monthly'] });
+    queryClient.invalidateQueries({ queryKey: ['season-stocks'] });
+    queryClient.invalidateQueries({ queryKey: ['indicators-quality'] });
+    queryClient.invalidateQueries({ queryKey: ['indicators-yearly'] });
+    queryClient.invalidateQueries({ queryKey: ['indicators-local-partners'] });
+    queryClient.invalidateQueries({ queryKey: ['beekeepers-involved'] });
+    queryClient.invalidateQueries({ queryKey: ['beekeepers-trends'] });
+    queryClient.invalidateQueries({ queryKey: ['finance-revenue'] });
+    queryClient.invalidateQueries({ queryKey: ['finance-contracts'] });
   };
 
   return (
