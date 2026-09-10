@@ -90,24 +90,12 @@ const ACTOR_TYPE_COLORS = {
 const HIVE_COLORS = { Traditional: '#0f48aa', Modern: '#9fb6dd', Other: '#c5cae9' };
 const GENDER_COLORS = { Male: '#0f48aa', Female: '#9fb6dd', Other: '#219653' };
 
-const CATEGORY_TRANSLATION_KEY = {
-  'Producer Organisation': 'dashboard.categoryProducerOrganisation',
-  Aggregator: 'dashboard.categoryAggregator',
-  'Local Partner': 'dashboard.categoryLocalPartner',
-  Buyer: 'dashboard.categoryBuyer',
-  Traditional: 'dashboard.categoryTraditional',
-  Modern: 'dashboard.categoryModern',
-  Other: 'dashboard.categoryOther',
-  Male: 'dashboard.categoryMale',
-  Female: 'dashboard.categoryFemale',
-};
-
 export default function Dashboard() {
   const { t } = useTranslation();
   usePageTitle(t('dashboard.title'));
   const { profile } = useAuth();
   const { data: actors = [] } = useAllActorsLite();
-  const [tab, setTab] = useState('supply');
+  const [tab, setTab] = useState('season');
   const [country, setCountry] = useState('');
   const [actorFilter, setActorFilter] = useState('');
   const [year, setYear] = useState('2026');
@@ -133,28 +121,6 @@ export default function Dashboard() {
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);
-
-  const actorTypeData = actorCounts
-    ? Object.entries(actorCounts.byType)
-        .filter(([name, v]) => v > 0 && (!actorFilter || name === actorFilter))
-        .map(([name, value]) => ({ name, translatedName: t(CATEGORY_TRANSLATION_KEY[name] || name), value }))
-    : [];
-
-  const hiveData = bkAgg
-    ? [
-        { name: 'Traditional', translatedName: t('dashboard.categoryTraditional'), value: bkAgg.traditional },
-        { name: 'Modern', translatedName: t('dashboard.categoryModern'), value: bkAgg.modern },
-        { name: 'Other', translatedName: t('dashboard.categoryOther'), value: bkAgg.other },
-      ].filter((d) => d.value > 0)
-    : [];
-
-  const genderData = bkAgg
-    ? [
-        { name: 'Male', translatedName: t('dashboard.categoryMale'), value: bkAgg.male },
-        { name: 'Female', translatedName: t('dashboard.categoryFemale'), value: bkAgg.female },
-        { name: 'Other', translatedName: t('dashboard.categoryOther'), value: bkAgg.genderOther },
-      ].filter((d) => d.value > 0)
-    : [];
 
   return (
     <AppLayout hideDefaultHeader>
@@ -197,28 +163,6 @@ export default function Dashboard() {
         <div className="px-8">
           <div className="flex" data-testid="dashboard-tabs">
             <button
-              data-testid="dashboard-tab-supply"
-              onClick={() => setTab('supply')}
-              className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
-                tab === 'supply'
-                  ? 'bg-white text-[#0f48aa] border-[#0f48aa]'
-                  : 'bg-[#e8ecf3] text-[#5a6f9a] border-transparent'
-              }`}
-            >
-              {t('dashboard.supplyChainOverview')}
-            </button>
-            <button
-              data-testid="dashboard-tab-transactions"
-              onClick={() => setTab('transactions')}
-              className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
-                tab === 'transactions'
-                  ? 'bg-white text-[#0f48aa] border-[#0f48aa]'
-                  : 'bg-[#e8ecf3] text-[#5a6f9a] border-transparent'
-              }`}
-            >
-              {t('dashboard.transactionOverview')}
-            </button>
-            <button
               data-testid="dashboard-tab-season"
               onClick={() => setTab('season')}
               className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
@@ -227,7 +171,7 @@ export default function Dashboard() {
                   : 'bg-[#e8ecf3] text-[#5a6f9a] border-transparent'
               }`}
             >
-              {t('dashboard.seasonTab')}
+              {t('dashboard.supplyChainOverview')}
             </button>
             <button
               data-testid="dashboard-tab-indicators"
@@ -239,6 +183,17 @@ export default function Dashboard() {
               }`}
             >
               {t('dashboard.indicatorsTab')}
+            </button>
+            <button
+              data-testid="dashboard-tab-transactions"
+              onClick={() => setTab('transactions')}
+              className={`px-4 h-10 text-sm font-bold border-b-2 transition-colors ${
+                tab === 'transactions'
+                  ? 'bg-white text-[#0f48aa] border-[#0f48aa]'
+                  : 'bg-[#e8ecf3] text-[#5a6f9a] border-transparent'
+              }`}
+            >
+              {t('dashboard.transactionOverview')}
             </button>
           </div>
 
@@ -298,63 +253,7 @@ export default function Dashboard() {
 
         {/* Charts */}
         <div className="px-8 pt-6">
-          {tab === 'supply' ? (
-            <div className="flex flex-wrap gap-6" data-testid="dashboard-charts-supply">
-              <ChartCard
-                title={t("dashboard.actorTypeDistribution")}
-                testId="chart-actor-types"
-                isEmpty={actorTypeData.length === 0 || actorTypeData.every((d) => !d.value)}
-              >
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie data={actorTypeData} dataKey="value" nameKey="translatedName" innerRadius={55} outerRadius={90} isAnimationActive={false}>
-                      {actorTypeData.map((entry) => (
-                        <Cell key={entry.name} fill={ACTOR_TYPE_COLORS[entry.name] || '#cfd8e6'} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartCard>
-
-              <ChartCard
-                title={t("dashboard.totalHivesInstalled")}
-                testId="chart-hives"
-                isEmpty={hiveData.length === 0 || hiveData.every((d) => !d.value)}
-              >
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie data={hiveData} dataKey="value" nameKey="translatedName" innerRadius={55} outerRadius={90} isAnimationActive={false}>
-                      {hiveData.map((entry) => (
-                        <Cell key={entry.name} fill={HIVE_COLORS[entry.name] || '#cfd8e6'} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartCard>
-
-              <ChartCard
-                title={t("dashboard.beekeepersOverview")}
-                testId="chart-gender"
-                isEmpty={genderData.length === 0 || genderData.every((d) => !d.value)}
-              >
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie data={genderData} dataKey="value" nameKey="translatedName" innerRadius={55} outerRadius={90} isAnimationActive={false}>
-                      {genderData.map((entry) => (
-                        <Cell key={entry.name} fill={GENDER_COLORS[entry.name] || '#cfd8e6'} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            </div>
-          ) : tab === 'transactions' ? (
+          {tab === 'transactions' ? (
             <div className="flex flex-wrap gap-6" data-testid="dashboard-charts-transactions">
               <ChartCard title={t('dashboard.transactionOverview')} testId="chart-transactions-by-direction">
                 {txSummary && txSummary.total > 0 ? (
