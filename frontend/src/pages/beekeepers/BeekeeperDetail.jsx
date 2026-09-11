@@ -28,10 +28,21 @@ export default function BeekeeperDetail() {
   const { data: bk, isLoading } = useBeekeeper(id);
   usePageTitle(bk?.full_name);
 
-  if (isLoading || !bk) {
+  // Same real gap and fix as ActorDetail.jsx: split the combined
+  // isLoading/!bk check into two real, separate checks, so a genuinely
+  // deleted or invalid beekeeper id shows a clear message instead of
+  // the loading skeleton forever.
+  if (isLoading) {
     return (
       <AppLayout title={t('beekeeperDetail.title')}>
         <DetailPageSkeleton testId="beekeeper-detail-skeleton" />
+      </AppLayout>
+    );
+  }
+  if (!bk) {
+    return (
+      <AppLayout title={t('beekeeperDetail.title')}>
+        <p className="text-[#5a6f9a]" data-testid="beekeeper-not-found">{t('common.notFound')}</p>
       </AppLayout>
     );
   }

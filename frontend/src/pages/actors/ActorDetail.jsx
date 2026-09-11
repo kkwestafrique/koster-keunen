@@ -52,10 +52,26 @@ export default function ActorDetail() {
     }
   };
 
-  if (isLoading || !actor) {
+  // Real gap found during an error-injection audit: this used to
+  // combine isLoading and !actor into one check, meaning a genuinely
+  // deleted or invalid actor id would show the loading skeleton
+  // forever -- isLoading correctly becomes false once the query
+  // resolves, but !actor stays true, and the combined condition never
+  // clears. Split into two real, separate checks, matching the
+  // already-correct pattern used by StockDetail/TransactionDetail/
+  // ContractDetail -- this app already knew how to do this right, just
+  // not consistently everywhere.
+  if (isLoading) {
     return (
       <AppLayout hideDefaultHeader>
         <DetailPageSkeleton testId="actor-detail-skeleton" />
+      </AppLayout>
+    );
+  }
+  if (!actor) {
+    return (
+      <AppLayout hideDefaultHeader>
+        <p className="text-[#5a6f9a]" data-testid="actor-not-found">{t('common.notFound')}</p>
       </AppLayout>
     );
   }
