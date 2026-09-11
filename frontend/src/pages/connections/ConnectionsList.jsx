@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
@@ -57,13 +57,24 @@ export default function ConnectionsList() {
   // brief-wait improvement that doesn't need that risk.
   const [pendingDeleteIds, setPendingDeleteIds] = useState(new Set());
   const visibleRows = (data?.rows || []).filter((r) => !pendingDeleteIds.has(r.id));
+  // The real fix for double-clicking Approve is the database-level
+  // idempotency check added to approve_connection itself (it now
+  // rejects being called on an already-Active connection with a clear
+  // error). This ref is a belt-and-suspenders addition on top of
+  // that -- avoids even the momentary, confusing error toast a
+  // genuinely fast double-click would otherwise show.
+  const approvingRef = useRef(new Set());
 
   const handleApprove = async (connectionId) => {
+    if (approvingRef.current.has(connectionId)) return;
+    approvingRef.current.add(connectionId);
     try {
       await approveConnection.mutateAsync(connectionId);
       toast({ title: t('connectionsList.approved') });
     } catch (err) {
       toast({ title: t('connectionsList.approveFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    } finally {
+      approvingRef.current.delete(connectionId);
     }
   };
 
