@@ -22,6 +22,13 @@ export function usePermissions() {
     // with Babs. Mirrors the real boundary: field_change_log's own RLS
     // SELECT policy independently restricts to auth_role() = 'Admin'.
     canViewChangeHistory: role === 'Admin',
+    // Real gap found and confirmed live during a permissions audit:
+    // claims_delete requires Admin specifically at the database level,
+    // but the UI was using the generic canDelete (Admin OR Member) --
+    // a Member clicking the visible delete button would have it
+    // silently do nothing. Confirmed with Babs this should be tightened
+    // to match the database, not the other way around.
+    canDeleteClaims: role === 'Admin',
     isFieldOfficer: role === 'Field Officer',
   };
 }

@@ -32,7 +32,7 @@ export default function VerificationQueue() {
   const { t } = useTranslation();
   usePageTitle(t('verification.title'));
   const { toast } = useToast();
-  const { canApprove, canDelete } = usePermissions();
+  const { canApprove, canDeleteClaims } = usePermissions();
   const { data: claims = [], isLoading, isError, refetch } = usePendingClaims();
   const verifyClaim = useVerifyClaim();
   const rejectClaim = useRejectClaim();
@@ -120,7 +120,7 @@ export default function VerificationQueue() {
           ),
         }]
       : []),
-    ...(canDelete
+    ...(canDeleteClaims
       ? [{
           key: '__delete',
           label: '',
