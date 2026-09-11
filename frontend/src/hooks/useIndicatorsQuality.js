@@ -2,7 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
+const BROWN = 'Beeswax-Brown';
 const YELLOW = 'Beeswax-Yellow';
+const CRUDE_WAX = 'Crude Wax';
+// Real, confirmed bug fixed here: every aggregate in this hook used
+// to sum ALL received products with no filter at all -- including
+// Royal Jelly, Honey, and Crude Honey -- not just wax. Confirmed
+// against real 2026 data before fixing: Royal Jelly alone was 10,085kg
+// against a real wax total (Brown + Yellow + Crude Wax) of just
+// 1,805kg, a ~7x overcount that also silently distorted the Yellow
+// ratio (the wrong, inflated denominator). "Total Beeswax" should mean
+// wax specifically, matching the same product scope already
+// established in useSeasonStocks.js and useBeekeepersInvolved.js.
+const WAX_PRODUCTS = [BROWN, YELLOW, CRUDE_WAX];
 
 function sumField(rows, field) {
   return rows.reduce((sum, r) => sum + (Number(r[field]) || 0), 0);
@@ -35,11 +47,12 @@ export function useIndicatorsQuality({ year }) {
       if (thisYear.error) throw thisYear.error;
       if (lastYear.error) throw lastYear.error;
 
-      const rows = thisYear.data;
+      const rows = thisYear.data.filter((r) => WAX_PRODUCTS.includes(r.product));
+      const lastYearRows = lastYear.data.filter((r) => WAX_PRODUCTS.includes(r.product));
       const totalBeeswax = sumField(rows, 'quantity');
       const totalYellow = sumField(rows.filter((r) => r.product === YELLOW), 'quantity');
-      const lastYearTotal = sumField(lastYear.data, 'quantity');
-      const lastYearYellow = sumField(lastYear.data.filter((r) => r.product === YELLOW), 'quantity');
+      const lastYearTotal = sumField(lastYearRows, 'quantity');
+      const lastYearYellow = sumField(lastYearRows.filter((r) => r.product === YELLOW), 'quantity');
       const yoy = (thisVal, lastVal) => (lastVal > 0 ? (thisVal - lastVal) / lastVal : 0);
 
       const byStandard = {};
