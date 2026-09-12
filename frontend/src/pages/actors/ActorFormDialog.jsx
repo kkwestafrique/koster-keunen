@@ -289,7 +289,7 @@ export default function ActorFormDialog({ open, onOpenChange }) {
           </div>
 
           <h3 className="text-sm font-black text-[#032b71] mt-2">{t('actorProfile.address')}</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AddressFields
               testIdPrefix="actor-form"
               value={{
@@ -303,7 +303,7 @@ export default function ActorFormDialog({ open, onOpenChange }) {
           </div>
 
           <h3 className="text-sm font-black text-[#032b71] mt-2">{t('actorProfile.contactInformation')}</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <RequiredLabel required>{t('actorProfile.contactFullName')}</RequiredLabel>
               <Input data-testid="actor-form-contact-name" required value={form.contact_name} onChange={(e) => set('contact_name')(e.target.value)} />

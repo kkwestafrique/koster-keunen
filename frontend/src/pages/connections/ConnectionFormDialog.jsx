@@ -75,7 +75,7 @@ export default function ConnectionFormDialog({ open, onOpenChange }) {
           <DialogTitle className="text-[#032b71] font-black">{t('forms.addConnection')}</DialogTitle>
           <DialogDescription>{t('forms.addConnectionDescription')}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="conn-form-from" className="text-[#5a6f9a]">{t('forms.actorFrom')}</Label>
             <Select value={form.actor_from_id} onValueChange={setActorFrom}>

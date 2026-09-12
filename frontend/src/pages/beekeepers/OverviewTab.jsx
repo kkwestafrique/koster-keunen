@@ -97,7 +97,7 @@ export default function OverviewTab({ bk }) {
 
         <div className="flex flex-col gap-1.5">
           <RequiredLabel required spaced={false}>{t('forms.totalHivesInstalled')}</RequiredLabel>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Input type="number" min="0" data-testid="bk-overview-edit-hts" value={form.hives_traditional_single} onChange={(e) => set('hives_traditional_single')(e.target.value)} />
             <Input type="number" min="0" data-testid="bk-overview-edit-htd" value={form.hives_traditional_double} onChange={(e) => set('hives_traditional_double')(e.target.value)} />
             <Input type="number" min="0" data-testid="bk-overview-edit-modern" value={form.hives_modern} onChange={(e) => set('hives_modern')(e.target.value)} />
@@ -107,7 +107,7 @@ export default function OverviewTab({ bk }) {
 
         <div className="flex flex-col gap-1.5">
           <RequiredLabel required spaced={false}>{t('forms.hiveSpreadPerCrop')}</RequiredLabel>
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {HIVE_SPREAD_CROPS.map((crop) => {
               const key = `hive_${crop.toLowerCase().replace(' ', '_')}`;
               return <Input key={crop} type="number" min="0" data-testid={`bk-overview-edit-crop-${crop}`} value={form[key] ?? 0} onChange={(e) => set(key)(e.target.value)} />;
@@ -179,7 +179,7 @@ export default function OverviewTab({ bk }) {
       </div>
 
       <p className="text-xs text-[#5a6f9a] mb-2">{t('beekeeperDetail.totalBeehivesInstalled')}</p>
-      <div className="grid grid-cols-5 gap-3 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
         {[
           [t('beekeeperDetail.totalHives'), bk.total_hives],
           [t('beekeeperDetail.traditionalSingleHives'), bk.hives_traditional_single],
@@ -231,7 +231,7 @@ export default function OverviewTab({ bk }) {
                     <tr className="border-b border-[#f0f0f0] bg-[#f9fbfd]" data-testid={`bk-year-row-${r.year}-expanded`}>
                       <td></td>
                       <td colSpan={5} className="py-3">
-                        <div className="grid grid-cols-5 gap-4 text-sm">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                           <DetailField label={t('beekeeperDetail.traditionalSingleHives')} value={r.hives_traditional_single} />
                           <DetailField label={t('beekeeperDetail.traditionalDoubleHives')} value={r.hives_traditional_double} />
                           <DetailField label={t('beekeeperDetail.modernHives')} value={r.hives_modern} />

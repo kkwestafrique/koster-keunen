@@ -97,7 +97,7 @@ function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} })
           <DialogDescription className="sr-only">{t('contractDetail.updateContract')}</DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-3 gap-4 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           <DetailField label={t('contracts.year')} value={contract.year} testId="update-contract-year" />
           <DetailField label={t('contractWizard.supplier')} value={contract.actors?.contact_name} testId="update-contract-actor" />
           <div className="flex flex-col gap-1">
@@ -109,7 +109,7 @@ function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} })
         {products.map((row, idx) => (
           <div key={row.id} className="flex flex-col gap-2 border-t border-[#cfd8e6] pt-3 mt-2" data-testid={`update-contract-row-${idx}`}>
             <p className="font-bold text-[#032b71]">{row.product}</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <RequiredLabel required>{t('contractDetail.expectedQuantityKg')}</RequiredLabel>
                 <FormattedNumberInput
@@ -151,7 +151,7 @@ function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} })
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <RequiredLabel required>{t('contractWizard.advanceAmountPaid')}</RequiredLabel>
             <Input
@@ -431,7 +431,7 @@ export default function ContractDetail() {
           Contract type, then Name of Supplier/Country/Signature date, then
           Standard/Advance amount paid/Advance(%), then Comments full width. */}
       <div className="bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-6 mb-6" data-testid="contract-detail-header">
-        <div className="grid grid-cols-3 gap-x-8 gap-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
           <DetailField label={t('contractDetail.contractId')} value={contract.contract_code} />
           <DetailField label={t('contracts.year')} value={contract.year} />
           <DetailField label={t('contracts.type')} value={contract.contract_type} />
@@ -501,7 +501,7 @@ export default function ContractDetail() {
                   </tbody>
                 </table>
 
-                <div className="grid grid-cols-3 gap-4 bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4 mt-4" data-testid="contract-detail-totals">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4 mt-4" data-testid="contract-detail-totals">
                   <DetailField label={t('contractWizard.totalQuantityExpected')} value={contract.total_quantity_expected} />
                   <DetailField label={t('contractWizard.totalContractAmount')} value={products.reduce((s, p) => s + (Number(p.expected_quantity) || 0) * (Number(p.price) || 0), 0).toLocaleString()} />
                   <DetailField

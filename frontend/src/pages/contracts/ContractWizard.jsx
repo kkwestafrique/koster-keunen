@@ -358,7 +358,7 @@ export default function ContractWizard() {
               </div>
 
               {showTotalsSummary && (
-                <div className="col-span-full grid grid-cols-3 gap-4 bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4" data-testid="contract-totals-summary">
+                <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4" data-testid="contract-totals-summary">
                   <SummaryField label={t('contractWizard.totalQuantityExpected')} value={`${totalQuantity}`} />
                   <SummaryField label={t('contractWizard.totalContractAmount')} value={totalContractAmount.toLocaleString()} />
                   <SummaryField label={t('contractWizard.percentageYellowWax')} value={percentageYellowWax != null ? `${percentageYellowWax}%` : '—'} />

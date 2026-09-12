@@ -434,7 +434,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
                       <RequiredLabel required>{t('forms.beekeeperFullName')}</RequiredLabel>
                       <Input data-testid="bk-wizard-name" required value={form.full_name} onChange={(e) => set('full_name')(e.target.value)} placeholder={t('forms.beekeeperFullName')} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <AddressFields
                         testIdPrefix="bk-wizard"
                         value={{ country: form.country, state_region: form.state_region, lga_municipality: form.lga_municipality, village: form.village }}
@@ -442,7 +442,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
                       />
                     </div>
                     <h3 className="text-sm font-black text-[#032b71] mt-2">{t('actorProfile.contactInformation')}</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5">
                         <RequiredLabel required={false}>{t('actorProfile.contactEmail')}</RequiredLabel>
                         <Input type="email" data-testid="bk-wizard-email" value={form.contact_email} onChange={(e) => set('contact_email')(e.target.value)} />
@@ -465,7 +465,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
                 {step === STEP_CONNECTION && (
                   <>
                     <h3 className="text-sm font-black text-[#032b71]">{t('forms.connectionDetails')}</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5">
                         <RequiredLabel required={false}>{t('forms.nationalId')}</RequiredLabel>
                         <Input data-testid="bk-wizard-national-id" value={form.national_id} onChange={(e) => set('national_id')(e.target.value)} placeholder={t('forms.nationalId')} />
@@ -531,7 +531,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
                   <>
                     <div className="flex flex-col gap-1.5">
                       <RequiredLabel required spaced={false}>{t('forms.totalHivesInstalled')}</RequiredLabel>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5">
                           <RequiredLabel required={false} className="text-xs">{t('forms.traditionalSingleHives')}</RequiredLabel>
                           <Input type="number" min="0" data-testid="bk-wizard-hts" value={form.hives_traditional_single} onChange={(e) => set('hives_traditional_single')(e.target.value)} />
@@ -553,7 +553,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
 
                     <div className="flex flex-col gap-1.5 mt-2">
                       <RequiredLabel required spaced={false}>{t('forms.hiveSpreadPerCrop')}</RequiredLabel>
-                      <div className="grid grid-cols-5 gap-3">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         {HIVE_SPREAD_CROPS.map((crop) => {
                           const key = `hive_${crop.toLowerCase().replace(' ', '_')}`;
                           return (

@@ -130,7 +130,7 @@ export default function DetailsTab({ bk }) {
         <Textarea data-testid="bk-details-edit-description" className="bg-white" value={form.description} onChange={(e) => set('description')(e.target.value)} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <RequiredLabel required spaced={false}>{t('forms.gender')}</RequiredLabel>
           <Select value={form.gender} onValueChange={set('gender')}>
@@ -154,7 +154,7 @@ export default function DetailsTab({ bk }) {
       </div>
 
       <h3 className="text-sm font-black text-[#032b71]">{t('actorProfile.address')}</h3>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <AddressFields
           testIdPrefix="bk-details-edit"
           value={{ country: form.country, state_region: form.state_region, lga_municipality: form.lga_municipality, village: form.village }}
@@ -163,7 +163,7 @@ export default function DetailsTab({ bk }) {
       </div>
 
       <h3 className="text-sm font-black text-[#032b71]">{t('actorProfile.contactInformation')}</h3>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <RequiredLabel required={false}>{t('actorProfile.contactEmail')}</RequiredLabel>
           <Input type="email" className="bg-white" data-testid="bk-details-edit-email" value={form.contact_email} onChange={(e) => set('contact_email')(e.target.value)} />

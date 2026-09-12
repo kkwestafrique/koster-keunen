@@ -125,7 +125,7 @@ export default function ExchangeRates() {
           <DialogHeader>
             <DialogTitle className="text-[#0f48aa]">{t('exchangeRates.addRate')}</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="exrate-currency" className="text-[#5a6f9a]">{t('exchangeRates.currency')}</Label>
               <Select value={form.currency} onValueChange={(v) => setForm((f) => ({ ...f, currency: v }))}>

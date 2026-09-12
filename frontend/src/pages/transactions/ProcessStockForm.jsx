@@ -226,7 +226,7 @@ export default function ProcessStockForm() {
 
         {form.standard && (
           <>
-            <div className="grid grid-cols-2 gap-4 border-b border-[#cfd8e6] pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-[#cfd8e6] pb-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="process-source-product" className="text-[#5a6f9a]">{t('processForm.sourceProduct')}</Label>
                 <Select value={form.source_product} onValueChange={handleSourceProductChange}>

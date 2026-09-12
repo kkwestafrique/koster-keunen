@@ -231,7 +231,7 @@ export default function Dashboard() {
             <span className="text-[13px] text-[#5a6f9a]">
               {tab === 'transactions' ? t('dashboard.filterHintTransactions') : t('dashboard.filterHint')}
             </span>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-bold text-[#032b71]">{t('dashboard.country')}</span>
                 <Select value={country || 'all'} onValueChange={(v) => setCountry(v === 'all' ? '' : v)}>

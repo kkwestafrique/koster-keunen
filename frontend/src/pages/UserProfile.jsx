@@ -103,7 +103,7 @@ export default function UserProfile() {
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-2xl mb-6">
         <h2 className="text-sm font-black text-[#032b71] mb-4">{t('userProfile.accountDetails')}</h2>
 
-        <div className="grid grid-cols-2 gap-4 mb-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
           <DetailField label={t('userProfile.email')} value={user?.email} testId="profile-email" />
           <DetailField label={t('userProfile.role')} value={profile?.role} testId="profile-role" />
           <DetailField
@@ -113,7 +113,7 @@ export default function UserProfile() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <RequiredLabel required>{t('userProfile.name')}</RequiredLabel>
             <Input data-testid="profile-username" value={username} onChange={(e) => setUsername(e.target.value)} />
@@ -143,7 +143,7 @@ export default function UserProfile() {
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-2xl">
         <h2 className="text-sm font-black text-[#032b71] mb-4">{t('userProfile.changePassword')}</h2>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <RequiredLabel required>{t('userProfile.currentPassword')}</RequiredLabel>
             <Input
@@ -155,7 +155,7 @@ export default function UserProfile() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div className="flex flex-col gap-1.5">
             <RequiredLabel required>{t('userProfile.newPassword')}</RequiredLabel>
             <Input

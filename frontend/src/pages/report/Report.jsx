@@ -393,7 +393,7 @@ export default function Report() {
 
           {activeReport?.modal === 'yearRange' && (
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="report-start-year" className="text-[#5a6f9a]">{t('report.startYear')} *</Label>
                   <Select value={filters.startYear} onValueChange={(v) => setFilters((f) => ({ ...f, startYear: v }))}>
@@ -428,7 +428,7 @@ export default function Report() {
 
           {activeReport?.modal === 'dateProducts' && (
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="report-date-from" className="text-[#5a6f9a]">{t('report.dateFrom')}</Label>
                   <Input id="report-date-from" type="date" data-testid="report-date-from" min="1900-01-01" max="2100-12-31" value={filters.dateFrom} onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))} />

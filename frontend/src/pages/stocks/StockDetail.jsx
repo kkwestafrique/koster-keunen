@@ -50,7 +50,7 @@ export default function StockDetail() {
       </div>
 
       <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-6 max-w-2xl">
-        <div className="grid grid-cols-2 gap-5 mb-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           <DetailField label={t('stocks.batch')} value={stock.batch_reference} testId="stock-detail-batch-reference" />
           <DetailField label={t('stocks.stockType')} value={stock.stock_type} testId="stock-detail-stock-type" />
           <DetailField

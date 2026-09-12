@@ -124,7 +124,7 @@ export default function HeaderCard({ bk }) {
         </div>
       ) : (
         <div className="flex flex-col gap-4" data-testid="beekeeper-header-edit-form">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <RequiredLabel required>{t('forms.beekeeperFullName')}</RequiredLabel>
               <Input className="bg-white" data-testid="bk-header-edit-name" value={form.full_name} onChange={(e) => set('full_name')(e.target.value)} />
