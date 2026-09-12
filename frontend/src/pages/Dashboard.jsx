@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTour, DASHBOARD_TOUR_STEPS } from '@/contexts/TourContext';
+import { useMarkOnboardingSeen } from '@/hooks/useMyProfile';
 import { useAllActorsLite, useActorTypeCounts } from '@/hooks/useActors';
 import { useBeekeeperAggregates } from '@/hooks/useBeekeepers';
 import { useDashboardTransactionSummary } from '@/hooks/useTransactions';
@@ -94,6 +96,33 @@ export default function Dashboard() {
   const { t } = useTranslation();
   usePageTitle(t('dashboard.title'));
   const { profile } = useAuth();
+  const { isActive: tourActive, startTour } = useTour();
+  const markOnboardingSeen = useMarkOnboardingSeen();
+  // Real gap closed: has_seen_onboarding and the tour's own visual
+  // engine were both built earlier, but nothing ever actually started
+  // the tour -- confirmed with Babs this should auto-start on a real
+  // user's first login, using the exact value already stored in the
+  // database (not localStorage, so it stays consistent across
+  // devices). Only fires when the value is explicitly false, not on
+  // every render or while profile is still loading (null/undefined).
+  useEffect(() => {
+    if (profile?.has_seen_onboarding === false) {
+      startTour(DASHBOARD_TOUR_STEPS);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.has_seen_onboarding]);
+  // Marks it seen the moment the tour actually ends (completed or
+  // skipped) -- watches isActive's own true-to-false transition rather
+  // than hooking into next()/skip() directly, so this works
+  // regardless of which one the person used to end it.
+  const wasTourActive = React.useRef(false);
+  useEffect(() => {
+    if (wasTourActive.current && !tourActive && profile?.id) {
+      markOnboardingSeen.mutate(profile.id);
+    }
+    wasTourActive.current = tourActive;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourActive]);
   const { data: actors = [] } = useAllActorsLite();
   const [tab, setTab] = useState('season');
   const [country, setCountry] = useState('');

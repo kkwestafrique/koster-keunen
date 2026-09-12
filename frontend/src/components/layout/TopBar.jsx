@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Download, Bell, ChevronDown, Loader2, CheckCircle2, XCircle, Menu, X } from 'lucide-react';
+import { Download, Bell, ChevronDown, Loader2, CheckCircle2, XCircle, Menu, X, HelpCircle } from 'lucide-react';
+import { useTour, DASHBOARD_TOUR_STEPS } from '@/contexts/TourContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite } from '@/hooks/useActors';
 import { useRecentExports, useDeleteExport } from '@/hooks/useExports';
@@ -169,6 +170,28 @@ function timeAgo(dateStr) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+function HelpTourButton() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { startTour } = useTour();
+
+  return (
+    <button
+      type="button"
+      data-testid="top-bar-help-tour"
+      aria-label={t('tour.replayTooltip')}
+      title={t('tour.replayTooltip')}
+      onClick={() => {
+        navigate('/dashboard');
+        startTour(DASHBOARD_TOUR_STEPS);
+      }}
+      className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[#f5f5f5] transition-colors"
+    >
+      <HelpCircle className="h-5 w-5 text-[#032b71]" />
+    </button>
+  );
+}
+
 function NotificationBell() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -274,6 +297,7 @@ export default function TopBar({ onOpenMobileMenu }) {
       <div className="flex items-center gap-2 md:gap-4">
         <LanguageSwitcher />
 
+        <HelpTourButton />
         <NotificationBell />
         <DownloadsPanel />
 

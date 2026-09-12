@@ -1026,5 +1026,23 @@
     "confirmDeleteTitle": "Supprimer ce taux ?",
     "confirmDeleteBody": "Ce taux ne sera plus utilisé pour convertir les montants d'achat pour cette devise/mois.",
     "empty": "Aucun taux de change ajouté pour le moment."
+  },
+  "tour": {
+    "welcomeTitle": "Bienvenue sur Koster Keunen MIS",
+    "welcomeBody": "Faisons un tour rapide pour que vous sachiez où tout se trouve. Cela ne prendra qu'un instant.",
+    "statsTitle": "Votre chaîne d'approvisionnement en un coup d'œil",
+    "statsBody": "Ces chiffres se mettent à jour automatiquement au fur et à mesure que vous ajoutez des Partenaires locaux, Agrégateurs, Organisations de producteurs et Apiculteurs.",
+    "tabsTitle": "Trois façons de voir vos données",
+    "tabsBody": "Vue d'ensemble de la chaîne d'approvisionnement montre la progression de votre saison, Indicateurs montre des indicateurs de performance plus détaillés, et Vue d'ensemble des transactions montre l'activité par type.",
+    "filtersTitle": "Filtrer par pays, acteur ou année",
+    "filtersBody": "Chaque graphique et chiffre de cette page se met à jour en fonction de votre sélection ici.",
+    "navTitle": "Tout le reste se trouve ici",
+    "navBody": "Acteurs, Apiculteurs, Transactions, Contrats et plus encore — tous accessibles depuis le menu latéral.",
+    "next": "Suivant",
+    "back": "Précédent",
+    "done": "Terminé",
+    "skip": "Ignorer",
+    "stepCount": "Étape {{current}} sur {{total}}",
+    "replayTooltip": "Revoir la visite de bienvenue"
   }
 }

@@ -1026,5 +1026,23 @@
     "confirmDeleteTitle": "Delete this rate?",
     "confirmDeleteBody": "This rate will no longer be used to convert purchase amounts for this currency/month.",
     "empty": "No exchange rates added yet."
+  },
+  "tour": {
+    "welcomeTitle": "Welcome to Koster Keunen MIS",
+    "welcomeBody": "Let's take a quick look around so you know where everything is. This will only take a moment.",
+    "statsTitle": "Your supply chain at a glance",
+    "statsBody": "These numbers update automatically as you add Local Partners, Aggregators, Producer Organisations, and Beekeepers.",
+    "tabsTitle": "Three ways to view your data",
+    "tabsBody": "Supply Chain Overview shows your season's progress, Indicators shows deeper performance metrics, and Transaction Overview shows activity by type.",
+    "filtersTitle": "Filter by Country, Actor, or Year",
+    "filtersBody": "Every chart and number on this page updates to match whatever you select here.",
+    "navTitle": "Everything else lives here",
+    "navBody": "Actors, Beekeepers, Transactions, Contracts, and more — all accessible from the sidebar.",
+    "next": "Next",
+    "back": "Back",
+    "done": "Done",
+    "skip": "Skip",
+    "stepCount": "Step {{current}} of {{total}}",
+    "replayTooltip": "Replay the welcome tour"
   }
 }
