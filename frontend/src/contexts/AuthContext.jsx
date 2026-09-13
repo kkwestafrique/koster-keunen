@@ -129,6 +129,18 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     isExplicitSignOutRef.current = true;
+    // Real gap found during a cache-isolation audit: this never used to
+    // clear the React Query cache, and logout doesn't force a full page
+    // reload anywhere in the app -- meaning a second, different person
+    // logging in on the same browser tab would have found the previous
+    // person's already-fetched data (dashboard stats, notifications,
+    // profile) still sitting in memory until each query's own staleTime
+    // happened to expire. Same root cause and same fix pattern as the
+    // "switching actors doesn't refresh the screen" bug fixed earlier in
+    // switchActor below -- clear() instead of selective invalidation
+    // here, since a genuine logout should reset everything, not just the
+    // queries known to be actor-scoped.
+    queryClient.clear();
     await supabase.auth.signOut();
     resetIdentity();
   };
