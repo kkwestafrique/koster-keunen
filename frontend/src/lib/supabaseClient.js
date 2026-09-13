@@ -20,6 +20,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 export const MEDIA_BUCKET = 'media';
+// Resolves a real gap from the 2026-09-12 security audit (Finding 5):
+// exports and attachments used to live in the public 'media' bucket
+// alongside logos, permanently exposed to anyone with the URL. Only
+// actor logos belong in the public bucket now -- everything else
+// (exports, transaction/contract attachments) goes here, and is only
+// ever reachable through a short-lived signed URL generated at the
+// moment someone actually clicks to view/download it.
+export const PRIVATE_MEDIA_BUCKET = 'private-media';
+// Folders that hold logos -- the only content still meant to be
+// public. Everything else uploaded through uploadMediaFile is treated
+// as private by default, so a new folder added later is private
+// unless explicitly listed here -- the safer default for anything
+// that might contain real business data.
+const PUBLIC_FOLDERS = ['actors'];
 
 // Mirrors the media bucket's server-side allowed_mime_types and
 // file_size_limit (Supabase Dashboard > Storage > media > Configuration).
@@ -58,10 +72,26 @@ export async function uploadMediaFile(file, folder, supplyChainId) {
   // Path is folder/{supply_chain_id}/filename — the storage RLS policies
   // check that middle segment against the caller's own supply chain, so
   // one tenant can never overwrite or delete another tenant's files even
-  // though the bucket itself is public-read (needed for logos/exports to
-  // be viewable via a plain URL).
+  // though the logos bucket itself is public-read.
   const filePath = `${folder}/${supplyChainId}/${fileName}`;
-  const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(filePath, file);
+  const isPublic = PUBLIC_FOLDERS.includes(folder);
+  const bucket = isPublic ? MEDIA_BUCKET : PRIVATE_MEDIA_BUCKET;
+  const { error } = await supabase.storage.from(bucket).upload(filePath, file);
   if (error) throw error;
-  return getPublicMediaUrl(filePath);
+  // Public content (logos) still returns a real, permanent URL, same as
+  // before. Private content returns just the path -- the caller stores
+  // this, and must call getSignedMediaUrl(path) to get an actual,
+  // time-limited link at the moment someone needs to view/download it.
+  return isPublic ? getPublicMediaUrl(filePath) : filePath;
+}
+
+// Generates a fresh, short-lived signed URL for a private-bucket path —
+// call this at the moment someone actually clicks to view/download a
+// file, not before. Defaults to 1 hour, long enough for a real person
+// to click through and download without the link outliving its purpose.
+export async function getSignedMediaUrl(path, expirySeconds = 3600) {
+  if (!path) return null;
+  const { data, error } = await supabase.storage.from(PRIVATE_MEDIA_BUCKET).createSignedUrl(path, expirySeconds);
+  if (error) throw error;
+  return data.signedUrl;
 }

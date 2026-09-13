@@ -47,7 +47,8 @@
     "notificationsUnread": "Notifications ({{count}} non lues)",
     "openMenu": "Ouvrir le menu",
     "deleteDownload": "Retirer des téléchargements",
-    "downloadDeleteFailed": "Impossible de retirer ce téléchargement"
+    "downloadDeleteFailed": "Impossible de retirer ce téléchargement",
+    "downloadOpenFailed": "Impossible d'ouvrir ce téléchargement"
   },
   "login": {
     "title": "Connectez-vous à",

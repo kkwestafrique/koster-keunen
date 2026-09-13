@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Download, Bell, ChevronDown, Loader2, CheckCircle2, XCircle, Menu, X, HelpCircle } from 'lucide-react';
 import { useTour, DASHBOARD_TOUR_STEPS } from '@/contexts/TourContext';
+import { getSignedMediaUrl } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAllActorsLite } from '@/hooks/useActors';
 import { useRecentExports, useDeleteExport } from '@/hooks/useExports';
@@ -97,6 +98,19 @@ function DownloadsPanel() {
     }
   };
 
+  // Real fix for a security-audit finding: e.file_url now stores a path
+  // in the private bucket, not a permanent public URL -- generates a
+  // real, short-lived signed URL at the moment someone actually clicks
+  // "Download again," not before.
+  const handleDownload = async (path) => {
+    try {
+      const signedUrl = await getSignedMediaUrl(path);
+      window.open(signedUrl, '_blank', 'noreferrer');
+    } catch (err) {
+      toast({ title: t('topbar.downloadOpenFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -131,14 +145,14 @@ function DownloadsPanel() {
                   </p>
                 </div>
                 {e.status === 'Completed' && e.file_url && (
-                  <a
-                    href={e.file_url}
-                    download
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(e.file_url)}
                     data-testid={`download-link-${e.id}`}
                     className="text-xs font-bold text-[#0f48aa] hover:underline shrink-0"
                   >
                     {t('topbar.downloadAgain')}
-                  </a>
+                  </button>
                 )}
                 {canDelete && (
                   <button

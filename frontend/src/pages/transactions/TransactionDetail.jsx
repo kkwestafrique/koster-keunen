@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, Paperclip } from 'lucide-react';
 import DetailPageSkeleton from '@/components/common/DetailPageSkeleton';
 import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction, useLinkedTransactionStatus } from '@/hooks/useTransactions';
-import { uploadMediaFile, supabase, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
+import { uploadMediaFile, getSignedMediaUrl, supabase, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -169,6 +169,21 @@ export default function TransactionDetail() {
     }
   };
 
+  // Real fix for a security-audit finding: the attachment used to be a
+  // direct link to a permanent, public URL. tx.attachment_url now
+  // stores a path in the private bucket, not a URL -- this generates a
+  // real, short-lived signed URL at the moment someone actually clicks,
+  // rather than exposing a link that would work forever for anyone who
+  // ever saw it.
+  const handleViewAttachment = async () => {
+    try {
+      const signedUrl = await getSignedMediaUrl(tx.attachment_url);
+      window.open(signedUrl, '_blank', 'noreferrer');
+    } catch (err) {
+      toast({ title: t('transactionDetail.attachFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    }
+  };
+
   return (
     <AppLayout hideDefaultHeader>
       <button
@@ -239,9 +254,9 @@ export default function TransactionDetail() {
                 </Button>
                 <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT_ATTR} className="hidden" onChange={handleAttachFile} />
                 {tx.attachment_url && (
-                  <a href={tx.attachment_url} target="_blank" rel="noreferrer" className="text-xs text-[#0f48aa] underline">
+                  <button type="button" onClick={handleViewAttachment} className="text-xs text-[#0f48aa] underline">
                     {t('contractWizard.attachedFile')}
-                  </a>
+                  </button>
                 )}
               </>
             )}

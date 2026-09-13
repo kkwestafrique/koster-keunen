@@ -15,7 +15,7 @@ import { useContract, useUpdateContractGroup, useContractDeliveries, useCreateCo
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import FormattedNumberInput from '@/components/common/FormattedNumberInput';
-import { uploadMediaFile, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
+import { uploadMediaFile, getSignedMediaUrl, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -343,6 +343,19 @@ export default function ContractDetail() {
   const { canEdit, canViewChangeHistory } = usePermissions();
   const [updateOpen, setUpdateOpen] = useState(false);
   const { isReadOnly, currentActor } = useActingActor();
+  const { toast } = useToast();
+  // Real fix for a security-audit finding, same as TransactionDetail.jsx:
+  // contract.attachment_url now stores a path in the private bucket, not
+  // a permanent public URL -- generates a real, short-lived signed URL
+  // at the moment someone actually clicks, not before.
+  const handleViewAttachment = async () => {
+    try {
+      const signedUrl = await getSignedMediaUrl(contract.attachment_url);
+      window.open(signedUrl, '_blank', 'noreferrer');
+    } catch (err) {
+      toast({ title: t('contractDetail.updateFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    }
+  };
   // Real bug found live: contracts.owning_actor_id is the only actor
   // who can ever edit one -- confirmed directly against RLS (write
   // policies were already correctly scoped this way). canEdit alone is
@@ -520,7 +533,7 @@ export default function ContractDetail() {
               <span className="text-xs text-[#5a6f9a]">{t('contractWizard.attachedFile')}</span>
               <p className="text-sm text-[#032b71]">
                 {contract.attachment_url
-                  ? <a href={contract.attachment_url} target="_blank" rel="noreferrer" className="text-[#0f48aa] underline">{t('contractWizard.attachedFile')}</a>
+                  ? <button type="button" onClick={handleViewAttachment} className="text-[#0f48aa] underline">{t('contractWizard.attachedFile')}</button>
                   : t('contractWizard.noAttachedFiles')}
               </p>
             </div>

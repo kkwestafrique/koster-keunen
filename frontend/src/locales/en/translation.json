@@ -47,7 +47,8 @@
     "notificationsUnread": "Notifications ({{count}} unread)",
     "openMenu": "Open menu",
     "deleteDownload": "Remove from downloads",
-    "downloadDeleteFailed": "Could not remove this download"
+    "downloadDeleteFailed": "Could not remove this download",
+    "downloadOpenFailed": "Could not open this download"
   },
   "login": {
     "title": "Login to",
