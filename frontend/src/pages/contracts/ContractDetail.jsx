@@ -98,11 +98,11 @@ function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} })
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-          <DetailField label={t('contracts.year')} value={contract.year} testId="update-contract-year" />
-          <DetailField label={t('contractWizard.supplier')} value={contract.actors?.contact_name} testId="update-contract-actor" />
+          <DetailField label={t('contracts.year')} value={contract?.year} testId="update-contract-year" />
+          <DetailField label={t('contractWizard.supplier')} value={contract?.actors?.contact_name} testId="update-contract-actor" />
           <div className="flex flex-col gap-1">
             <span className="text-xs text-[#5a6f9a]">{t('contracts.standard')}</span>
-            <StandardBadge standard={contract.standard} />
+            <StandardBadge standard={contract?.standard} />
           </div>
         </div>
 
