@@ -14,17 +14,40 @@ export const BULK_UPLOAD_TEMPLATES = {
     uploadType: 'Connections', // matches bulk_uploads.upload_type CHECK constraint
     columns: [
       { key: 'full_name', label: 'Full name', required: true },
-      { key: 'gender', label: 'Gender', required: true, allowed: ['Male', 'Female', 'Other'] },
+      { key: 'gender', label: 'Gender', required: true, allowed: ['Male', 'Female'] },
+      { key: 'contact_phone', label: 'Contact number', required: true },
+      { key: 'country', label: 'Country', required: true, cascadeLevel: 'country' },
+      { key: 'state_region', label: 'Region', required: true, cascadeLevel: 'state' },
+      { key: 'lga_municipality', label: 'LGA', required: true, cascadeLevel: 'lga' },
       { key: 'village_name', label: 'Village', required: true },
+      // Three real Yes/No columns instead of one comma-separated Standards
+      // column: a beekeeper can genuinely hold more than one standard at
+      // once (Babs's own real feedback), and a single Excel dropdown can
+      // only ever hold one selected value — this is the only way to keep
+      // real, enforceable dropdowns while still allowing multiple real
+      // values per beekeeper. atLeastOneOf groups these for validation:
+      // the single-upload form requires at least one standard, matched
+      // here rather than left looser just because it's a bulk upload.
+      { key: 'standard_sustainable', label: 'Sustainable', required: true, allowed: ['Yes', 'No'], atLeastOneOf: 'standards' },
+      { key: 'standard_organic', label: 'Organic', required: true, allowed: ['Yes', 'No'], atLeastOneOf: 'standards' },
+      { key: 'standard_conventional', label: 'Conventional', required: true, allowed: ['Yes', 'No'], atLeastOneOf: 'standards' },
+      // Conditionally required: only mandatory when Sustainable = Yes,
+      // matching the single-upload form's own real rule exactly
+      // (charterRequired = form.standards.includes('Sustainable')) rather
+      // than being unconditionally required or unconditionally optional.
+      { key: 'charter_signed', label: 'Sustainable Beekeeper charter approved', required: false, allowed: ['Yes', 'No'], requiredIf: { column: 'standard_sustainable', equals: 'Yes' } },
+      { key: 'commitment_crude_honey', label: 'Crude honey', required: true, allowed: ['Yes', 'No'], atLeastOneOf: 'commitment' },
+      { key: 'commitment_honey', label: 'Honey', required: true, allowed: ['Yes', 'No'], atLeastOneOf: 'commitment' },
+      { key: 'commitment_beeswax', label: 'Beeswax', required: true, allowed: ['Yes', 'No'], atLeastOneOf: 'commitment' },
       { key: 'national_id', label: 'National ID', required: false },
       { key: 'internal_code', label: 'Internal code', required: false },
       { key: 'year_of_birth', label: 'Year of birth', required: false, type: 'number' },
-      { key: 'linked_producer_organisation', label: 'Linked producer organisation', required: false },
+      // Soft dropdown (a real actor list, but not strictly enforced) --
+      // matches the single-upload form, which lets someone type a real
+      // producer organisation name manually if it hasn't been formally
+      // onboarded as an actor yet.
+      { key: 'linked_producer_organisation', label: 'Linked producer organisation', required: false, softDropdown: 'producerOrganisations' },
       { key: 'contact_email', label: 'Contact email', required: false },
-      { key: 'contact_phone', label: 'Contact number', required: false },
-      { key: 'standards', label: 'Standards (comma-separated: Sustainable, Organic, Conventional)', required: false, type: 'array', allowed: STANDARDS },
-      { key: 'charter_signed', label: 'Sustainable Beekeeper charter approved (Yes/No)', required: false, type: 'boolean' },
-      { key: 'commitment', label: 'Commitment of beekeeper (comma-separated: Crude honey, Honey, Beeswax)', required: false, type: 'array', allowed: COMMITMENT_OF_BEEKEEPER },
       { key: 'hives_traditional_single', label: 'Traditional single entry hives', required: false, type: 'number' },
       { key: 'hives_traditional_double', label: 'Traditional double entries hives', required: false, type: 'number' },
       { key: 'hives_modern', label: 'Modern hives', required: false, type: 'number' },
@@ -70,6 +93,27 @@ export const BULK_UPLOAD_TEMPLATES = {
       { key: 'comments', label: 'Comments', required: false },
     ],
   },
+  // Dedicated to ReceiveStockForm.jsx exactly -- that form only ever
+  // creates beekeeper-sourced Received transactions (never sets actor_id,
+  // never asks for a direction), unlike the broader `transactions`
+  // template above which covers all three directions from either an
+  // actor or a beekeeper. Kept both templates rather than replace one
+  // with the other, since real historical-import use still needs the
+  // broader shape.
+  receiveStock: {
+    label: 'Receive Stock',
+    table: 'transactions',
+    uploadType: 'Transactions',
+    columns: [
+      { key: 'transaction_date', label: 'Date', required: true },
+      { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: true },
+      { key: 'standard', label: 'Standard', required: true, allowed: ['Sustainable', 'Organic', 'Conventional'] },
+      { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
+      { key: 'quantity', label: 'Quantity', required: true, type: 'number' },
+      { key: 'unit', label: 'Unit', required: false },
+      { key: 'price', label: 'Price', required: false, type: 'number' },
+    ],
+  },
 };
 
 const NAVY = 'FF032B71';
@@ -80,11 +124,7 @@ const WHITE = 'FFFFFFFF';
 // Columns whose real, valid values come from live app data, not a fixed
 // list — fetched fresh every time someone downloads the template (not
 // baked in once and left to go stale), so a supplier added to the app
-// yesterday is already selectable in today's download. Currently just
-// actor_code (every template that has it lets someone pick any real
-// actor in the supply chain, matching the same broad scope the
-// single-upload Contract Wizard itself uses via useActorDirectory/
-// browse_actor_directory — not narrowed to connected-only).
+// yesterday is already selectable in today's download.
 async function fetchDynamicOptions(supplyChainId, columns) {
   const options = {};
   if (columns.some((c) => c.key === 'actor_code')) {
@@ -94,7 +134,93 @@ async function fetchDynamicOptions(supplyChainId, columns) {
       .filter((a) => a.traceability_code)
       .map((a) => `${a.traceability_code} - ${a.contact_name}`);
   }
+  if (columns.some((c) => c.key === 'beekeeper_code')) {
+    const { data, error } = await supabase.from('beekeepers')
+      .select('traceability_code, full_name')
+      .eq('supply_chain_id', supplyChainId);
+    if (error) throw error;
+    options.beekeeper_code = (data || [])
+      .filter((b) => b.traceability_code)
+      .map((b) => `${b.traceability_code} - ${b.full_name}`);
+  }
+  if (columns.some((c) => c.cascadeLevel === 'country')) {
+    const { data, error } = await supabase.from('regions').select('country, level, name, parent_name, sort_order');
+    if (error) throw error;
+    options.regions = data || [];
+  }
+  if (columns.some((c) => c.softDropdown === 'producerOrganisations')) {
+    const { data, error } = await supabase.rpc('browse_actor_directory');
+    if (error) throw error;
+    options.producerOrganisations = (data || [])
+      .filter((a) => a.actor_type === 'Producer Organisation')
+      .map((a) => a.contact_name);
+  }
   return options;
+}
+
+// Builds the cascading Country -> Region -> LGA dropdown structure on the
+// hidden Lists sheet: a plain Countries list, a Country-name -> index
+// lookup table, one named range per country listing its regions, a
+// Region-name -> index lookup table (keyed by "country|region" since two
+// different countries can share a region name), and one named range per
+// region listing its LGAs. Index-based rather than sanitizing real names
+// (accents, apostrophes, spaces) into named-range-safe identifiers --
+// verified directly that a real accented name like "Côte d'Ivoire" works
+// cleanly this way, and that trying to sanitize it into a valid Excel
+// name would have been real, unnecessary extra complexity.
+function buildRegionCascade(listsSheet, regionsData, startCol) {
+  let col = startCol;
+  const countries = [...new Set(regionsData.map((r) => r.country))].sort();
+  const countryCol = listsSheet.getColumn(col).letter;
+  countries.forEach((c, i) => { listsSheet.getCell(`${countryCol}${i + 1}`).value = c; });
+  listsSheet.workbook.definedNames.add(`Lists!$${countryCol}$1:$${countryCol}$${countries.length}`, 'Countries_list');
+  col += 1;
+
+  const countryLookupCol1 = listsSheet.getColumn(col).letter;
+  const countryLookupCol2 = listsSheet.getColumn(col + 1).letter;
+  countries.forEach((c, i) => {
+    listsSheet.getCell(`${countryLookupCol1}${i + 1}`).value = c;
+    listsSheet.getCell(`${countryLookupCol2}${i + 1}`).value = i + 1;
+  });
+  listsSheet.workbook.definedNames.add(`Lists!$${countryLookupCol1}$1:$${countryLookupCol2}$${countries.length}`, 'Country_index_lookup');
+  col += 2;
+
+  const regionLookupRows = [];
+  countries.forEach((country, countryIdx) => {
+    const states = [...new Set(regionsData.filter((r) => r.country === country && r.level === 'state').map((r) => r.name))];
+    const stateCol = listsSheet.getColumn(col).letter;
+    states.forEach((s, i) => { listsSheet.getCell(`${stateCol}${i + 1}`).value = s; });
+    if (states.length > 0) {
+      listsSheet.workbook.definedNames.add(`Lists!$${stateCol}$1:$${stateCol}$${states.length}`, `State_${countryIdx + 1}`);
+    }
+    col += 1;
+    states.forEach((state) => {
+      regionLookupRows.push({ key: `${country}|${state}`, index: regionLookupRows.length + 1, country, state });
+    });
+  });
+
+  const regionLookupCol1 = listsSheet.getColumn(col).letter;
+  const regionLookupCol2 = listsSheet.getColumn(col + 1).letter;
+  regionLookupRows.forEach((r, i) => {
+    listsSheet.getCell(`${regionLookupCol1}${i + 1}`).value = r.key;
+    listsSheet.getCell(`${regionLookupCol2}${i + 1}`).value = r.index;
+  });
+  if (regionLookupRows.length > 0) {
+    listsSheet.workbook.definedNames.add(`Lists!$${regionLookupCol1}$1:$${regionLookupCol2}$${regionLookupRows.length}`, 'Region_index_lookup');
+  }
+  col += 2;
+
+  regionLookupRows.forEach((r) => {
+    const lgas = [...new Set(regionsData.filter((row) => row.country === r.country && row.level === 'lga' && row.parent_name === r.state).map((row) => row.name))];
+    const lgaCol = listsSheet.getColumn(col).letter;
+    lgas.forEach((l, i) => { listsSheet.getCell(`${lgaCol}${i + 1}`).value = l; });
+    if (lgas.length > 0) {
+      listsSheet.workbook.definedNames.add(`Lists!$${lgaCol}$1:$${lgaCol}$${lgas.length}`, `LGA_${r.index}`);
+    }
+    col += 1;
+  });
+
+  return col;
 }
 
 // Generates and downloads an .xlsx template for the given template key.
@@ -125,6 +251,9 @@ export async function downloadTemplate(templateKey, filename, supplyChainId) {
   // A range reference has no such limit.
   const listsSheet = workbook.addWorksheet('Lists', { state: 'veryHidden' });
   let listsSheetNextCol = 1;
+  if (dynamicOptions.regions) {
+    listsSheetNextCol = buildRegionCascade(listsSheet, dynamicOptions.regions, listsSheetNextCol);
+  }
 
   sheet.columns = template.columns.map((c) => ({
     header: c.label,
@@ -142,15 +271,31 @@ export async function downloadTemplate(templateKey, filename, supplyChainId) {
   });
 
   const exampleRow = {};
+  const firstRegionRow = dynamicOptions.regions?.[0];
+  const exampleCountry = firstRegionRow?.country;
+  const exampleState = exampleCountry ? dynamicOptions.regions.find((r) => r.country === exampleCountry && r.level === 'state')?.name : null;
+  const exampleLga = exampleState ? dynamicOptions.regions.find((r) => r.country === exampleCountry && r.level === 'lga' && r.parent_name === exampleState)?.name : null;
   template.columns.forEach((c) => {
-    const dynamicList = dynamicOptions[c.key];
-    if (dynamicList && dynamicList.length > 0) exampleRow[c.key] = dynamicList[0];
+    const dynamicList = dynamicOptions[c.key] || (c.softDropdown && dynamicOptions[c.softDropdown]);
+    if (c.cascadeLevel === 'country') exampleRow[c.key] = exampleCountry || '';
+    else if (c.cascadeLevel === 'state') exampleRow[c.key] = exampleState || '';
+    else if (c.cascadeLevel === 'lga') exampleRow[c.key] = exampleLga || '';
+    else if (dynamicList && dynamicList.length > 0) exampleRow[c.key] = dynamicList[0];
     else if (c.type === 'array' && c.allowed) exampleRow[c.key] = c.allowed[0];
     else if (c.type === 'boolean') exampleRow[c.key] = 'No';
+    else if (c.atLeastOneOf) exampleRow[c.key] = 'No';
     else if (c.allowed) exampleRow[c.key] = c.allowed[0];
     else if (c.type === 'number') exampleRow[c.key] = 0;
     else if (c.key === 'transaction_date' || c.key === 'signature_date') exampleRow[c.key] = '2026-01-15';
     else exampleRow[c.key] = '';
+  });
+  // At least one atLeastOneOf group member needs a real "Yes" example, or
+  // the example row itself would fail the very validation rule it's
+  // meant to demonstrate.
+  const groups = [...new Set(template.columns.filter((c) => c.atLeastOneOf).map((c) => c.atLeastOneOf))];
+  groups.forEach((group) => {
+    const firstInGroup = template.columns.find((c) => c.atLeastOneOf === group);
+    if (firstInGroup) exampleRow[firstInGroup.key] = 'Yes';
   });
   const addedExampleRow = sheet.addRow(exampleRow);
   addedExampleRow.font = { italic: true, color: { argb: 'FF5A6F9A' } };
@@ -160,7 +305,42 @@ export async function downloadTemplate(templateKey, filename, supplyChainId) {
   // just the one example row.
   template.columns.forEach((c, idx) => {
     const colLetter = sheet.getColumn(idx + 1).letter;
-    const dynamicList = dynamicOptions[c.key];
+
+    if (c.cascadeLevel === 'country') {
+      const validation = { type: 'list', allowBlank: !c.required, formulae: ['Countries_list'], showErrorMessage: true, errorTitle: 'Invalid entry', error: `Please choose a real Country from the dropdown.` };
+      for (let row = 2; row <= 500; row++) sheet.getCell(`${colLetter}${row}`).dataValidation = validation;
+      return;
+    }
+    if (c.cascadeLevel === 'state') {
+      const countryColLetter = sheet.getColumn(template.columns.findIndex((col) => col.cascadeLevel === 'country') + 1).letter;
+      const validation = { type: 'list', allowBlank: !c.required, formulae: [`INDIRECT("State_"&VLOOKUP($${countryColLetter}2,Country_index_lookup,2,FALSE))`], showErrorMessage: true, errorTitle: 'Invalid entry', error: `Please choose a Region for the selected Country.` };
+      // The INDIRECT formula references the same row's Country cell, so
+      // each row genuinely needs its own validation object (row-relative
+      // reference), unlike the fixed-list case above where one shared
+      // object safely covers every row.
+      for (let row = 2; row <= 500; row++) {
+        sheet.getCell(`${colLetter}${row}`).dataValidation = {
+          type: 'list', allowBlank: !c.required,
+          formulae: [`INDIRECT("State_"&VLOOKUP($${countryColLetter}${row},Country_index_lookup,2,FALSE))`],
+          showErrorMessage: true, errorTitle: 'Invalid entry', error: 'Please choose a Region for the selected Country.',
+        };
+      }
+      return;
+    }
+    if (c.cascadeLevel === 'lga') {
+      const countryColLetter = sheet.getColumn(template.columns.findIndex((col) => col.cascadeLevel === 'country') + 1).letter;
+      const stateColLetter = sheet.getColumn(template.columns.findIndex((col) => col.cascadeLevel === 'state') + 1).letter;
+      for (let row = 2; row <= 500; row++) {
+        sheet.getCell(`${colLetter}${row}`).dataValidation = {
+          type: 'list', allowBlank: !c.required,
+          formulae: [`INDIRECT("LGA_"&VLOOKUP($${countryColLetter}${row}&"|"&$${stateColLetter}${row},Region_index_lookup,2,FALSE))`],
+          showErrorMessage: true, errorTitle: 'Invalid entry', error: 'Please choose an LGA for the selected Region.',
+        };
+      }
+      return;
+    }
+
+    const dynamicList = dynamicOptions[c.key] || (c.softDropdown && dynamicOptions[c.softDropdown]);
     const list = dynamicList && dynamicList.length > 0 ? dynamicList : c.allowed;
     if (!list || list.length === 0) return;
 
@@ -175,9 +355,17 @@ export async function downloadTemplate(templateKey, filename, supplyChainId) {
       type: 'list',
       allowBlank: !c.required,
       formulae: [rangeRef],
+      // Soft dropdowns (e.g. Linked producer organisation) show a
+      // non-blocking warning instead of rejecting the entry outright --
+      // matches the single-upload form, which lets someone type a real
+      // organisation name manually if it hasn't been formally onboarded
+      // as an actor yet.
+      errorStyle: c.softDropdown ? 'warning' : 'error',
       showErrorMessage: true,
       errorTitle: 'Invalid entry',
-      error: `Please choose one of the values from the dropdown for "${c.label}".`,
+      error: c.softDropdown
+        ? `This doesn't match a known ${c.label} yet -- that's OK if it's a real, new one, just double-check the spelling.`
+        : `Please choose one of the values from the dropdown for "${c.label}".`,
     };
     for (let row = 2; row <= 500; row++) {
       sheet.getCell(`${colLetter}${row}`).dataValidation = validation;
@@ -229,9 +417,12 @@ async function fetchLookups(supplyChainId, templateKey) {
   const lookups = { villagesByName: {}, actorsByCode: {}, beekeepersByCode: {} };
 
   if (templateKey === 'beekeepers') {
-    const { data, error } = await supabase.from('villages').select('id, name').eq('supply_chain_id', supplyChainId);
+    const { data, error } = await supabase.from('villages').select('id, name, country, state_region, lga_municipality').eq('supply_chain_id', supplyChainId);
     if (error) throw error;
-    data.forEach((v) => { lookups.villagesByName[v.name.trim().toLowerCase()] = v.id; });
+    data.forEach((v) => {
+      const key = [v.name, v.country, v.state_region, v.lga_municipality].map((s) => (s || '').trim().toLowerCase()).join('|');
+      lookups.villagesByName[key] = v.id;
+    });
   }
 
   if (templateKey === 'transactions' || templateKey === 'contracts') {
@@ -328,8 +519,9 @@ function validateRows(rows, template, lookups, isHistorical) {
       // them verbatim under a column name the table doesn't have.
       if (col.key === 'village_name') {
         if (value) {
-          const id = lookups.villagesByName[String(value).toLowerCase()];
-          if (!id) errors.push(`Village "${value}" not found`);
+          const key = [value, cleaned.country, cleaned.state_region, cleaned.lga_municipality].map((s) => String(s || '').toLowerCase()).join('|');
+          const id = lookups.villagesByName[key];
+          if (!id) errors.push(`Village "${value}" not found in ${cleaned.lga_municipality || ''}, ${cleaned.state_region || ''}, ${cleaned.country || ''} — check the spelling and address match exactly, or this village hasn't been added to the app yet`);
           cleaned.village_id = id || null;
         }
       } else if (col.key === 'actor_code') {
@@ -404,6 +596,55 @@ function validateRows(rows, template, lookups, isHistorical) {
           : 0;
       }
       cleaned.contract_group_id = crypto.randomUUID();
+    }
+
+    // Beekeepers: converts the individual Yes/No standard_*/commitment_*
+    // columns (real, separate Excel dropdowns, since a beekeeper can
+    // genuinely hold more than one standard/commitment at once, and a
+    // single dropdown can only ever hold one value) back into the real
+    // standards/commitment arrays the beekeepers table actually has, and
+    // enforces the two cross-column rules the generic per-column loop
+    // above can't express on its own: at least one Yes per atLeastOneOf
+    // group, and charter_signed only actually required when
+    // standard_sustainable is Yes -- both matching AddBeekeeperDialog's
+    // own real validation exactly (charterRequired =
+    // form.standards.includes('Sustainable')), not a looser bulk-only
+    // rule.
+    if (template.table === 'beekeepers') {
+      const groups = {};
+      template.columns.filter((c) => c.atLeastOneOf).forEach((c) => {
+        const isYes = String(cleaned[c.key]).trim().toLowerCase() === 'yes';
+        (groups[c.atLeastOneOf] = groups[c.atLeastOneOf] || []).push({ col: c, isYes });
+      });
+      Object.entries(groups).forEach(([groupName, members]) => {
+        if (!members.some((m) => m.isYes)) {
+          errors.push(`At least one of ${members.map((m) => m.col.label).join(', ')} must be "Yes"`);
+        }
+      });
+      cleaned.standards = template.columns
+        .filter((c) => c.atLeastOneOf === 'standards' && String(cleaned[c.key]).trim().toLowerCase() === 'yes')
+        .map((c) => c.label);
+      cleaned.commitment = template.columns
+        .filter((c) => c.atLeastOneOf === 'commitment' && String(cleaned[c.key]).trim().toLowerCase() === 'yes')
+        .map((c) => c.label);
+
+      // Must run before the delete loop below -- this reads
+      // cleaned[requiredIf.column] (e.g. standard_sustainable), which
+      // that same delete loop removes right after. Real bug caught by a
+      // direct test before shipping: with the check placed after the
+      // delete, the trigger column was always already gone, so this
+      // never actually fired for any row, ever.
+      const charterCol = template.columns.find((c) => c.key === 'charter_signed');
+      if (charterCol?.requiredIf) {
+        const triggerValue = String(cleaned[charterCol.requiredIf.column]).trim().toLowerCase();
+        const triggered = triggerValue === charterCol.requiredIf.equals.toLowerCase();
+        if (triggered && String(cleaned.charter_signed || '').trim() === '') {
+          errors.push(`${charterCol.label} is required when Sustainable is Yes`);
+        }
+      }
+
+      template.columns.filter((c) => c.atLeastOneOf).forEach((c) => { delete cleaned[c.key]; });
+      cleaned.charter_signed = String(cleaned.charter_signed).trim().toLowerCase() === 'yes';
     }
 
     return { rowNumber: index + 2, data: cleaned, errors };

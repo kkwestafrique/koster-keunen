@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Download, Upload, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, ChevronLeft, Loader2 } from 'lucide-react';
 import { CURRENCIES, PRODUCTS, UNITS, STANDARDS } from '@/data/regions';
 import { useBeekeepers } from '@/hooks/useBeekeepers';
 import { useActingActor } from '@/hooks/useActors';
 import { useCreateTransaction } from '@/hooks/useTransactions';
 import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import SummaryField from '@/components/common/SummaryField';
@@ -32,8 +33,29 @@ export default function ReceiveStockForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const createTransaction = useCreateTransaction();
-  const bulkUpload = useBulkUpload('transactions');
+  const { supplyChainId } = useAuth();
+  // Real gap found and fixed: this bulk-upload mode used the older,
+  // broader "transactions" template (covers all three directions, from
+  // either an actor or a beekeeper) even though this page only ever
+  // creates beekeeper-sourced Received transactions. Switched to the new,
+  // dedicated receiveStock template, matching this page's own real,
+  // single-transaction validation exactly (no direction column needed
+  // here at all, since it's always Received).
+  const bulkUpload = useBulkUpload('receiveStock');
   const { isReadOnly } = useActingActor();
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+
+  const handleDownloadTemplate = async () => {
+    setDownloadingTemplate(true);
+    try {
+      await downloadTemplate('receiveStock', 'receive-stock-template.xlsx', supplyChainId);
+      toast({ title: t('common.templateDownloaded') });
+    } catch (err) {
+      toast({ title: t('common.templateDownloadFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
 
   const [mode, setMode] = useState('single');
   const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming (single mode only -- multiple/bulk mode already has its own review table before import)
@@ -347,9 +369,10 @@ export default function ReceiveStockForm() {
                     variant="outline"
                     className="w-fit border-[#0f48aa] text-[#0f48aa]"
                     data-testid="receive-download-template"
-                    onClick={() => { downloadTemplate('transactions', 'received-transactions-template.xlsx'); toast({ title: t('common.templateDownloaded') }); }}
+                    disabled={downloadingTemplate}
+                    onClick={handleDownloadTemplate}
                   >
-                    <Download className="h-4 w-4 mr-1" /> {t('receiveForm.downloadTemplate')}
+                    {downloadingTemplate ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />} {t('receiveForm.downloadTemplate')}
                   </Button>
                 </div>
                 <label className="flex items-start gap-2 mt-3 max-w-md cursor-pointer" data-testid="receive-historical-toggle-label">

@@ -17,6 +17,8 @@ import { useAllActorsLite } from '@/hooks/useActors';
 import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { useAuth } from '@/contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const STEP_BASIC = 1;
 const STEP_CONNECTION = 2;
@@ -97,17 +99,26 @@ function MultiUploadPanel({ multiMode, onToggle }) {
 function MultiUploadBody({ onDone }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { supplyChainId } = useAuth();
   const fileInputRef = useRef(null);
   const [fileLabel, setFileLabel] = useState('');
   const [downloaded, setDownloaded] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [phase, setPhase] = useState('idle'); // idle | processing | done
   const [progress, setProgress] = useState(0);
   const { rows, validCount, errorCount, loadFile, submit, unrecognizedColumns } = useBulkUpload('beekeepers');
 
-  const handleDownload = () => {
-    downloadTemplate('beekeepers', 'beekeepers-template.xlsx');
-    setDownloaded(true);
-    toast({ title: t('common.templateDownloaded') });
+  const handleDownload = async () => {
+    setDownloadingTemplate(true);
+    try {
+      await downloadTemplate('beekeepers', 'beekeepers-template.xlsx', supplyChainId);
+      setDownloaded(true);
+      toast({ title: t('common.templateDownloaded') });
+    } catch (err) {
+      toast({ title: t('common.templateDownloadFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    } finally {
+      setDownloadingTemplate(false);
+    }
   };
 
   const handleFileChange = async (e) => {
@@ -153,9 +164,10 @@ function MultiUploadBody({ onDone }) {
             variant="outline"
             data-testid="bk-wizard-download-template"
             className="border-[#0f48aa] text-[#0f48aa] self-start"
+            disabled={downloadingTemplate}
             onClick={handleDownload}
           >
-            {t('forms.downloadExcelTemplate')}
+            {downloadingTemplate ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null} {t('forms.downloadExcelTemplate')}
           </Button>
         </div>
       </div>
