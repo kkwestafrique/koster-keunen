@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { STANDARDS, COMMITMENT_OF_BEEKEEPER, PRODUCTS } from '@/data/regions';
@@ -63,7 +64,7 @@ export const BULK_UPLOAD_TEMPLATES = {
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
       { key: 'expected_quantity', label: 'Expected quantity', required: true, type: 'number' },
       { key: 'unit', label: 'Unit', required: false },
-      { key: 'price', label: 'Maximum price', required: true, type: 'number' },
+      { key: 'price', label: 'Maximum price', required: false, type: 'number' },
       { key: 'currency', label: 'Currency', required: true },
       { key: 'advance_amount_paid', label: 'Advance amount paid', required: false, type: 'number' },
       { key: 'comments', label: 'Comments', required: false },
@@ -71,28 +72,128 @@ export const BULK_UPLOAD_TEMPLATES = {
   },
 };
 
-// Generates and downloads an .xlsx template for the given template key —
-// header row matches template.columns labels, with one example row to show
-// the expected format. Used by the "Download excel template" buttons inside
-// the Multiple-transaction flows (Received / Send).
-export function downloadTemplate(templateKey, filename) {
+const NAVY = 'FF032B71';
+const BLUE = 'FF0F48AA';
+const AMBER_FILL = 'FFFFF3CD';
+const WHITE = 'FFFFFFFF';
+
+// Columns whose real, valid values come from live app data, not a fixed
+// list — fetched fresh every time someone downloads the template (not
+// baked in once and left to go stale), so a supplier added to the app
+// yesterday is already selectable in today's download. Currently just
+// actor_code (every template that has it lets someone pick any real
+// actor in the supply chain, matching the same broad scope the
+// single-upload Contract Wizard itself uses via useActorDirectory/
+// browse_actor_directory — not narrowed to connected-only).
+async function fetchDynamicOptions(supplyChainId, columns) {
+  const options = {};
+  if (columns.some((c) => c.key === 'actor_code')) {
+    const { data, error } = await supabase.rpc('browse_actor_directory');
+    if (error) throw error;
+    options.actor_code = (data || [])
+      .filter((a) => a.traceability_code)
+      .map((a) => `${a.traceability_code} - ${a.contact_name}`);
+  }
+  return options;
+}
+
+// Generates and downloads an .xlsx template for the given template key.
+// Real dropdowns (Excel data validation), not just an instructions column
+// describing the allowed values — a column with a fixed or live-fetched
+// allowed list gets an actual in-cell dropdown, so a typo becomes
+// impossible instead of just discouraged. Required columns get a visibly
+// different header color from optional ones, matching exactly what's
+// required/optional in the matching single-upload form (checked directly
+// against each form's own real validation logic, not assumed) --
+// switched from xlsx.js to exceljs specifically because xlsx.js's free
+// tier cannot write real data validation or header styling at all,
+// confirmed directly by inspecting a generated file's raw XML before
+// making this change.
+export async function downloadTemplate(templateKey, filename, supplyChainId) {
   const template = BULK_UPLOAD_TEMPLATES[templateKey];
   if (!template) throw new Error(`Unknown bulk upload template: ${templateKey}`);
 
-  const headers = template.columns.map((c) => c.label);
-  const exampleRow = template.columns.map((c) => {
-    if (c.type === 'array' && c.allowed) return c.allowed[0];
-    if (c.type === 'boolean') return 'No';
-    if (c.allowed) return c.allowed[0];
-    if (c.type === 'number') return 0;
-    if (c.key === 'transaction_date') return '2026-01-15';
-    return '';
+  const dynamicOptions = supplyChainId ? await fetchDynamicOptions(supplyChainId, template.columns) : {};
+
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet(template.label, { views: [{ state: 'frozen', ySplit: 1 }] });
+  // Hidden sheet holding the real option lists, referenced by range
+  // (e.g. Lists!$A$2:$A$11) rather than an inline comma-separated
+  // formula -- Excel's inline list formula is capped at 255 characters
+  // total, which a real actor_code list (potentially many actors, each
+  // a "code - name" string) would likely exceed and silently break.
+  // A range reference has no such limit.
+  const listsSheet = workbook.addWorksheet('Lists', { state: 'veryHidden' });
+  let listsSheetNextCol = 1;
+
+  sheet.columns = template.columns.map((c) => ({
+    header: c.label,
+    key: c.key,
+    width: Math.max(18, Math.min(38, c.label.length + 4)),
+  }));
+
+  const headerRow = sheet.getRow(1);
+  headerRow.height = 32;
+  template.columns.forEach((c, idx) => {
+    const cell = headerRow.getCell(idx + 1);
+    cell.font = { bold: true, color: { argb: c.required ? NAVY : WHITE }, size: 11 };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: c.required ? AMBER_FILL : BLUE } };
+    cell.alignment = { wrapText: true, vertical: 'middle' };
   });
 
-  const worksheet = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, template.label);
-  XLSX.writeFile(workbook, filename || `${template.label.toLowerCase()}-template.xlsx`);
+  const exampleRow = {};
+  template.columns.forEach((c) => {
+    const dynamicList = dynamicOptions[c.key];
+    if (dynamicList && dynamicList.length > 0) exampleRow[c.key] = dynamicList[0];
+    else if (c.type === 'array' && c.allowed) exampleRow[c.key] = c.allowed[0];
+    else if (c.type === 'boolean') exampleRow[c.key] = 'No';
+    else if (c.allowed) exampleRow[c.key] = c.allowed[0];
+    else if (c.type === 'number') exampleRow[c.key] = 0;
+    else if (c.key === 'transaction_date' || c.key === 'signature_date') exampleRow[c.key] = '2026-01-15';
+    else exampleRow[c.key] = '';
+  });
+  const addedExampleRow = sheet.addRow(exampleRow);
+  addedExampleRow.font = { italic: true, color: { argb: 'FF5A6F9A' } };
+
+  // Real Excel data validation dropdowns, applied to a large real range
+  // (rows 2-500) so they keep working as someone fills in more rows, not
+  // just the one example row.
+  template.columns.forEach((c, idx) => {
+    const colLetter = sheet.getColumn(idx + 1).letter;
+    const dynamicList = dynamicOptions[c.key];
+    const list = dynamicList && dynamicList.length > 0 ? dynamicList : c.allowed;
+    if (!list || list.length === 0) return;
+
+    // Write the real option list to the hidden Lists sheet, one column
+    // per dropdown, and build a real range reference to it.
+    const listColLetter = listsSheet.getColumn(listsSheetNextCol).letter;
+    list.forEach((val, i) => { listsSheet.getCell(`${listColLetter}${i + 1}`).value = val; });
+    const rangeRef = `Lists!$${listColLetter}$1:$${listColLetter}$${list.length}`;
+    listsSheetNextCol += 1;
+
+    const validation = {
+      type: 'list',
+      allowBlank: !c.required,
+      formulae: [rangeRef],
+      showErrorMessage: true,
+      errorTitle: 'Invalid entry',
+      error: `Please choose one of the values from the dropdown for "${c.label}".`,
+    };
+    for (let row = 2; row <= 500; row++) {
+      sheet.getCell(`${colLetter}${row}`).dataValidation = validation;
+    }
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || `${template.label.toLowerCase()}-template.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function parseFile(file) {

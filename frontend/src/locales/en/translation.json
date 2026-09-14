@@ -401,7 +401,8 @@
     "skipToContent": "Skip to main content",
     "loadFailed": "Something went wrong loading this data.",
     "retry": "Retry",
-    "delete": "Delete"
+    "delete": "Delete",
+    "templateDownloadFailed": "Could not download the template"
   },
   "beekeeperDetail": {
     "title": "Beekeeper profile",

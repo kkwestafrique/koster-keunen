@@ -401,7 +401,8 @@
     "skipToContent": "Passer au contenu principal",
     "loadFailed": "Une erreur s'est produite lors du chargement de ces données.",
     "retry": "Réessayer",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "templateDownloadFailed": "Impossible de télécharger le modèle"
   },
   "beekeeperDetail": {
     "title": "Profil de l'apiculteur",

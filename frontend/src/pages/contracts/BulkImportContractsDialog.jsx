@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, Loader2 } from 'lucide-react';
 import { useBulkUpload, downloadTemplate } from '@/hooks/useBulkUpload';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 
@@ -15,8 +16,22 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 export default function BulkImportContractsDialog({ open, onOpenChange }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { supplyChainId } = useAuth();
   const fileInputRef = useRef(null);
   const bulkUpload = useBulkUpload('contracts');
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+
+  const handleDownloadTemplate = async () => {
+    setDownloadingTemplate(true);
+    try {
+      await downloadTemplate('contracts', 'historical-contracts-template.xlsx', supplyChainId);
+      toast({ title: t('common.templateDownloaded') });
+    } catch (err) {
+      toast({ title: t('common.templateDownloadFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -51,9 +66,10 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
             variant="outline"
             className="w-fit border-[#0f48aa] text-[#0f48aa]"
             data-testid="contracts-download-template"
-            onClick={() => { downloadTemplate('contracts', 'historical-contracts-template.xlsx'); toast({ title: t('common.templateDownloaded') }); }}
+            disabled={downloadingTemplate}
+            onClick={handleDownloadTemplate}
           >
-            <Download className="h-4 w-4 mr-1" /> {t('receiveForm.downloadTemplate')}
+            {downloadingTemplate ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />} {t('receiveForm.downloadTemplate')}
           </Button>
 
           <label className="inline-block">
