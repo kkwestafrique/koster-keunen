@@ -234,7 +234,8 @@
       "advance": "Avance",
       "completionRate": "Taux d'exécution",
       "avgPriceLocalPartners": "Prix moyen partenaires locaux"
-    }
+    },
+    "beekeepersLabel": "Apiculteurs"
   },
   "actorsList": {
     "title": "Acteurs",

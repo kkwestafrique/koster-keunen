@@ -184,7 +184,7 @@ export default function Dashboard() {
               value={actorCounts?.byType?.['Producer Organisation']}
               testId="stat-producer-orgs"
             />
-            <StatCard label={t('dashboard.beekeepers')} value={bkAgg?.total} testId="stat-beekeepers" />
+            <StatCard label={t('dashboard.beekeepersLabel')} value={bkAgg?.total} testId="stat-beekeepers" />
           </div>
         </div>
 

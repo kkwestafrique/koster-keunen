@@ -204,14 +204,14 @@
       "achieved": "Achieved",
       "remaining": "Remaining",
       "yearlyTrendTitle": "Yearly Quantity / Contract / Quality (last 6 years)",
-      "contrat": "Contrat",
-      "quantite": "Quantité",
+      "contrat": "Contract",
+      "quantite": "Quantity",
       "qualite": "Qualité (% Yellow)",
       "localPartnersTitle": "Local Partners' Performance (Top 20)",
       "actorName": "Local Partner",
       "evolution": "Evolution",
       "deliveredKg": "Delivered (Kg)",
-      "pctAppro": "% Appro",
+      "pctAppro": "% Supplied",
       "countryPieTitle": "Received by Country"
     },
     "finance": {
@@ -234,7 +234,8 @@
       "advance": "Advance",
       "completionRate": "Completion Rate",
       "avgPriceLocalPartners": "Avg. Price - Local Partners"
-    }
+    },
+    "beekeepersLabel": "Beekeepers"
   },
   "actorsList": {
     "title": "Actors",
