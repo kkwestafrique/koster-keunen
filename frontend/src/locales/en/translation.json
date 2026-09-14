@@ -1028,7 +1028,9 @@
     "deleteFailed": "Could not delete exchange rate",
     "confirmDeleteTitle": "Delete this rate?",
     "confirmDeleteBody": "This rate will no longer be used to convert purchase amounts for this currency/month.",
-    "empty": "No exchange rates added yet."
+    "empty": "No exchange rates added yet.",
+    "trendTitle": "Rate trend",
+    "trendEmpty": "No rates recorded yet for this currency."
   },
   "tour": {
     "welcomeTitle": "Welcome to Koster Keunen MIS",

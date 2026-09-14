@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import DataTable from '@/components/common/DataTable';
@@ -11,6 +11,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Trash2, Plus } from 'lucide-react';
 import { useExchangeRates, useUpsertExchangeRate, useDeleteExchangeRate } from '@/hooks/useExchangeRates';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -32,6 +33,7 @@ const MONTHS = [
   { value: 7, label: 'July' }, { value: 8, label: 'August' }, { value: 9, label: 'September' },
   { value: 10, label: 'October' }, { value: 11, label: 'November' }, { value: 12, label: 'December' },
 ];
+const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const EMPTY_FORM = { currency: '', year: String(new Date().getFullYear()), month: String(new Date().getMonth() + 1), rate_to_xof: '' };
 
 export default function ExchangeRates() {
@@ -45,6 +47,40 @@ export default function ExchangeRates() {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  // Defaults to the first currency that actually has at least one real
+  // rate recorded, rather than always defaulting to USD regardless of
+  // whether any USD rate has ever been entered -- avoids opening the
+  // page onto an empty chart when a different currency is the one
+  // actually in use.
+  const [chartCurrency, setChartCurrency] = useState(null);
+  const effectiveChartCurrency = chartCurrency || rates.find((r) => CURRENCIES.includes(r.currency))?.currency || CURRENCIES[0];
+
+  // Real month-to-month trend for the selected currency, in real
+  // chronological order (the table above sorts newest-first, which
+  // would read backwards on a trend line). Fills the full range between
+  // the earliest and latest recorded month with null for any month that
+  // has no real rate on file, rather than only plotting the months that
+  // exist -- recharts leaves a real, visible gap in the line for a null
+  // point instead of silently connecting straight across a missing
+  // month as if the rate had moved smoothly between two dates that
+  // are actually several months apart.
+  const chartData = useMemo(() => {
+    const currencyRates = rates.filter((r) => r.currency === effectiveChartCurrency);
+    if (currencyRates.length === 0) return [];
+    const byKey = new Map(currencyRates.map((r) => [`${r.year}-${r.month}`, Number(r.rate_to_xof)]));
+    const sorted = [...currencyRates].sort((a, b) => (a.year - b.year) || (a.month - b.month));
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    const points = [];
+    let y = first.year;
+    let m = first.month;
+    while (y < last.year || (y === last.year && m <= last.month)) {
+      points.push({ label: `${SHORT_MONTHS[m - 1]} ${y}`, rate: byKey.get(`${y}-${m}`) ?? null });
+      m += 1;
+      if (m > 12) { m = 1; y += 1; }
+    }
+    return points;
+  }, [rates, effectiveChartCurrency]);
 
   const missingFields = [
     !form.currency && t('exchangeRates.currency'),
@@ -105,6 +141,35 @@ export default function ExchangeRates() {
         <Button type="button" data-testid="exchange-rate-add" onClick={() => { setForm(EMPTY_FORM); setFormOpen(true); }} className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]">
           <Plus className="h-4 w-4 mr-1" /> {t('exchangeRates.addRate')}
         </Button>
+      </div>
+
+      <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-4 mb-4" data-testid="exchange-rate-trend-card">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h3 className="text-sm font-bold text-[#032b71]">{t('exchangeRates.trendTitle')}</h3>
+          <Select value={effectiveChartCurrency} onValueChange={setChartCurrency}>
+            <SelectTrigger className="w-[140px]" data-testid="exchange-rate-trend-currency"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        {chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-[220px] text-sm text-[#5a6f9a]" data-testid="exchange-rate-trend-empty">
+            {t('exchangeRates.trendEmpty')}
+          </div>
+        ) : (
+          <div role="img" aria-label={t('exchangeRates.trendTitle')}>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={chartData} margin={{ left: 8, right: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e8ecf3" />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#5a6f9a' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#5a6f9a' }} domain={['auto', 'auto']} />
+                <Tooltip formatter={(v) => (v == null ? t('exchangeRates.trendEmpty') : Number(v).toLocaleString())} />
+                <Line type="monotone" dataKey="rate" name={t('exchangeRates.rateToXof')} stroke="#0f48aa" strokeWidth={2} dot={{ r: 3 }} connectNulls={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
 
       <DataTable
