@@ -38,8 +38,8 @@ function UpdateContractModal({ open, onOpenChange, contract, fulfillment = {} })
   const fileInputRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [newFile, setNewFile] = useState(null);
-  const [products, setProducts] = useState(() => contract.products.map((p) => ({ ...p })));
-  const [advanceAmountPaid, setAdvanceAmountPaid] = useState(Number(contract.advance_amount_paid ?? 0).toFixed(2));
+  const [products, setProducts] = useState(() => (contract?.products || []).map((p) => ({ ...p })));
+  const [advanceAmountPaid, setAdvanceAmountPaid] = useState(Number(contract?.advance_amount_paid ?? 0).toFixed(2));
   const [updatedOn, setUpdatedOn] = useState(today());
 
   const setProductField = (idx, key, val) =>
