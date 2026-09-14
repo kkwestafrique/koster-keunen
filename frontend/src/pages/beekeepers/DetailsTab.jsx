@@ -138,7 +138,6 @@ export default function DetailsTab({ bk }) {
             <SelectContent>
               <SelectItem value="Male">{t('common.male')}</SelectItem>
               <SelectItem value="Female">{t('common.female')}</SelectItem>
-              <SelectItem value="Other">{t('common.other')}</SelectItem>
             </SelectContent>
           </Select>
         </div>

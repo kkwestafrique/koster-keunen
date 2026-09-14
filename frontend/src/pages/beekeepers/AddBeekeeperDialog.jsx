@@ -252,7 +252,13 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
   const submittingRef = useRef(false);
   const findOrCreateVillage = useFindOrCreateVillage();
   const createBeekeeper = useCreateBeekeeper();
-  const { data: actors = [] } = useAllActorsLite();
+  const { data: allActors = [] } = useAllActorsLite();
+  // Real, confirmed bug: this dropdown is specifically for linking to a
+  // Producer Organisation, but was showing every actor type (Aggregators,
+  // Local Partners, etc.) with no filter at all -- confirmed live against
+  // the real data, which is why actors that clearly weren't producer
+  // organisations were showing up here.
+  const actors = allActors.filter((a) => a.actor_type === 'Producer Organisation');
 
   // Real gap found via independent audit (UF4): partially completing
   // this dialog and dismissing it (Cancel, Escape, or clicking the
@@ -481,7 +487,6 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
                           <SelectContent>
                             <SelectItem value="Male">{t('common.male')}</SelectItem>
                             <SelectItem value="Female">{t('common.female')}</SelectItem>
-                            <SelectItem value="Other">{t('common.other')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
