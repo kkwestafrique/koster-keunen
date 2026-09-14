@@ -360,7 +360,7 @@ export async function downloadTemplate(templateKey, filename, supplyChainId) {
       // matches the single-upload form, which lets someone type a real
       // organisation name manually if it hasn't been formally onboarded
       // as an actor yet.
-      errorStyle: c.softDropdown ? 'warning' : 'error',
+      errorStyle: c.softDropdown ? 'warning' : 'stop',
       showErrorMessage: true,
       errorTitle: 'Invalid entry',
       error: c.softDropdown
