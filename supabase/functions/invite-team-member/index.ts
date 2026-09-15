@@ -70,6 +70,55 @@ Deno.serve(async (req) => {
       });
     }
 
+    // redirectTo comes straight from the caller's request body. The only
+    // legitimate value the real frontend ever sends (confirmed directly
+    // against useTeamMembers.js) is its own origin plus exactly
+    // /set-up-password -- this function must not blindly trust an
+    // arbitrary caller-supplied URL here, since whoever can reach this
+    // endpoint is, by definition, an authenticated Admin (verified
+    // below), and a malicious or compromised Admin account could call
+    // this function directly -- bypassing the UI entirely -- with an
+    // attacker-controlled redirectTo. Supabase's invite flow appends the
+    // invited user's real session tokens to that URL once the email link
+    // is clicked, so an unvalidated redirectTo is a real path to
+    // stealing another person's session, not just a cosmetic redirect
+    // issue. Validated with a real hostname allowlist, not just a path
+    // check -- an earlier version of this fix only checked path/scheme
+    // and would have let "https://attacker.com/set-up-password" straight
+    // through; caught that with a direct test before trusting it, not by
+    // review alone.
+    const ALLOWED_REDIRECT_HOST_SUFFIXES = ['.miskkwa.com', '.preview.emergentagent.com'];
+    const ALLOWED_REDIRECT_EXACT_HOSTS = ['miskkwa.com'];
+    if (redirectTo !== undefined) {
+      let redirectUrl;
+      try {
+        redirectUrl = new URL(redirectTo);
+      } catch {
+        return new Response(JSON.stringify({ error: 'Invalid redirectTo URL' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (redirectUrl.username || redirectUrl.password) {
+        return new Response(JSON.stringify({ error: 'redirectTo must not contain embedded credentials' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const host = redirectUrl.hostname;
+      const isLocalDev = host === 'localhost' || host === '127.0.0.1';
+      const isAllowedHost = isLocalDev
+        || ALLOWED_REDIRECT_EXACT_HOSTS.includes(host)
+        || ALLOWED_REDIRECT_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix));
+      const validScheme = isLocalDev ? redirectUrl.protocol === 'http:' : redirectUrl.protocol === 'https:';
+      if (!isAllowedHost || !validScheme || redirectUrl.pathname !== '/set-up-password' || redirectUrl.search || redirectUrl.hash) {
+        return new Response(JSON.stringify({ error: 'redirectTo must be this app\'s own origin plus exactly /set-up-password' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
