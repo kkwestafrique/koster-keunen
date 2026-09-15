@@ -69,7 +69,7 @@ export const BULK_UPLOAD_TEMPLATES = {
       { key: 'actor_code', label: 'Actor traceability code', required: false },
       { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: false },
       { key: 'product', label: 'Product', required: true },
-      { key: 'standard', label: 'Standard', required: true, allowed: ['Sustainable', 'Organic', 'Conventional'] },
+      { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'quantity', label: 'Quantity', required: true, type: 'number' },
       { key: 'unit', label: 'Unit', required: false },
       { key: 'price', label: 'Price', required: true, type: 'number' },
@@ -83,7 +83,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     columns: [
       { key: 'signature_date', label: 'Signature date', required: true },
       { key: 'actor_code', label: 'Supplier actor traceability code', required: true },
-      { key: 'standard', label: 'Standard', required: true, allowed: ['Sustainable', 'Organic', 'Conventional'] },
+      { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
       { key: 'expected_quantity', label: 'Expected quantity', required: true, type: 'number' },
       { key: 'unit', label: 'Unit', required: false },
@@ -107,7 +107,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     columns: [
       { key: 'transaction_date', label: 'Date', required: true },
       { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: true },
-      { key: 'standard', label: 'Standard', required: true, allowed: ['Sustainable', 'Organic', 'Conventional'] },
+      { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
       { key: 'quantity', label: 'Quantity', required: true, type: 'number' },
       { key: 'unit', label: 'Unit', required: false },
