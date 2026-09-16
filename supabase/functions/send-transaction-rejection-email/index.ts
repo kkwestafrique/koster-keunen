@@ -40,8 +40,8 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } });
   }
 
-  const internalSecret = Deno.env.get('TRANSACTION_EMAIL_TRIGGER_SECRET');
-  const authHeader = req.headers.get('Authorization') || '';
+  const internalSecret = (Deno.env.get('TRANSACTION_EMAIL_TRIGGER_SECRET') || '').trim();
+  const authHeader = (req.headers.get('Authorization') || '').trim();
   if (!internalSecret || authHeader !== `Bearer ${internalSecret}`) {
     return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 401 });
   }
@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
 
   const { data: actor } = await supabaseAdmin
     .from('actors')
-    .select('name')
+    .select('contact_name')
     .eq('id', notification.actor_id)
     .single();
 
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
     : `${appOrigin}/transactions`;
 
   const html = buildEmailHtml({
-    actorName: actor?.name || 'your team',
+    actorName: actor?.contact_name || 'your team',
     title: notification.title,
     message: notification.message,
     linkUrl,
