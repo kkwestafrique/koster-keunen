@@ -179,7 +179,7 @@ function buildEmailHtml({ actorName, title, message, linkUrl }) {
             </tr>
             <tr>
               <td style="padding:24px 40px;">
-                <a href="${linkUrl}" style="display:block;text-align:center;background-color:${KKWA_BLUE};color:#ffffff;text-decoration:none;font-size:15px;font-weight:bold;padding:14px 0;border-radius:6px;">
+                <a href="${escapeHtmlAttr(linkUrl)}" style="display:block;text-align:center;background-color:${KKWA_BLUE};color:#ffffff;text-decoration:none;font-size:15px;font-weight:bold;padding:14px 0;border-radius:6px;">
                   View transaction
                 </a>
               </td>
@@ -204,4 +204,13 @@ function escapeHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+// Separate from escapeHtml: an href attribute value needs quotes escaped
+// too, since a quote there breaks out of the attribute entirely (unlike
+// plain body text, where escapeHtml's &/</> coverage is enough).
+function escapeHtmlAttr(str) {
+  return escapeHtml(str)
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
