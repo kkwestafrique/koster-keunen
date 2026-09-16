@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
-import { STANDARDS, COMMITMENT_OF_BEEKEEPER, PRODUCTS, CURRENCIES } from '@/data/regions';
+import { STANDARDS, COMMITMENT_OF_BEEKEEPER, PRODUCTS, CURRENCIES, UNITS } from '@/data/regions';
 
 // Column definitions per target table. "required" fields must be present and non-empty on every row.
 export const BULK_UPLOAD_TEMPLATES = {
@@ -92,7 +92,7 @@ export const BULK_UPLOAD_TEMPLATES = {
       { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
       { key: 'expected_quantity', label: 'Expected quantity', required: true, type: 'number' },
-      { key: 'unit', label: 'Unit', required: false },
+      { key: 'unit', label: 'Unit', required: true, allowed: UNITS },
       { key: 'price', label: 'Maximum price', required: false, type: 'number' },
       { key: 'currency', label: 'Currency', required: true, allowed: CURRENCIES },
       { key: 'advance_amount_paid', label: 'Advance amount paid', required: false, type: 'number' },
