@@ -1,0 +1,29 @@
+-- Real gap found via security audit (Section 3: account creation).
+-- user_accounts_self_insert only restricted WHICH id could be inserted
+-- (had to match the caller's own auth.uid()) -- it placed no
+-- restriction at all on role or supply_chain_id. A real, genuine
+-- auth.users account (if one could ever exist outside the
+-- invite-team-member flow -- e.g. if Supabase's project-level auth
+-- ever allowed public self-registration, now or in the future) could
+-- have inserted its own user_accounts row with role = 'Admin' and any
+-- real supply_chain_id, self-granting full Admin access to any tenant.
+--
+-- The foreign key to auth.users already blocks a trivially-forged id,
+-- confirmed directly: attempting this insert with a fake, non-existent
+-- id fails on that constraint before RLS is even the deciding factor.
+-- But that FK isn't the right thing to rely on here -- it protects
+-- against a fake id, not against a real one with a self-assigned role.
+--
+-- Confirmed this policy has zero legitimate use: no real frontend code
+-- anywhere in the app inserts into user_accounts directly (searched the
+-- whole codebase). The only real, legitimate path that creates a
+-- user_accounts row is invite-team-member, which uses the service-role
+-- key and bypasses RLS entirely -- confirmed directly, it was never
+-- relying on this policy to function. Removing it is a pure risk
+-- reduction: RLS defaults to deny when no INSERT policy exists, so
+-- this closes the gap completely with no legitimate functionality
+-- depending on it.
+--
+-- Verified after applying: only user_accounts_self_select and
+-- user_accounts_self_update remain -- no INSERT policy at all now.
+drop policy if exists user_accounts_self_insert on public.user_accounts;
