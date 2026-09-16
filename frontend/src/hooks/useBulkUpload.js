@@ -92,9 +92,17 @@ export const BULK_UPLOAD_TEMPLATES = {
       { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
       { key: 'expected_quantity', label: 'Expected quantity', required: true, type: 'number' },
-      { key: 'unit', label: 'Unit', required: true, allowed: UNITS },
       { key: 'price', label: 'Maximum price', required: false, type: 'number' },
+      { key: 'unit', label: 'Unit', required: true, allowed: UNITS },
       { key: 'currency', label: 'Currency', required: true, allowed: CURRENCIES },
+      // Calculated, not user-entered: never read back from an uploaded
+      // file. The real total_amount is already correctly calculated
+      // server-side below (expected_quantity * price) regardless of
+      // what this column's own Excel formula happens to show -- this
+      // exists purely so someone filling in the spreadsheet can see the
+      // real total as they go, matching the same pattern already built
+      // for Receive Stock's Amount column.
+      { key: 'total_amount', label: 'Total amount', required: false, computed: true, formula: { multiply: ['expected_quantity', 'price'] } },
       { key: 'advance_amount_paid', label: 'Advance amount paid', required: false, type: 'number' },
       { key: 'comments', label: 'Comments', required: false },
     ],
