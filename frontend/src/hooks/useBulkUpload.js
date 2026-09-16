@@ -111,13 +111,27 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'transactions',
     uploadType: 'Transactions',
     columns: [
-      { key: 'transaction_date', label: 'Date', required: true },
+      { key: 'transaction_date', label: 'Date (DD-MM-YYYY)', required: true, type: 'date' },
       { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: true },
       { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
-      { key: 'quantity', label: 'Quantity', required: true, type: 'number' },
+      { key: 'quantity', label: 'Quantity (Kg)', required: true, type: 'number' },
       { key: 'unit', label: 'Unit', required: false },
-      { key: 'price', label: 'Price', required: false, type: 'number' },
+      // Key stays 'price' to match the real transactions.price column --
+      // only the visible label changed.
+      { key: 'price', label: 'Unit price', required: false, type: 'number' },
+      { key: 'currency', label: 'Currency', required: true, allowed: CURRENCIES },
+      // Calculated, not user-entered: never read back from an uploaded
+      // file (skipped entirely by both the required-field check and the
+      // parsed-data mapping). The real total_amount is always
+      // recalculated server-side from quantity * price regardless
+      // (existing, established rule for every transaction template --
+      // "never treat Excel formulas as the source of truth") -- this
+      // column exists purely so someone filling in the spreadsheet can
+      // see the real total as they go, via a genuine Excel formula, not
+      // a static example number that goes stale the moment they change
+      // Quantity or Unit price.
+      { key: 'amount', label: 'Amount', required: false, computed: true, formula: { multiply: ['quantity', 'price'] } },
     ],
   },
 };
@@ -322,7 +336,8 @@ export async function downloadTemplate(templateKey, filename, supplyChainId) {
     else if (c.atLeastOneOf) exampleRow[c.key] = 'No';
     else if (c.allowed) exampleRow[c.key] = c.allowed[0];
     else if (c.type === 'number') exampleRow[c.key] = 0;
-    else if (c.key === 'transaction_date' || c.key === 'signature_date') exampleRow[c.key] = '2026-01-15';
+    else if (c.key === 'transaction_date' || c.key === 'signature_date') exampleRow[c.key] = '15-01-2026';
+    else if (c.computed) exampleRow[c.key] = null; // filled with a real formula below, not a static value
     else exampleRow[c.key] = '';
   });
   // At least one atLeastOneOf group member needs a real "Yes" example, or
@@ -338,10 +353,30 @@ export async function downloadTemplate(templateKey, filename, supplyChainId) {
   addedExampleRow.font = { italic: true, color: { argb: 'FF5A6F9A' } };
   addedExampleRow.commit();
 
+  // Real Excel formula cells for every computed column, across the full
+  // usable data range -- a genuine live formula per row
+  // (e.g. =E10*G10), not a static number that goes stale the moment
+  // Quantity or Unit price changes. Styled distinctly (grey fill) to
+  // signal it's calculated, not something to type into directly.
+  const COMPUTED_FILL = 'FFE8ECF3';
+  template.columns.forEach((c, idx) => {
+    if (!c.computed || !c.formula?.multiply) return;
+    const colLetter = sheet.getColumn(idx + 1).letter;
+    const [factorAKey, factorBKey] = c.formula.multiply;
+    const colA = sheet.getColumn(template.columns.findIndex((col) => col.key === factorAKey) + 1).letter;
+    const colB = sheet.getColumn(template.columns.findIndex((col) => col.key === factorBKey) + 1).letter;
+    for (let row = firstDataRow; row <= lastDataRow; row++) {
+      const cell = sheet.getCell(`${colLetter}${row}`);
+      cell.value = { formula: `IF(OR(${colA}${row}="",${colB}${row}=""),"",${colA}${row}*${colB}${row})` };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COMPUTED_FILL } };
+    }
+  });
+
   // Real Excel data validation dropdowns, applied to a large real range
   // so they keep working as someone fills in more rows, not just the
   // one example row.
   template.columns.forEach((c, idx) => {
+    if (c.computed) return; // formula cells above, no dropdown needed
     const colLetter = sheet.getColumn(idx + 1).letter;
 
     if (c.cascadeLevel === 'country') {
@@ -528,11 +563,43 @@ function validateRows(rows, template, lookups, isHistorical) {
     const rowLookup = buildNormalizedRowLookup(row);
 
     template.columns.forEach((col) => {
+      // Calculated columns (e.g. Amount) are never read from the
+      // uploaded file at all -- the real total is always recalculated
+      // server-side below from quantity and price, so trying to parse
+      // whatever a spreadsheet formula happened to cache would be both
+      // pointless and risky (a stale or hand-edited value could
+      // silently disagree with the real quantity/price on the same row).
+      if (col.computed) return;
+
       let value = getRowValue(rowLookup, col);
       if (typeof value === 'string') value = value.trim();
 
       if (col.required && (value === '' || value === undefined || value === null)) {
         errors.push(`${col.label} is required`);
+      }
+
+      if (col.type === 'date' && value !== '' && value !== undefined && value !== null) {
+        // Real DD-MM-YYYY parsing, not a loose pass-through -- the
+        // database needs a real ISO date, and the heading now explicitly
+        // promises DD-MM-YYYY, so this has to actually enforce that
+        // format and reject anything that doesn't genuinely parse as a
+        // real calendar date (e.g. 31-02-2026), not silently accept an
+        // ambiguous or wrong one.
+        const match = String(value).match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+        if (!match) {
+          errors.push(`${col.label} must be in DD-MM-YYYY format`);
+        } else {
+          const day = Number(match[1]);
+          const month = Number(match[2]);
+          const year = Number(match[3]);
+          const parsed = new Date(Date.UTC(year, month - 1, day));
+          const isRealDate = parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
+          if (!isRealDate) {
+            errors.push(`${col.label}: "${value}" is not a real date`);
+          } else {
+            value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          }
+        }
       }
 
       if (col.type === 'array') {
@@ -571,13 +638,22 @@ function validateRows(rows, template, lookups, isHistorical) {
         }
       } else if (col.key === 'actor_code') {
         if (value) {
-          const id = lookups.actorsByCode[String(value).toLowerCase()];
+          // The dropdown's real option text is "code - Name" (that's what
+          // gets written to the cell when someone actually selects it),
+          // but the lookup table is keyed by the bare code alone --
+          // strip everything from the first " - " onward before
+          // matching. Falls back to the whole value unchanged if there's
+          // no " - " at all, so someone who manually typed just the
+          // code still resolves correctly too.
+          const code = String(value).split(' - ')[0].trim();
+          const id = lookups.actorsByCode[code.toLowerCase()];
           if (!id) errors.push(`Actor code "${value}" not found`);
           cleaned.actor_id = id || null;
         }
       } else if (col.key === 'beekeeper_code') {
         if (value) {
-          const id = lookups.beekeepersByCode[String(value).toLowerCase()];
+          const code = String(value).split(' - ')[0].trim();
+          const id = lookups.beekeepersByCode[code.toLowerCase()];
           if (!id) errors.push(`Beekeeper code "${value}" not found`);
           cleaned.beekeeper_id = id || null;
         }
