@@ -837,6 +837,20 @@ export function useBulkUpload(templateKey) {
       supply_chain_id: supplyChainId,
     }));
     const validationFailedCount = rows.length - validRows.length;
+    // Real gap found via tracing why Failed uploads had a blank
+    // error_detail even after BUG-21 wired up DB-error capture: rows
+    // that fail our own client-side validation (wrong/missing fields,
+    // never even reach an insert) carry their own `errors` per row
+    // (validateRows above), but that was only ever used to compute a
+    // count here, never surfaced as text. An upload that fails purely
+    // on validation -- arguably the most common real failure mode --
+    // ended up with a totalFailed count but no reason a person could
+    // read. Capped at 5 for the same reason the DB-error path caps at
+    // 5 below: error_detail is a short summary, not a full log.
+    const validationErrorMessages = rows
+      .map((r, idx) => (r.errors.length > 0 ? `Row ${idx + 1}: ${r.errors[0]}` : null))
+      .filter(Boolean)
+      .slice(0, 5);
 
     // Historical transactions need `app.bulk_import_mode` set and (for
     // Send rows) auto_consume_stock_for_bulk_import() called in the SAME
@@ -847,7 +861,7 @@ export function useBulkUpload(templateKey) {
       let inserted = 0;
       let failed = 0;
       let shortfallCount = 0;
-      const errors = [];
+      const errors = [...validationErrorMessages];
       for (const row of validRows) {
         const { data, error } = await supabase.rpc('bulk_import_transaction', {
           p_direction: row.direction,
@@ -916,7 +930,7 @@ export function useBulkUpload(templateKey) {
     let inserted = 0;
     let updated = 0;
     let failed = 0;
-    const errors = [];
+    const errors = [...validationErrorMessages];
 
     // For beekeepers specifically: re-uploading the same file (accidentally,
     // or "just to be safe") previously created genuine duplicate records --
