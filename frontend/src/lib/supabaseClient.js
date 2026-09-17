@@ -69,11 +69,24 @@ export async function uploadMediaFile(file, folder, supplyChainId) {
 
   const fileExt = file.name.split('.').pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-  // Path is folder/{supply_chain_id}/filename — the storage RLS policies
-  // check that middle segment against the caller's own supply chain, so
-  // one tenant can never overwrite or delete another tenant's files even
-  // though the logos bucket itself is public-read.
-  const filePath = `${folder}/${supplyChainId}/${fileName}`;
+  // Path is folder/{supply_chain_id}/filename for every other folder --
+  // the storage RLS policies check that middle segment against the
+  // caller's own supply chain, so one tenant can never overwrite or
+  // delete another tenant's files even though the logos bucket itself
+  // is public-read.
+  //
+  // exports is the one real exception: a report export can contain
+  // tenant-wide data an Admin generated but a Field Officer or Member
+  // would never normally see through the UI (both are scoped to their
+  // own actor everywhere else in this app). Adding the uploader's own
+  // user id as a real path segment (folder/{supply_chain_id}/{user_id}/
+  // filename) lets the storage RLS policy check ownership directly,
+  // without depending on the separate `exports` metadata table (which,
+  // checked directly, isn't actually being kept populated).
+  const { data: { user } } = await supabase.auth.getUser();
+  const filePath = folder === 'exports'
+    ? `${folder}/${supplyChainId}/${user?.id}/${fileName}`
+    : `${folder}/${supplyChainId}/${fileName}`;
   const isPublic = PUBLIC_FOLDERS.includes(folder);
   const bucket = isPublic ? MEDIA_BUCKET : PRIVATE_MEDIA_BUCKET;
   const { error } = await supabase.storage.from(bucket).upload(filePath, file);
