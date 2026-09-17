@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Pencil, Plus } from 'lucide-react';
 import DetailPageSkeleton from '@/components/common/DetailPageSkeleton';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useContract, useUpdateContractGroup, useContractDeliveries, useCreateContractDelivery, useContractFulfillment } from '@/hooks/useContracts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
