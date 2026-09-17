@@ -101,6 +101,6 @@ code {
 .zebra-table tbody tr:nth-child(even) {
     background-color: #ffffff;
 }
-.zebra-table tbody tr:hover {
+.zebra-table tbody tr.cursor-pointer:hover {
     background-color: #f5f5f5;
 }
