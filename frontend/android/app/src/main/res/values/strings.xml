@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Koster Keunen</string>
+    <string name="title_activity_main">Koster Keunen</string>
+    <string name="package_name">com.miskkwa.app</string>
+    <string name="custom_url_scheme">com.miskkwa.app</string>
+</resources>

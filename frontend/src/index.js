@@ -7,10 +7,12 @@ import "@/lib/i18n";
 import App from "@/App";
 import { initSentry } from "@/lib/sentry";
 import { initPostHog } from "@/lib/posthog";
+import { initNativeApp } from "@/lib/nativeApp";
 import * as serviceWorkerRegistration from "@/serviceWorkerRegistration";
 
 initSentry();
 initPostHog();
+initNativeApp();
 
 const queryClient = new QueryClient({
   defaultOptions: {
