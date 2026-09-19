@@ -60,8 +60,13 @@ const TRANSACTION_REPORTS = [
 const TABLE_SELECT = {
   beekeepers: '*, villages(name), actors!beekeepers_actor_id_fkey(contact_name, traceability_code)',
   actors: '*',
-  contracts: '*, actors(traceability_code, contact_name)',
-  transactions: '*, actors(traceability_code, contact_name), beekeepers(traceability_code, full_name), user_accounts(username)',
+  // `actors!actor_id(...)` disambiguates the embed -- both `contracts` and
+  // `transactions` have two FK relationships to `actors` (actor_id and
+  // owning_actor_id), and an unqualified `actors(...)` embed throws a
+  // PostgREST "more than one relationship" error. Same fix already proven
+  // in useReportData.js and useTransactions.js, applied here too.
+  contracts: '*, actors!actor_id(traceability_code, contact_name)',
+  transactions: '*, actors!actor_id(traceability_code, contact_name), beekeepers(traceability_code, full_name), user_accounts(username)',
 };
 
 // Purely internal columns with no meaning to a real reader outside the

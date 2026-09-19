@@ -24,6 +24,7 @@ import { useActingActor } from '@/hooks/useActors';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 import { formatDate } from '@/lib/dateFormat';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
