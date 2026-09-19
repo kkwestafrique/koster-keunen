@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -363,6 +363,16 @@ export function useAvailableBatches({ product, standard, stockType }) {
       if (error) throw error;
       return data;
     },
+    // Real gap found via QA report (KKWA-MIS-QA-Report, issue #6): the
+    // "X Kg available" hint on Send/Process forms briefly showed 0/stale
+    // right after picking a product, only correcting once the field was
+    // re-triggered. Root cause: `product` is part of the query key, so
+    // TanStack Query clears `data` to undefined the instant it changes,
+    // while the new query is in flight -- the caller's `= []` fallback
+    // then renders as a real "0 Kg available", indistinguishable from an
+    // actually-empty batch. keepPreviousData shows the last real result
+    // until the new one resolves, so the UI never shows a false zero.
+    placeholderData: keepPreviousData,
     enabled: !!supplyChainId && !!product && !!stockType,
   });
 }
