@@ -833,7 +833,12 @@
     "status": "Status",
     "allStatus": "All status",
     "title": "Bulk Uploads",
-    "beekeepersTab": "Beekeepers"
+    "beekeepersTab": "Beekeepers",
+    "startNewUpload": "Starting a new upload",
+    "startNewUploadHint": "Bulk uploads happen from inside the flow they belong to, not from this history page:",
+    "startBeekeepers": "Add Beekeeper → Multiple beekeepers",
+    "startTransactions": "Transactions → Received → Multiple transaction",
+    "startContracts": "Contracts → New contract → Bulk import"
   },
   "transactionDetail": {
     "title": "Transaction Detail",
