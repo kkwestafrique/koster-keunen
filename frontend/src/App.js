@@ -1,10 +1,12 @@
 import React from 'react';
 import '@/App.css';
+import * as Sentry from '@sentry/react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { UnsavedChangesProvider } from '@/contexts/UnsavedChangesContext';
 import { TourProvider } from '@/contexts/TourContext';
 import TourOverlay from '@/components/common/TourOverlay';
+import RouteErrorFallback from '@/components/common/RouteErrorFallback';
 import { Toaster } from '@/components/ui/toaster';
 import Login from '@/pages/Login';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -48,7 +50,11 @@ function ProtectedRoute({ children }) {
     );
   }
   if (!session) return <Navigate to="/login" replace />;
-  return children;
+  // Per-route boundary: a render error inside this specific page no
+  // longer takes the whole app down with it. See
+  // RouteErrorFallback.jsx for the full reasoning and an honest note
+  // on what this does and doesn't fully fix.
+  return <Sentry.ErrorBoundary fallback={<RouteErrorFallback />}>{children}</Sentry.ErrorBoundary>;
 }
 
 function AppRoutes() {
