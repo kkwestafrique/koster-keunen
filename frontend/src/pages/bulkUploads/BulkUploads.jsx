@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import AppLayout from '@/components/layout/AppLayout';
@@ -143,6 +144,35 @@ export default function BulkUploads() {
   return (
     <AppLayout hideDefaultHeader>
       <h1 className="text-lg font-black text-[#0f48aa] mb-4">{t('nav.bulkUploads')}</h1>
+
+      {/* QA report flagged this page as having "no visible way to start a
+          new bulk upload" -- correct observation, since uploads genuinely
+          happen from inside Add Beekeeper / Receive Stock / New Contract,
+          not here. This page staying a pure history view is intentional
+          (see the tab comment below), but a first-time user landing here
+          with no pointer to where uploads actually start is a real, if
+          smaller, gap on top of that intentional choice. */}
+      <div className="mb-6 rounded-[5px] border border-[#cfd8e6] bg-[#f4f6fa] p-4">
+        <p className="text-sm font-bold text-[#0f48aa] mb-2">{t('bulkUploads.startNewUpload')}</p>
+        <p className="text-sm text-[#5a6f9a] mb-2">{t('bulkUploads.startNewUploadHint')}</p>
+        <ul className="text-sm text-[#0f48aa] list-disc list-inside space-y-1">
+          <li>
+            <Link to="/beekeepers" className="underline hover:no-underline" data-testid="bulk-hint-beekeepers">
+              {t('bulkUploads.startBeekeepers')}
+            </Link>
+          </li>
+          <li>
+            <Link to="/transactions/received/new" className="underline hover:no-underline" data-testid="bulk-hint-transactions">
+              {t('bulkUploads.startTransactions')}
+            </Link>
+          </li>
+          <li>
+            <Link to="/contracts" className="underline hover:no-underline" data-testid="bulk-hint-contracts">
+              {t('bulkUploads.startContracts')}
+            </Link>
+          </li>
+        </ul>
+      </div>
 
       <Tabs defaultValue="connections">
         <TabsList className="bg-transparent border-b border-[#cfd8e6] p-0 rounded-none h-auto gap-6 justify-start mb-4">

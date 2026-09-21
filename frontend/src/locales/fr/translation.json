@@ -833,7 +833,12 @@
     "status": "Statut",
     "allStatus": "Tous les statuts",
     "title": "Téléversements en masse",
-    "beekeepersTab": "Apiculteurs"
+    "beekeepersTab": "Apiculteurs",
+    "startNewUpload": "Démarrer un nouveau téléversement",
+    "startNewUploadHint": "Les téléversements groupés se font depuis le flux concerné, pas depuis cette page d'historique :",
+    "startBeekeepers": "Ajouter un apiculteur → Plusieurs apiculteurs",
+    "startTransactions": "Transactions → Reçu → Transaction multiple",
+    "startContracts": "Contrats → Nouveau contrat → Import groupé"
   },
   "transactionDetail": {
     "title": "Détail de la transaction",
