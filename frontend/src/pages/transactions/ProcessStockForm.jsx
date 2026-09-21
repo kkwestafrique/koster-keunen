@@ -56,6 +56,11 @@ export default function ProcessStockForm() {
   // React's next render actually disables the button. A ref updates
   // immediately, closing that gap regardless of render timing.
   const submittingRef = useRef(false);
+  // Generated once, at mount, not per-submit-attempt -- see
+  // ContractWizard's identical fix for the full reasoning. Passed to
+  // process_stock as p_idempotency_key so a genuine network retry
+  // can't double-consume real source stock.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [batchPickerOpen, setBatchPickerOpen] = useState(false);
   const [selectedBatches, setSelectedBatches] = useState([]);
   const [form, setForm] = useState({
@@ -165,6 +170,7 @@ export default function ProcessStockForm() {
       // exceed what was genuinely consumed, the whole operation is
       // rejected before anything is created or deducted.
       await processStock.mutateAsync({
+        idempotencyKey,
         sourceProduct: form.source_product,
         standard: form.standard,
         sourceBatches: selectedBatches,

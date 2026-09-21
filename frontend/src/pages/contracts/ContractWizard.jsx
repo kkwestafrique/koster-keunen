@@ -49,6 +49,12 @@ export default function ContractWizard() {
   // before React's next render actually disables the button. A ref
   // updates immediately, closing that gap regardless of render timing.
   const submittingRef = useRef(false);
+  // Generated once, at mount, not per-submit-attempt -- a genuine
+  // retry of the same submission (e.g. after a network timeout) needs
+  // to reuse this same id for useCreateContract's idempotency check to
+  // mean anything. A fresh id per attempt would make every retry look
+  // like a brand new, different contract.
+  const [contractGroupId] = useState(() => crypto.randomUUID());
   const [contractFile, setContractFile] = useState(null);
   const fileInputRef = useRef(null);
   const [form, setForm] = useState({
@@ -205,6 +211,7 @@ export default function ContractWizard() {
         attachment_url = await uploadMediaFile(contractFile, 'contracts', supplyChainId);
       }
       await createContract.mutateAsync({
+        contract_group_id: contractGroupId,
         year: Number(form.year),
         standard: form.standard,
         actor_id: form.supplier_actor_id || null,

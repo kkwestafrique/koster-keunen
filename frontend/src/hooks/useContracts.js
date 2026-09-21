@@ -187,8 +187,26 @@ export function useCreateContract() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();
   return useMutation({
-    mutationFn: async ({ products, ...shared }) => {
-      const contract_group_id = crypto.randomUUID();
+    // contract_group_id now comes from the caller instead of being
+    // generated fresh in here -- the caller (ContractWizard) creates it
+    // once, when the form first mounts, and reuses the same id across
+    // any retry of the same submission. That's what makes the check
+    // below meaningful: a genuine network retry (the insert actually
+    // succeeded server-side, the client just never got the response)
+    // arrives here with the *same* group id as the original attempt,
+    // not a fresh random one every time.
+    mutationFn: async ({ products, contract_group_id, ...shared }) => {
+      if (!contract_group_id) throw new Error('contract_group_id is required');
+
+      // Real idempotency check, not just a client-side double-click
+      // guard: if rows with this exact group id already exist, this is
+      // a retry of a submission that already succeeded -- return those
+      // rows instead of inserting a second, duplicate contract.
+      const { data: existing, error: existingErr } = await supabase
+        .from('contracts').select().eq('contract_group_id', contract_group_id);
+      if (existingErr) throw existingErr;
+      if (existing && existing.length > 0) return existing;
+
       const rows = products.map((p) => {
         const expected_quantity = Number(p.expected_quantity) || 0;
         const price = p.price !== '' && p.price != null ? Number(p.price) : null;

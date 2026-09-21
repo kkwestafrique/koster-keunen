@@ -61,6 +61,9 @@ export default function ReceiveStockForm() {
   const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming (single mode only -- multiple/bulk mode already has its own review table before import)
   const [saving, setSaving] = useState(false);
   const submittingRef = useRef(false);
+  // Generated once, at mount, not per-submit-attempt -- see
+  // ContractWizard's identical fix for the full reasoning.
+  const [transactionGroupId] = useState(() => crypto.randomUUID());
   const [form, setForm] = useState({
     standard: '',
     village_id: '',
@@ -141,6 +144,7 @@ export default function ReceiveStockForm() {
     setSaving(true);
     try {
       await createTransaction.mutateAsync({
+        transaction_group_id: transactionGroupId,
         direction: 'Received',
         // Explicit, not left to the transactions table's own default —
         // confirmed bug: that default is 'Approved' for every row

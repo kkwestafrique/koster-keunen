@@ -396,7 +396,7 @@ export function useAvailableBatches({ product, standard, stockType }) {
 export function useProcessStock() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ sourceProduct, standard, sourceBatches, destinations, transactionType, transactionDate, currency }) => {
+    mutationFn: async ({ sourceProduct, standard, sourceBatches, destinations, transactionType, transactionDate, currency, idempotencyKey }) => {
       const { data, error } = await supabase.rpc('process_stock', {
         p_source_product: sourceProduct,
         p_standard: standard,
@@ -405,6 +405,7 @@ export function useProcessStock() {
         p_transaction_type: transactionType,
         p_transaction_date: transactionDate,
         p_currency: currency || null,
+        p_idempotency_key: idempotencyKey,
       });
       if (error) throw error;
       return data;
@@ -536,8 +537,23 @@ export function useCreateTransaction() {
   const queryClient = useQueryClient();
   const { supplyChainId } = useAuth();
   return useMutation({
-    mutationFn: async ({ products, ...shared }) => {
-      const transaction_group_id = crypto.randomUUID();
+    // transaction_group_id now comes from the caller (generated once,
+    // at form-mount time) instead of being generated fresh on every
+    // call -- same fix, same reasoning as useCreateContract. This one
+    // hook is shared by Receive/Send/Process Stock, so this single fix
+    // covers all three forms.
+    mutationFn: async ({ products, transaction_group_id, ...shared }) => {
+      if (!transaction_group_id) throw new Error('transaction_group_id is required');
+
+      // Real idempotency check: if rows with this exact group id
+      // already exist, this is a retry of an already-successful
+      // submission -- return those rows instead of inserting a second,
+      // duplicate transaction (and, downstream, double-counting stock).
+      const { data: existing, error: existingErr } = await supabase
+        .from('transactions').select().eq('transaction_group_id', transaction_group_id);
+      if (existingErr) throw existingErr;
+      if (existing && existing.length > 0) return existing;
+
       const rows = products.map((p) => {
         const quantity = Number(p.quantity) || 0;
         const price = p.price !== '' && p.price != null ? Number(p.price) : null;

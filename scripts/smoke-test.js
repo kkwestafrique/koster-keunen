@@ -423,6 +423,50 @@ async function main() {
       `got ${exportsVisible?.length} matching files`
     );
 
+    // =========================================================================
+    console.log('\n15. process_stock: a retry with the same idempotency key does not double-consume stock');
+    // =========================================================================
+    // Real gap found while building duplicate-submission protection: unlike
+    // a plain insert, process_stock has a real side effect beyond creating a
+    // row -- it physically deducts quantity_available from source batches.
+    // A genuine network retry (the call succeeded server-side, the client
+    // never got the response) could have silently deducted real inventory
+    // twice. Fixed by accepting a client-generated idempotency key and
+    // returning the existing result immediately if a transaction with that
+    // exact group id already exists, before touching any batch.
+    const { data: sourceStock, error: sourceStockErr } = await admin
+      .from('stocks')
+      .insert({ supply_chain_id: supplyChain.id, stock_type: 'Raw Material', product: 'Crude Honey', standard: 'Sustainable', quantity_available: 20, unit: 'Kg', owning_actor_id: actor.id })
+      .select().single();
+    if (sourceStockErr) throw new Error(`Could not create test source stock: ${sourceStockErr.message}`);
+    cleanup.push(() => admin.from('stocks').delete().eq('id', sourceStock.id));
+
+    const idempotencyKey = randomUUID();
+    const processArgs = {
+      p_source_product: 'Crude Honey', p_standard: 'Sustainable',
+      p_source_batches: [{ stock_id: sourceStock.id, quantity: 5 }],
+      p_destinations: [{ product: 'Honey', quantity: 5, unit: 'Kg' }],
+      p_transaction_type: 'Refining', p_transaction_date: '2026-01-01', p_currency: null,
+      p_idempotency_key: idempotencyKey,
+    };
+    const { data: firstGroupId, error: firstCallErr } = await asFieldOfficer.rpc('process_stock', processArgs);
+    if (firstCallErr) throw new Error(`process_stock first call failed: ${firstCallErr.message}`);
+    cleanup.push(() => admin.from('transactions').delete().eq('transaction_group_id', firstGroupId));
+    cleanup.push(() => admin.from('transaction_batch_selections').delete().eq('transaction_group_id', firstGroupId));
+    cleanup.push(() => admin.from('stocks').delete().eq('supply_chain_id', supplyChain.id).eq('product', 'Honey'));
+
+    const { data: afterFirstCall } = await admin.from('stocks').select('quantity_available').eq('id', sourceStock.id).single();
+    check('First call consumes the real, correct amount (20 - 5 = 15)', Number(afterFirstCall?.quantity_available) === 15, `got ${afterFirstCall?.quantity_available}`);
+
+    // The retry: identical arguments, same idempotency key.
+    const { data: retryGroupId, error: retryErr } = await asFieldOfficer.rpc('process_stock', processArgs);
+    const { data: afterRetry } = await admin.from('stocks').select('quantity_available').eq('id', sourceStock.id).single();
+    check(
+      'Retrying with the same idempotency key returns the same group id and does not consume stock again',
+      !retryErr && retryGroupId === firstGroupId && Number(afterRetry?.quantity_available) === 15,
+      `error=${retryErr?.message}, sameGroupId=${retryGroupId === firstGroupId}, quantity=${afterRetry?.quantity_available}`
+    );
+
   } catch (err) {
     console.error(`\nFatal error during setup — aborting: ${err.message}`);
     failed += 1;

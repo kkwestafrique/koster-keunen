@@ -81,6 +81,9 @@ export default function SendStockForm() {
   // updates immediately, not on the next render, closing that gap
   // regardless of render timing.
   const submittingRef = useRef(false);
+  // Generated once, at mount, not per-submit-attempt -- see
+  // ContractWizard's identical fix for the full reasoning.
+  const [transactionGroupId] = useState(() => crypto.randomUUID());
   const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming
   const [batchPickerOpen, setBatchPickerOpen] = useState(false);
   const [selectedBatches, setSelectedBatches] = useState([]);
@@ -154,6 +157,7 @@ export default function SendStockForm() {
     setSaving(true);
     try {
       const [createdRow] = await createTransaction.mutateAsync({
+        transaction_group_id: transactionGroupId,
         products: [{ product: form.product, quantity: form.quantity, price: form.price, unit: 'Kg' }],
         direction: 'Send',
         // Real design flaw found via actual user testing: the earlier
