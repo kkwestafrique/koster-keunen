@@ -185,6 +185,244 @@ async function main() {
     const segments = testPath.split('/');
     check('Upload path format has supply_chain_id as its 2nd segment (matches storage policy expectation)', segments[1] === supplyChain.id);
 
+    // ---- Fixture: a real, throwaway authenticated user, not just anon ----
+    // Several of the bugs below are role-restricted-access bugs, not
+    // "logged out vs logged in" bugs -- testing them properly needs a real,
+    // low-privilege authenticated session, not the anon client used above.
+    const testEmail = `${testTag.toLowerCase()}@smoketest.invalid`;
+    const testPassword = `Sm0ke-${randomUUID()}`;
+    const { data: authUser, error: authUserErr } = await admin.auth.admin.createUser({
+      email: testEmail, password: testPassword, email_confirm: true,
+    });
+    if (authUserErr) throw new Error(`Could not create test auth user: ${authUserErr.message}`);
+    cleanup.push(() => admin.auth.admin.deleteUser(authUser.user.id));
+
+    const { error: uaErr } = await admin.from('user_accounts').insert({
+      id: authUser.user.id, username: testTag, role: 'Member',
+      supply_chain_id: supplyChain.id, current_actor_id: actor.id,
+    });
+    if (uaErr) throw new Error(`Could not create test user_account: ${uaErr.message}`);
+
+    const { error: tmErr } = await admin.from('team_members').insert({
+      actor_id: actor.id, name: testTag, email: testEmail, role: 'Member',
+      status: 'Active', user_id: authUser.user.id,
+    });
+    if (tmErr) throw new Error(`Could not create test team_members row: ${tmErr.message}`);
+
+    const asFieldOfficer = createClient(SUPABASE_URL, ANON_KEY);
+    const { error: signInErr } = await asFieldOfficer.auth.signInWithPassword({ email: testEmail, password: testPassword });
+    if (signInErr) throw new Error(`Could not sign in as test Member: ${signInErr.message}`);
+
+    // =========================================================================
+    console.log('\n7. lookup_actor_by_connect_id: minimal fields, real tenant scope');
+    // =========================================================================
+    // Real bug: this function used to return full contact_email,
+    // contact_phone, and complete address for ANY actor in ANY tenant, gated
+    // only by "is logged in." Regression-guards both halves of the fix.
+    const { data: otherTenant, error: otherTenantErr } = await admin
+      .from('supply_chains').insert({ name: `${testTag}-OTHER-TENANT` }).select().single();
+    if (otherTenantErr) throw new Error(`Could not create second test tenant: ${otherTenantErr.message}`);
+    cleanup.push(() => admin.from('supply_chains').delete().eq('id', otherTenant.id));
+
+    const { data: otherTenantActor, error: otaErr } = await admin
+      .from('actors')
+      .insert({
+        supply_chain_id: otherTenant.id, traceability_code: `${testTag}-OTHER-ACTOR`,
+        contact_name: testTag, actor_type: 'Local Partner', country: 'Nigeria',
+        contact_email: 'should-never-leak@smoketest.invalid', connect_id: `${testTag}-CONNECT-ID`,
+      })
+      .select().single();
+    if (otaErr) throw new Error(`Could not create other-tenant test actor: ${otaErr.message}`);
+    cleanup.push(() => admin.from('actors').delete().eq('id', otherTenantActor.id));
+
+    const { data: crossTenantLookup, error: crossTenantLookupErr } = await asFieldOfficer
+      .rpc('lookup_actor_by_connect_id', { p_connect_id: `${testTag}-CONNECT-ID` });
+    check(
+      'A real, unconnected user in tenant A cannot look up a real actor in tenant B by connect_id',
+      !crossTenantLookupErr && (crossTenantLookup?.length ?? 0) === 0,
+      crossTenantLookupErr ? crossTenantLookupErr.message : `got ${crossTenantLookup?.length} rows`
+    );
+
+    const { data: ownTenantActor2, error: ota2Err } = await admin
+      .from('actors')
+      .insert({
+        supply_chain_id: supplyChain.id, traceability_code: `${testTag}-ACTOR-2`,
+        contact_name: testTag, actor_type: 'Local Partner', country: 'Nigeria',
+        contact_email: 'should-never-leak-either@smoketest.invalid', contact_phone: '+2340000000000',
+        connect_id: `${testTag}-OWN-CONNECT-ID`,
+      })
+      .select().single();
+    if (ota2Err) throw new Error(`Could not create own-tenant second test actor: ${ota2Err.message}`);
+    cleanup.push(() => admin.from('actors').delete().eq('id', ownTenantActor2.id));
+
+    const { data: sameTenantLookup } = await asFieldOfficer
+      .rpc('lookup_actor_by_connect_id', { p_connect_id: `${testTag}-OWN-CONNECT-ID` });
+    const lookedUp = sameTenantLookup?.[0];
+    check(
+      'Same-tenant connect_id lookup returns only the 4 real fields the app uses (never email/phone)',
+      lookedUp && Object.keys(lookedUp).sort().join(',') === 'actor_type,contact_name,country,id'
+        && !('contact_email' in lookedUp) && !('contact_phone' in lookedUp),
+      lookedUp ? `got keys: ${Object.keys(lookedUp).join(',')}` : 'no row returned'
+    );
+
+    // =========================================================================
+    console.log('\n8. approve_connection: real status-conflict is caught, not overwritten');
+    // =========================================================================
+    // Real bug: the final UPDATE had no status condition in its own WHERE
+    // clause, so a status change between the earlier read-check and this
+    // function's own UPDATE was silently overwritten instead of detected.
+    // Fixed by moving the condition onto the UPDATE itself. Runs before
+    // section 9 below, deliberately — that section revokes this same test
+    // user's access as part of its own test, so this needs to run first,
+    // while asFieldOfficer is still a real, valid, active Member.
+    const { data: pendingConn, error: pendingConnErr } = await admin.from('connections').insert({
+      supply_chain_id: supplyChain.id, actor_from_id: otherTenantActor.id, actor_to_id: actor.id, status: 'Pending',
+    }).select().single();
+    if (pendingConnErr) throw new Error(`Could not create test connection: ${pendingConnErr.message}`);
+    cleanup.push(() => admin.from('connections').delete().eq('id', pendingConn.id));
+
+    await admin.from('connections').update({ status: 'Revoked' }).eq('id', pendingConn.id);
+    // Called as the real, authenticated test user (a real Member on
+    // actor_to_id) — not the service-role admin client, which would bypass
+    // approve_connection's own real authorization checks entirely rather
+    // than genuinely exercising them.
+    const { error: approveAfterRevokeErr } = await asFieldOfficer.rpc('approve_connection', { p_connection_id: pendingConn.id });
+    const { data: connAfter } = await admin.from('connections').select('status').eq('id', pendingConn.id).single();
+    check(
+      'Approving a connection that was concurrently revoked raises an error and leaves it Revoked (not silently Active)',
+      !!approveAfterRevokeErr && connAfter?.status === 'Revoked',
+      `error=${approveAfterRevokeErr?.message}, status=${connAfter?.status}`
+    );
+
+    // =========================================================================
+    console.log('\n9. Removing a team member actually revokes access');
+    // =========================================================================
+    // Real bug: useRemoveTeamMember only deleted the team_members row.
+    // auth_role()/auth_current_actor_id()/auth_supply_chain_id() read solely
+    // from user_accounts, so "removal" changed nothing about real access.
+    const { data: beforeRemoval } = await asFieldOfficer.from('actors').select('id').eq('id', actor.id);
+    check('Before removal: the test Member can see their own actor', (beforeRemoval?.length ?? 0) === 1);
+
+    const { error: removeErr } = await admin.from('team_members').delete().eq('actor_id', actor.id).eq('user_id', authUser.user.id);
+    if (removeErr) throw new Error(`Could not remove test team member: ${removeErr.message}`);
+
+    const { data: afterAccount } = await admin.from('user_accounts').select('supply_chain_id, current_actor_id').eq('id', authUser.user.id).single();
+    check(
+      'After removal (their only team_members row): supply_chain_id and current_actor_id are both cleared',
+      afterAccount?.supply_chain_id === null && afterAccount?.current_actor_id === null,
+      `supply_chain_id=${afterAccount?.supply_chain_id}, current_actor_id=${afterAccount?.current_actor_id}`
+    );
+
+    const { data: afterRemoval } = await asFieldOfficer.from('actors').select('id').eq('id', actor.id);
+    check('After removal: the same session can no longer see any actor at all', (afterRemoval?.length ?? 0) === 0);
+
+    // =========================================================================
+    console.log('\n10. user_accounts has no INSERT policy (self-registration is not possible)');
+    // =========================================================================
+    // Real bug: the old policy restricted WHICH id could be inserted, but
+    // placed zero restriction on role/supply_chain_id — a real account could
+    // have self-assigned Admin on any tenant. Fixed by removing the policy
+    // entirely, since nothing legitimate ever depended on it.
+    const { error: selfInsertErr } = await asFieldOfficer.from('user_accounts').insert({
+      id: authUser.user.id, username: 'Self-Escalation Attempt', role: 'Admin', supply_chain_id: supplyChain.id,
+    });
+    check('A real authenticated user cannot insert their own user_accounts row at all', !!selfInsertErr, selfInsertErr ? undefined : 'insert unexpectedly succeeded');
+
+    // =========================================================================
+    console.log('\n11. Charter-required-if-Sustainable is enforced by the database, not just JS');
+    // =========================================================================
+    const { error: charterViolationErr } = await admin.from('beekeepers').insert({
+      supply_chain_id: supplyChain.id, full_name: `${testTag}-charter-violation`,
+      standards: ['Sustainable'], charter_signed: false, commitment: ['Honey'],
+    });
+    check(
+      'A direct insert with Sustainable + charter_signed=false is rejected by the database itself',
+      !!charterViolationErr && /beekeepers_charter_required_if_sustainable/.test(charterViolationErr.message || ''),
+      charterViolationErr ? undefined : 'insert unexpectedly succeeded'
+    );
+
+    const { data: charterOk, error: charterOkErr } = await admin.from('beekeepers').insert({
+      supply_chain_id: supplyChain.id, full_name: `${testTag}-charter-ok`,
+      standards: ['Sustainable'], charter_signed: true, commitment: ['Honey'],
+    }).select().single();
+    check('The same rule correctly allows Sustainable + charter_signed=true', !charterOkErr && !!charterOk, charterOkErr?.message);
+    if (charterOk) cleanup.push(() => admin.from('beekeepers').delete().eq('id', charterOk.id));
+
+    // =========================================================================
+    console.log('\n12. approve_transaction: real status-conflict is caught, not overwritten');
+    // =========================================================================
+    // Real bug: same pattern as approve_connection above -- the final UPDATE
+    // had no status condition in its own WHERE clause.
+    const tx12Group = randomUUID();
+    const { error: tx12Err } = await admin.from('transactions').insert({
+      transaction_group_id: tx12Group, supply_chain_id: supplyChain.id, direction: 'Received',
+      standard: 'Sustainable', beekeeper_id: beekeeper.id, product: 'Honey', quantity: 10, unit: 'Kg',
+      price: 100, total_amount: 1000, transaction_date: '2026-01-01', status: 'Pending', owning_actor_id: actor.id,
+    });
+    if (tx12Err) throw new Error(`Could not create test transaction (12): ${tx12Err.message}`);
+    cleanup.push(() => admin.from('transactions').delete().eq('transaction_group_id', tx12Group));
+
+    await admin.from('transactions').update({ status: 'Rejected' }).eq('transaction_group_id', tx12Group);
+    const { error: approveAfterRejectErr } = await asFieldOfficer.rpc('approve_transaction', { p_transaction_group_id: tx12Group });
+    const { data: tx12After } = await admin.from('transactions').select('status').eq('transaction_group_id', tx12Group).single();
+    check(
+      'Approving a transaction that was concurrently rejected raises an error and leaves it Rejected (not silently Approved)',
+      !!approveAfterRejectErr && tx12After?.status === 'Rejected',
+      `error=${approveAfterRejectErr?.message}, status=${tx12After?.status}`
+    );
+
+    // =========================================================================
+    console.log('\n13. reject_transaction_with_reversal: the most serious race — no phantom reversal');
+    // =========================================================================
+    // Real bug, the most serious of the three: a transaction could be
+    // simultaneously Approved (by one path) AND get a full rejection
+    // reversal (stock row + new reversal transaction + notification)
+    // created by this function, corrupting the immutable ledger. Fixed by
+    // gating every side effect on the same race-safe UPDATE, not just the
+    // status column.
+    const tx13Group = randomUUID();
+    const { error: tx13Err } = await admin.from('transactions').insert({
+      transaction_group_id: tx13Group, supply_chain_id: supplyChain.id, direction: 'Received',
+      standard: 'Sustainable', beekeeper_id: beekeeper.id, product: 'Honey', quantity: 10, unit: 'Kg',
+      price: 100, total_amount: 1000, transaction_date: '2026-01-01', status: 'Pending', owning_actor_id: actor.id,
+    });
+    if (tx13Err) throw new Error(`Could not create test transaction (13): ${tx13Err.message}`);
+    cleanup.push(() => admin.from('transactions').delete().eq('transaction_group_id', tx13Group));
+
+    await admin.from('transactions').update({ status: 'Approved' }).eq('transaction_group_id', tx13Group);
+    const { error: rejectAfterApproveErr } = await asFieldOfficer
+      .rpc('reject_transaction_with_reversal', { p_transaction_group_id: tx13Group, p_reject_reason: 'smoke test' });
+    const { data: tx13After } = await admin.from('transactions').select('status').eq('transaction_group_id', tx13Group).single();
+    const { data: phantomReversals } = await admin
+      .from('transactions').select('id').neq('transaction_group_id', tx13Group)
+      .eq('supply_chain_id', supplyChain.id).ilike('comments', '%smoke test%');
+    check(
+      'Rejecting a transaction that was concurrently approved raises an error, leaves it Approved, and creates no reversal',
+      !!rejectAfterApproveErr && tx13After?.status === 'Approved' && (phantomReversals?.length ?? 0) === 0,
+      `error=${rejectAfterApproveErr?.message}, status=${tx13After?.status}, phantom reversals=${phantomReversals?.length}`
+    );
+
+    // =========================================================================
+    console.log('\n14. Report exports: downloadable by their owner or Admin, not the whole tenant');
+    // =========================================================================
+    // Real bug: private-media's storage policy scoped exports/ the same as
+    // every other folder in the bucket (tenant-only) -- a Member or Field
+    // Officer could download a report export an Admin generated containing
+    // tenant-wide data they'd never normally see through the UI.
+    const otherUserExportPath = `exports/${supplyChain.id}/${randomUUID()}/${testTag}-not-mine.csv`;
+    const { error: exportUploadErr } = await admin.storage.from('private-media')
+      .upload(otherUserExportPath, Buffer.from('col1,col2\n1,2'), { contentType: 'text/csv' });
+    if (exportUploadErr) throw new Error(`Could not create test export file: ${exportUploadErr.message}`);
+    cleanup.push(() => admin.storage.from('private-media').remove([otherUserExportPath]));
+
+    const { data: exportsVisible } = await asFieldOfficer.storage.from('private-media')
+      .list(`exports/${supplyChain.id}`, { search: `${testTag}-not-mine` });
+    check(
+      'A real Member cannot see another user\'s export file in the same tenant',
+      (exportsVisible?.length ?? 0) === 0,
+      `got ${exportsVisible?.length} matching files`
+    );
+
   } catch (err) {
     console.error(`\nFatal error during setup — aborting: ${err.message}`);
     failed += 1;
