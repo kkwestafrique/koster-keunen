@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
+import { calculateAdvancePercent } from '@/lib/contractMath';
 import ExcelJS from 'exceljs';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -720,9 +721,7 @@ function validateRows(rows, template, lookups, isHistorical) {
       cleaned.advance_amount_paid = cleaned.advance_amount_paid || 0;
       if (typeof cleaned.expected_quantity === 'number' && typeof cleaned.price === 'number') {
         cleaned.total_amount = cleaned.expected_quantity * cleaned.price;
-        cleaned.advance_percent = cleaned.total_amount > 0
-          ? Math.round((cleaned.advance_amount_paid / cleaned.total_amount) * 100)
-          : 0;
+        cleaned.advance_percent = calculateAdvancePercent(cleaned.total_amount, cleaned.advance_amount_paid);
       }
       cleaned.contract_group_id = crypto.randomUUID();
     }

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { calculateAdvancePercent } from '@/lib/contractMath';
 
 // Real bug found via independent audit (BUG-36): the Dashboard's Year
 // filter offered a hardcoded ['2026', '2025', '2024'] list, while real
@@ -249,9 +250,7 @@ export function useUpdateContractGroup() {
       const totalContractAmount = products.reduce(
         (sum, p) => sum + (Number(p.expected_quantity) || 0) * (Number(p.price) || 0), 0
       );
-      const advance_percent = totalContractAmount > 0
-        ? Math.round(((Number(advance_amount_paid) || 0) / totalContractAmount) * 100)
-        : 0;
+      const advance_percent = calculateAdvancePercent(totalContractAmount, advance_amount_paid);
 
       const results = await Promise.all(products.map((p) => {
         const expected_quantity = Number(p.expected_quantity) || 0;

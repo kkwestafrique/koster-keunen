@@ -17,6 +17,7 @@ import { CURRENCIES, PRODUCTS, STANDARDS } from '@/data/regions';
 import { useCountries } from '@/hooks/useReferenceData';
 import { useActorDirectory, useActingActor } from '@/hooks/useActors';
 import { useCreateContract } from '@/hooks/useContracts';
+import { calculateAdvancePercent } from '@/lib/contractMath';
 import { useCreateConnection } from '@/hooks/useConnections';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
@@ -150,9 +151,7 @@ export default function ContractWizard() {
   const percentageYellowWax = totalQuantity > 0 ? Math.round((yellowWaxQuantity / totalQuantity) * 100) : null;
   // Advance(%) is NOT user-entered — audit confirms it's a greyed,
   // auto-calculated field (Advance amount paid ÷ Total contract amount).
-  const advancePercent = totalContractAmount > 0
-    ? Math.round(((Number(form.advance_amount_paid) || 0) / totalContractAmount) * 100)
-    : 0;
+  const advancePercent = calculateAdvancePercent(totalContractAmount, form.advance_amount_paid);
   // The live totals box only appears once at least one row has both
   // quantity and price filled in (audit finding).
   const showTotalsSummary = form.products.some((p) => p.expected_quantity && p.price);
