@@ -1,0 +1,70 @@
+name: CI
+
+# Enforced DETECTION, not a merge block. There's currently no PR step
+# in this project's real workflow -- everyone (this included) pushes
+# directly to main -- so there's nowhere to attach a hard "block the
+# merge" gate yet. What this does instead: the moment a push breaks
+# the build or a real security regression test, it shows up as a red
+# X on the commit and GitHub notifies whoever pushed it, rather than
+# someone finding out days later from a user report. Turning this into
+# a real gate later just needs branch protection + a PR requirement
+# turned on in the repo settings -- this workflow doesn't need to
+# change for that.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        working-directory: frontend
+        run: npm install --legacy-peer-deps
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  smoke-tests:
+    name: Security & data-integrity regression tests
+    # IMPORTANT, real trade-off: these tests run against the actual,
+    # live Supabase project -- there is no separate staging project for
+    # this app yet. Each test creates its own clearly-tagged, disposable
+    # data (a dedicated supply chain, SMOKE-TEST-<timestamp>) and cleans
+    # it up in a `finally` block, whether it passes or fails -- but a
+    # runner crash or timeout mid-run could theoretically leave orphaned
+    # test rows behind. Accepted for now given there's no staging
+    # environment to run this against instead; worth building one before
+    # this runs much more frequently than "once per push."
+    #
+    # Requires 3 repository secrets to be set (Settings -> Secrets and
+    # variables -> Actions) before this step will do anything other than
+    # fail with a clear "missing env vars" message:
+    #   SUPABASE_URL              (the project's REACT_APP_SUPABASE_URL)
+    #   SUPABASE_ANON_KEY         (the project's REACT_APP_SUPABASE_ANON_KEY)
+    #   SUPABASE_SERVICE_ROLE_KEY (Supabase dashboard -> Settings -> API
+    #                              -> service_role -- NOT the anon key,
+    #                              and never commit this one to the repo)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install root scripts' dependencies
+        run: npm install --no-save dotenv @supabase/supabase-js
+      - name: Run smoke tests
+        env:
+          REACT_APP_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          REACT_APP_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/smoke-test.js
