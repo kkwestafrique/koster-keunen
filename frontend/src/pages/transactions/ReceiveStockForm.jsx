@@ -48,7 +48,7 @@ export default function ReceiveStockForm() {
   const handleDownloadTemplate = async () => {
     setDownloadingTemplate(true);
     try {
-      await downloadTemplate('receiveStock', 'receive-stock-template.xlsx', supplyChainId);
+      await downloadTemplate('receiveStock', 'receive-stock-template.xlsx', supplyChainId, { standard: form.standard });
       toast({ title: t('common.templateDownloaded') });
     } catch (err) {
       toast({ title: t('common.templateDownloadFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
@@ -515,7 +515,7 @@ export default function ReceiveStockForm() {
                         disabled={bulkUpload.validCount === 0 || bulkUpload.uploading}
                         className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
                         onClick={async () => {
-                          const res = await bulkUpload.submit({ currency: form.currency, fileName: bulkUpload.fileName });
+                          const res = await bulkUpload.submit({ currency: form.currency, standard: form.standard, fileName: bulkUpload.fileName });
                           if (res.inserted > 0) {
                             if (res.shortfallCount > 0) {
                               toast({

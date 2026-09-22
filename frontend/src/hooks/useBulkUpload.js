@@ -115,6 +115,19 @@ export const BULK_UPLOAD_TEMPLATES = {
   // actor or a beekeeper. Kept both templates rather than replace one
   // with the other, since real historical-import use still needs the
   // broader shape.
+  //
+  // Real gap found via user report: Standard and Unit both used to be
+  // per-row columns here too, exactly like the generic `transactions`
+  // template above. But ReceiveStockForm already makes the person choose
+  // one Standard before the multi-upload block even renders (`mode ===
+  // 'multiple' && form.standard`) -- asking for it again on every row
+  // was pure redundant re-entry of a value already fixed for the whole
+  // batch. Unit was always meant to be "Kg" only, never a real per-row
+  // choice (see the single-transaction form, which shows it as a fixed
+  // label, not a field) -- carrying it as a blank, dropdown-less column
+  // here was a leftover, not a real column. Both removed; the caller now
+  // passes the chosen standard through submit()'s options, and unit is
+  // hardcoded to 'Kg' at insert time (see submit() below).
   receiveStock: {
     label: 'Receive Stock',
     table: 'transactions',
@@ -122,10 +135,8 @@ export const BULK_UPLOAD_TEMPLATES = {
     columns: [
       { key: 'transaction_date', label: 'Date (DD-MM-YYYY)', required: true, type: 'date' },
       { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: true },
-      { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
       { key: 'quantity', label: 'Quantity (Kg)', required: true, type: 'number' },
-      { key: 'unit', label: 'Unit', required: false },
       // Key stays 'price' to match the real transactions.price column --
       // only the visible label changed.
       { key: 'price', label: 'Unit price', required: false, type: 'number' },
@@ -154,7 +165,7 @@ const WHITE = 'FFFFFFFF';
 // list — fetched fresh every time someone downloads the template (not
 // baked in once and left to go stale), so a supplier added to the app
 // yesterday is already selectable in today's download.
-async function fetchDynamicOptions(supplyChainId, columns) {
+async function fetchDynamicOptions(supplyChainId, columns, filters = {}) {
   const options = {};
   if (columns.some((c) => c.key === 'actor_code')) {
     const { data, error } = await supabase.rpc('browse_actor_directory');
@@ -164,9 +175,19 @@ async function fetchDynamicOptions(supplyChainId, columns) {
       .map((a) => `${a.traceability_code} - ${a.contact_name}`);
   }
   if (columns.some((c) => c.key === 'beekeeper_code')) {
-    const { data, error } = await supabase.from('beekeepers')
+    let query = supabase.from('beekeepers')
       .select('traceability_code, full_name')
       .eq('supply_chain_id', supplyChainId);
+    // Real gap found via user report: with Standard chosen once up front
+    // (ReceiveStockForm's multi-upload block only renders after
+    // form.standard is set), the beekeeper list handed to this template
+    // was still every beekeeper regardless of standard -- offering
+    // beekeepers the person couldn't actually pick for a batch already
+    // locked to one standard. `.contains` on the real standards array,
+    // same column the single-transaction form's own beekeeper picker
+    // already filters by.
+    if (filters.standard) query = query.contains('standards', [filters.standard]);
+    const { data, error } = await query;
     if (error) throw error;
     options.beekeeper_code = (data || [])
       .filter((b) => b.traceability_code)
@@ -264,11 +285,11 @@ function buildRegionCascade(listsSheet, regionsData, startCol) {
 // tier cannot write real data validation or header styling at all,
 // confirmed directly by inspecting a generated file's raw XML before
 // making this change.
-export async function downloadTemplate(templateKey, filename, supplyChainId) {
+export async function downloadTemplate(templateKey, filename, supplyChainId, filters = {}) {
   const template = BULK_UPLOAD_TEMPLATES[templateKey];
   if (!template) throw new Error(`Unknown bulk upload template: ${templateKey}`);
 
-  const dynamicOptions = supplyChainId ? await fetchDynamicOptions(supplyChainId, template.columns) : {};
+  const dynamicOptions = supplyChainId ? await fetchDynamicOptions(supplyChainId, template.columns, filters) : {};
 
   const workbook = new ExcelJS.Workbook();
   // Real, merged group-header row above the column names -- opt-in,
@@ -809,7 +830,41 @@ export function useBulkUpload(templateKey) {
         fetchLookups(supplyChainId, templateKey),
       ]);
       setUnrecognizedColumns(detectUnrecognizedColumns(rawRows, template));
-      setRows(validateRows(rawRows, template, lookups, isHistorical));
+      const validated = validateRows(rawRows, template, lookups, isHistorical);
+      setRows(validated);
+
+      // Real gap found via user report ("no trace of the transaction
+      // bulk upload in the list"): when every row fails validation, the
+      // Import button is disabled (validCount === 0), so submit() --
+      // and the bulk_uploads logging inside it -- never runs. A fully
+      // failed upload attempt (the exact case someone most needs a
+      // record of) simply vanished the moment they closed the dialog,
+      // with nothing in the history page to show it ever happened.
+      // Logged here instead, the moment verification itself confirms
+      // zero valid rows, rather than waiting on a submit that can now
+      // never come. Contracts excluded to match the existing rule just
+      // below in submit() (upload_type CHECK constraint doesn't include
+      // 'Contracts').
+      const validCountNow = validated.filter((r) => r.errors.length === 0).length;
+      if (validCountNow === 0 && validated.length > 0 && template.table !== 'contracts' && supplyChainId) {
+        const failureMessages = validated
+          .map((r, idx) => (r.errors.length > 0 ? `Row ${idx + 1}: ${r.errors[0]}` : null))
+          .filter(Boolean)
+          .slice(0, 5);
+        try {
+          await supabase.from('bulk_uploads').insert({
+            supply_chain_id: supplyChainId,
+            upload_type: template.uploadType,
+            file_name: file.name,
+            status: 'Failed',
+            progress: 100,
+            error_detail: failureMessages.join(' | '),
+          });
+          queryClient.invalidateQueries({ queryKey: ['bulk_uploads'] });
+        } catch (logErr) {
+          console.error('Failed to log fully-failed bulk upload attempt:', logErr);
+        }
+      }
     } catch (err) {
       // parseFile rejects (e.g. non-.xlsx file) with a real Error. Store it
       // for callers that just read `parseError` state (ReceiveStockForm's
@@ -834,6 +889,11 @@ export function useBulkUpload(templateKey) {
     const validRows = rows.filter((r) => r.errors.length === 0).map((r) => ({
       ...r.data,
       supply_chain_id: supplyChainId,
+      // Same reasoning as the historical RPC branch above: receiveStock
+      // rows no longer carry their own standard/unit, so they're stamped
+      // on here from the batch-level choice instead of the (now
+      // nonexistent) per-row column.
+      ...(templateKey === 'receiveStock' ? { standard: options.standard, unit: 'Kg' } : {}),
     }));
     const validationFailedCount = rows.length - validRows.length;
     // Real gap found via tracing why Failed uploads had a blank
@@ -864,12 +924,17 @@ export function useBulkUpload(templateKey) {
       for (const row of validRows) {
         const { data, error } = await supabase.rpc('bulk_import_transaction', {
           p_direction: row.direction,
-          p_standard: row.standard,
+          // receiveStock no longer carries a standard column (see the
+          // template definition above) -- the batch-level choice from
+          // ReceiveStockForm's top selector is the only source for it
+          // now. The generic transactions template still has its own
+          // per-row standard, used as-is.
+          p_standard: templateKey === 'receiveStock' ? options.standard : row.standard,
           p_actor_id: row.actor_id || null,
           p_beekeeper_id: row.beekeeper_id || null,
           p_product: row.product,
           p_quantity: row.quantity,
-          p_unit: row.unit || 'Kg',
+          p_unit: templateKey === 'receiveStock' ? 'Kg' : (row.unit || 'Kg'),
           p_price: row.price,
           // The Transactions template has no currency column at all (it's
           // a supply-chain-wide currency choice made once on the form, not

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -251,6 +252,7 @@ function MultiUploadBody({ onDone }) {
 
 export default function AddBeekeeperDialog({ open, onOpenChange }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [step, setStep] = useState(STEP_BASIC);
   const [multiMode, setMultiMode] = useState(false);
   const [form, setForm] = useState(EMPTY);
@@ -332,6 +334,20 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
     onOpenChange(false);
   };
 
+  // Real bug found via user report: the multi-upload flow's "Go to
+  // details page" button was wired to attemptClose -- which does exactly
+  // what its name says (close the dialog) and nothing else. There's no
+  // single beekeeper record to open after a BULK upload, so "details"
+  // here means the upload's own history row (status, row counts, any
+  // errors) on the Bulk Uploads page -- not a beekeeper detail page.
+  // Closes the dialog the same safe way, then actually navigates there.
+  const goToBulkUploadDetails = () => {
+    setHasUnsavedChanges(false);
+    reset();
+    onOpenChange(false);
+    navigate('/bulk-uploads');
+  };
+
   const handleFinalSubmit = async () => {
     if (submittingRef.current) return;
     submittingRef.current = true;
@@ -393,7 +409,7 @@ export default function AddBeekeeperDialog({ open, onOpenChange }) {
         <div className="flex gap-6 items-start">
           <div className="flex-1 flex flex-col gap-4">
             {multiMode ? (
-              <MultiUploadBody onDone={attemptClose} />
+              <MultiUploadBody onDone={goToBulkUploadDetails} />
             ) : (
               <>
                 {step === STEP_BASIC && (
