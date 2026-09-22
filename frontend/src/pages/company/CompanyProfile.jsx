@@ -440,7 +440,7 @@ export default function CompanyProfile() {
                         <td className="py-2.5">{m.email}</td>
                         <td className="py-2.5">{m.role}</td>
                         <td className="py-2.5">
-                          <span className={`font-bold ${m.status === 'Active' ? 'text-[#219653]' : 'text-[#79730a]'}`}>{m.status}</span>
+                          <span className={`font-bold ${m.status === 'Active' ? 'text-[#1c7f46]' : 'text-[#79730a]'}`}>{m.status}</span>
                         </td>
                         <td className="py-2.5 text-right">
                           {canManageTeam && (

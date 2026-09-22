@@ -8,8 +8,8 @@ import React from 'react';
 // duplicating the mapping.
 const STATUS_COLORS = {
   Pending: { bg: '#fffaec', border: '#f2e4b3', text: '#79730a' },
-  Approved: { bg: '#eafaf0', border: '#b8e6c9', text: '#219653' },
-  Rejected: { bg: '#fdecea', border: '#f3b8b3', text: '#ba550c' },
+  Approved: { bg: '#eafaf0', border: '#b8e6c9', text: '#1c7f46' },
+  Rejected: { bg: '#fdecea', border: '#f3b8b3', text: '#a74c0a' },
   Returned: { bg: '#ebf6ff', border: '#cfd8e6', text: '#0f48aa' },
 };
 

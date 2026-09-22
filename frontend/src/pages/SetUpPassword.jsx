@@ -168,9 +168,9 @@ export default function SetUpPassword() {
                   </button>
                 </div>
                 <div className="flex items-center gap-4 text-xs mt-1">
-                  <span className={hasEightLetters ? 'text-[#219653] font-medium' : 'text-[#5a6f9a]'}>✓ {t('resetPassword.ruleLetters')}</span>
-                  <span className={hasNumeral ? 'text-[#219653] font-medium' : 'text-[#5a6f9a]'}>✓ {t('resetPassword.ruleNumericals')}</span>
-                  <span className={hasSymbol ? 'text-[#219653] font-medium' : 'text-[#5a6f9a]'}>✓ {t('resetPassword.ruleSymbols')}</span>
+                  <span className={hasEightLetters ? 'text-[#1c7f46] font-medium' : 'text-[#5a6f9a]'}>✓ {t('resetPassword.ruleLetters')}</span>
+                  <span className={hasNumeral ? 'text-[#1c7f46] font-medium' : 'text-[#5a6f9a]'}>✓ {t('resetPassword.ruleNumericals')}</span>
+                  <span className={hasSymbol ? 'text-[#1c7f46] font-medium' : 'text-[#5a6f9a]'}>✓ {t('resetPassword.ruleSymbols')}</span>
                 </div>
               </div>
 

@@ -14,7 +14,7 @@ import { formatDateTime } from '@/lib/dateFormat';
 
 const STATUS_OPTIONS = ['Cancelled', 'Inprogress', 'Completed', 'Failed'];
 const STATUS_COLORS = {
-  Completed: '#219653',
+  Completed: '#1c7f46',
   Inprogress: '#79730a',
   Cancelled: '#5a6f9a',
   Failed: '#ba550c',

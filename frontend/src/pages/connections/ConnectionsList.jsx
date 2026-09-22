@@ -104,12 +104,12 @@ export default function ConnectionsList() {
     {
       key: 'is_supplier',
       label: t('connectionsList.supplier'),
-      render: (row) => (row.is_supplier ? <Check className="h-4 w-4 text-[#219653]" /> : <X className="h-4 w-4 text-[#5a6f9a]" />),
+      render: (row) => (row.is_supplier ? <Check className="h-4 w-4 text-[#1c7f46]" /> : <X className="h-4 w-4 text-[#5a6f9a]" />),
     },
     {
       key: 'is_buyer',
       label: t('connectionsList.buyer'),
-      render: (row) => (row.is_buyer ? <Check className="h-4 w-4 text-[#219653]" /> : <X className="h-4 w-4 text-[#5a6f9a]" />),
+      render: (row) => (row.is_buyer ? <Check className="h-4 w-4 text-[#1c7f46]" /> : <X className="h-4 w-4 text-[#5a6f9a]" />),
     },
     {
       key: 'approve_action',
@@ -121,7 +121,7 @@ export default function ConnectionsList() {
             data-testid={`connection-approve-${row.id}`}
             onClick={(e) => { e.stopPropagation(); handleApprove(row.id); }}
             disabled={approveConnection.isPending}
-            className="bg-[#219653] text-white hover:bg-[#1c7f47]"
+            className="bg-[#1c7f46] text-white hover:bg-[#1c7f47]"
           >
             {t('connectionsList.approve')}
           </Button>

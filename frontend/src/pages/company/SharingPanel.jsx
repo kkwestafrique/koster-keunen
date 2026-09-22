@@ -229,7 +229,7 @@ export default function SharingPanel() {
                   {g.revoked_at ? (
                     <span className="text-[#5a6f9a]">{t('sharing.revokedOn', { date: g.revoked_at.slice(0, 10) })}</span>
                   ) : (
-                    <span className="text-[#219653] font-bold">{t('sharing.active')}</span>
+                    <span className="text-[#1c7f46] font-bold">{t('sharing.active')}</span>
                   )}
                 </td>
                 <td className="py-2">

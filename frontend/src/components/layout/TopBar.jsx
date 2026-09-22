@@ -78,7 +78,7 @@ function LanguageSwitcher() {
 }
 
 function statusIcon(status) {
-  if (status === 'Completed') return <CheckCircle2 className="h-4 w-4 text-[#219653] shrink-0" />;
+  if (status === 'Completed') return <CheckCircle2 className="h-4 w-4 text-[#1c7f46] shrink-0" />;
   if (status === 'Failed') return <XCircle className="h-4 w-4 text-[#ba550c] shrink-0" />;
   return <Loader2 className="h-4 w-4 text-[#5a6f9a] shrink-0 animate-spin" />;
 }

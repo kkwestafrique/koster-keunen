@@ -172,7 +172,7 @@ export default function ActorDetail() {
         <div className="bg-white border border-[#cfd8e6] rounded-[5px] p-5 flex items-center justify-between gap-4" data-testid="actor-connection-panel">
           <div>
             <p className="text-sm font-bold text-[#032b71]">{t('actorProfile.enableDisableConnection')}</p>
-            <p className={`text-xs font-medium mt-1 ${isActive ? 'text-[#219653]' : 'text-[#ba550c]'}`}>
+            <p className={`text-xs font-medium mt-1 ${isActive ? 'text-[#1c7f46]' : 'text-[#ba550c]'}`}>
               {isActive ? t('actorProfile.statusActive') : t('common.revoked')}
             </p>
           </div>

@@ -126,7 +126,7 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
                         <td className="py-1.5 px-3 text-[#032b71]">{r.rowNumber}</td>
                         <td className="py-1.5 px-3">
                           {r.errors.length === 0
-                            ? <span className="text-[#219653] font-bold">{t('receiveForm.valid')}</span>
+                            ? <span className="text-[#1c7f46] font-bold">{t('receiveForm.valid')}</span>
                             : <span className="text-[#ba550c] font-bold">{t('receiveForm.invalid')}</span>}
                         </td>
                         <td className="py-1.5 px-3 text-[#5a6f9a]">{r.errors.join('; ') || '—'}</td>

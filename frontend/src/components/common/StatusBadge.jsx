@@ -2,8 +2,8 @@ import React from 'react';
 
 // Figma design system: status is rendered as bold colored text (no pill background)
 const STATUS_COLORS = {
-  Active: '#219653',
-  Achieved: '#219653',
+  Active: '#1c7f46',
+  Achieved: '#1c7f46',
   Inactive: '#5a6f9a',
   Potential: '#79730a',
   Revoked: '#ba550c',
