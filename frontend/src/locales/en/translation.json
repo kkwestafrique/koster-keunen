@@ -700,7 +700,8 @@
     "historicalDataLabel": "This is historical data.",
     "historicalDataNote": "Rows are approved immediately (no Pending review step) and Send rows auto-consume matching stock — only Received and Send are supported this way, Processing rows will be rejected.",
     "bulkImportShortfallWarning": "{{count}} row(s) didn't have enough matching stock available — check the transaction detail page for details",
-    "noBeekeepersFound": "No beekeepers found for this village."
+    "noBeekeepersFound": "No beekeepers found for this village.",
+    "invalidQuantity": "Quantity must be greater than 0"
   },
   "batchPicker": {
     "title": "Add batch details",

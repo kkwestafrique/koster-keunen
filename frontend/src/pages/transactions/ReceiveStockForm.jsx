@@ -117,8 +117,14 @@ export default function ReceiveStockForm() {
   const setProductRow = (idx, patch) =>
     setForm((f) => ({ ...f, products: f.products.map((row, i) => (i === idx ? { ...row, ...patch } : row)) }));
 
+  // Critical gap found via live audit: quantity only ever checked for
+  // presence (p.quantity truthy), never validity -- "-5" is truthy, so
+  // it passed this gate and reached submission with no error anywhere
+  // in the flow. Every row must now have a product, AND a quantity
+  // that's both present and a real positive number.
+  const quantitiesValid = form.products.every((p) => p.quantity !== '' && Number(p.quantity) > 0);
   const singleValid = form.standard && form.beekeeper_id
-    && form.transaction_date && form.products.every((p) => p.product && p.quantity);
+    && form.transaction_date && form.products.every((p) => p.product) && quantitiesValid;
 
   // Real gap found via independent audit (C5): the button was simply
   // disabled with zero indication of what was missing. Computes the
@@ -127,7 +133,8 @@ export default function ReceiveStockForm() {
     !form.standard && t('contractWizard.standard'),
     !form.beekeeper_id && t('receiveForm.beekeeperFullName'),
     !form.transaction_date && t('receiveForm.transactionDate'),
-    !form.products.every((p) => p.product && p.quantity) && t('contractWizard.products'),
+    !form.products.every((p) => p.product) && t('contractWizard.products'),
+    !quantitiesValid && t('receiveForm.invalidQuantity'),
   ].filter(Boolean);
 
   const handleSubmit = async () => {
@@ -140,6 +147,13 @@ export default function ReceiveStockForm() {
     // render, so this guard closes that gap regardless of render
     // timing.
     if (submittingRef.current) return;
+    // Defense in depth: the Review & Confirm step's submit button is only
+    // gated on `saving` (see the double-submit guard above), not on
+    // singleValid -- it trusts step 1 already enforced that. Re-checking
+    // here directly means a future navigation edge case (browser
+    // back/forward between steps, a refactor that skips step 1) can't
+    // silently reopen the negative-quantity gap this form used to have.
+    if (!quantitiesValid) return;
     submittingRef.current = true;
     setSaving(true);
     try {
@@ -267,7 +281,27 @@ export default function ReceiveStockForm() {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor={`receive-quantity-${idx}`} className="text-[#5a6f9a] text-xs">{t('receiveForm.quantity')}</Label>
-                    <Input id={`receive-quantity-${idx}`} data-testid={`receive-quantity-${idx}`} type="number" min="0" value={row.quantity} onChange={(e) => setProductRow(idx, { quantity: e.target.value })} />
+                    {/* Critical gap found via live audit: min="0" alone only affects the
+                        native spinner/reportValidity() -- it does nothing to stop someone
+                        typing a negative number directly, and this form's submit never
+                        called native constraint validation, so -5 sailed straight through
+                        to Review & Confirm with no error at all. min stays (real users
+                        still benefit from the spinner behavior) but the actual gate is the
+                        explicit quantity > 0 check below, same as every other required
+                        field on this form. */}
+                    <Input
+                      id={`receive-quantity-${idx}`}
+                      data-testid={`receive-quantity-${idx}`}
+                      type="number"
+                      min="0"
+                      value={row.quantity}
+                      onChange={(e) => setProductRow(idx, { quantity: e.target.value })}
+                      className={row.quantity !== '' && Number(row.quantity) <= 0 ? 'border-red-500 focus-visible:ring-red-500' : undefined}
+                      aria-invalid={row.quantity !== '' && Number(row.quantity) <= 0}
+                    />
+                    {row.quantity !== '' && Number(row.quantity) <= 0 && (
+                      <span className="text-red-600 text-xs" data-testid={`receive-quantity-${idx}-error`}>{t('receiveForm.invalidQuantity')}</span>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor={`receive-unit-${idx}`} className="text-[#5a6f9a] text-xs">{t('contractWizard.unit')}</Label>
