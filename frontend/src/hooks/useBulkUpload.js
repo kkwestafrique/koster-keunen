@@ -877,7 +877,7 @@ export function useBulkUpload(templateKey) {
     } finally {
       setParsing(false);
     }
-  }, [template, templateKey, supplyChainId, isHistorical]);
+  }, [template, templateKey, supplyChainId, isHistorical, queryClient]);
 
   const validCount = rows.filter((r) => r.errors.length === 0).length;
   const errorCount = rows.length - validCount;
@@ -1107,7 +1107,7 @@ export function useBulkUpload(templateKey) {
     setUploading(false);
     setResult({ inserted, updated, failed: totalFailed, errors });
     return { inserted, updated, failed: totalFailed, errors };
-  }, [rows, supplyChainId, template, fileName, queryClient, isHistorical]);
+  }, [rows, supplyChainId, template, fileName, queryClient, isHistorical, templateKey]);
 
   const reset = useCallback(() => {
     setRows([]);
