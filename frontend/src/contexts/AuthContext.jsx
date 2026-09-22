@@ -39,8 +39,32 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .maybeSingle();
-    if (!error) setProfile(data);
-  }, []);
+    if (!error) {
+      setProfile(data);
+      return;
+    }
+    // Real gap found while investigating a live audit finding
+    // (Dashboard stat cards silently stuck on "-" until a hard
+    // reload): this fetch previously failed completely silently --
+    // no retry, no toast, nothing logged -- and it re-fires on every
+    // Supabase auth event, including routine background token
+    // refreshes that have nothing to do with navigation. If a
+    // transient failure lands here, profile (and everything
+    // downstream that depends on it, e.g. supplyChainId) is left
+    // stuck with zero indication anything went wrong, and nothing
+    // else retries until the whole app restarts via a hard reload.
+    // One quick retry closes the transient case; a visible toast on
+    // genuine failure means it's no longer silent either way.
+    console.error('loadProfile failed, retrying once:', error);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    const retry = await supabase.from('user_accounts').select('*').eq('id', userId).maybeSingle();
+    if (!retry.error) {
+      setProfile(retry.data);
+    } else {
+      console.error('loadProfile retry also failed:', retry.error);
+      toast({ title: t('auth.profileLoadFailedTitle'), description: t('auth.profileLoadFailedDescription'), variant: 'destructive' });
+    }
+  }, [toast, t]);
 
   // Real, remaining half of Gap 3 (see useMyProfile.js): the value
   // itself was fixed to actually persist to the database, but nothing

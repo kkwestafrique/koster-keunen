@@ -32,13 +32,25 @@ import { useFinanceRevenue } from '@/hooks/useFinanceRevenue';
 import { useFinanceContracts } from '@/hooks/useFinanceContracts';
 import GaugeCard from '@/components/common/GaugeCard';
 
-function StatCard({ label, value, testId }) {
+// Real gap found via live audit: value ?? '—' gave zero visual
+// difference between "still loading" and "the data genuinely never
+// arrived" -- if a fetch got stuck (see AuthContext's loadProfile fix,
+// a real contributing mechanism found while investigating this), the
+// card just sat on '—' forever with nothing to tell a user, or a
+// developer watching over their shoulder, that anything was wrong.
+// A loading pulse now looks visibly different from a stuck '—', so
+// this class of bug is at least diagnosable instead of silent.
+function StatCard({ label, value, testId, isLoading }) {
   return (
     <div
       data-testid={testId}
       className="bg-white border border-[#cfd8e6] rounded-[5px] px-6 py-5 flex flex-col gap-1 justify-center flex-1"
     >
-      <span className="text-[28px] font-bold text-[#032b71]">{value ?? '—'}</span>
+      {isLoading ? (
+        <span className="h-[34px] w-16 rounded bg-[#eef1f6] animate-pulse" data-testid={`${testId}-loading`} />
+      ) : (
+        <span className="text-[28px] font-bold text-[#032b71]">{value ?? '—'}</span>
+      )}
       <span className="text-xs text-[#5a6f9a]">{label}</span>
     </div>
   );
@@ -133,8 +145,8 @@ export default function Dashboard() {
   // and even if there happen to be zero contracts yet for some year.
   const yearOptions = [...new Set([2026, 2025, 2024, ...contractYears])].sort((a, b) => b - a);
 
-  const { data: actorCounts } = useActorTypeCounts({ country });
-  const { data: bkAgg } = useBeekeeperAggregates({ country });
+  const { data: actorCounts, isLoading: actorCountsLoading } = useActorTypeCounts({ country });
+  const { data: bkAgg, isLoading: bkAggLoading } = useBeekeeperAggregates({ country });
   const { data: txSummary } = useDashboardTransactionSummary({ year });
   const { data: seasonMetrics } = useSeasonMetrics({ year });
   const { data: seasonPurchases } = useSeasonPurchases({ year });
@@ -172,19 +184,22 @@ export default function Dashboard() {
             <StatCard
               label={t('dashboard.localPartners')}
               value={actorCounts?.byType?.['Local Partner']}
+              isLoading={actorCountsLoading}
               testId="stat-local-partners"
             />
             <StatCard
               label={t('dashboard.aggregators')}
               value={actorCounts?.byType?.Aggregator}
+              isLoading={actorCountsLoading}
               testId="stat-aggregators"
             />
             <StatCard
               label={t('dashboard.producerOrganisations')}
               value={actorCounts?.byType?.['Producer Organisation']}
+              isLoading={actorCountsLoading}
               testId="stat-producer-orgs"
             />
-            <StatCard label={t('dashboard.beekeepersLabel')} value={bkAgg?.total} testId="stat-beekeepers" />
+            <StatCard label={t('dashboard.beekeepersLabel')} value={bkAgg?.total} isLoading={bkAggLoading} testId="stat-beekeepers" />
           </div>
         </div>
 

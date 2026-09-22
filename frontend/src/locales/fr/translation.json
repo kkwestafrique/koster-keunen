@@ -1016,7 +1016,9 @@
     "sessionExpiredTitle": "Session expirée",
     "sessionExpiredDescription": "Votre session a expiré. Veuillez vous reconnecter.",
     "roleChangedTitle": "Votre rôle a changé",
-    "roleChangedDescription": "Veuillez vous reconnecter pour continuer avec vos permissions mises à jour."
+    "roleChangedDescription": "Veuillez vous reconnecter pour continuer avec vos permissions mises à jour.",
+    "profileLoadFailedTitle": "Impossible de charger votre profil",
+    "profileLoadFailedDescription": "Une erreur de notre côté a empêché le chargement de vos informations de compte. Essayez d'actualiser la page."
   },
   "exchangeRates": {
     "title": "Taux de change",

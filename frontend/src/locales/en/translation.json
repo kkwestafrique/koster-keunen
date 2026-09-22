@@ -1016,7 +1016,9 @@
     "sessionExpiredTitle": "Session expired",
     "sessionExpiredDescription": "Your session has expired. Please log in again.",
     "roleChangedTitle": "Your role has changed",
-    "roleChangedDescription": "Please log in again to continue with your updated permissions."
+    "roleChangedDescription": "Please log in again to continue with your updated permissions.",
+    "profileLoadFailedTitle": "Couldn't load your profile",
+    "profileLoadFailedDescription": "Something on our end failed to load your account details. Try refreshing the page."
   },
   "exchangeRates": {
     "title": "Exchange Rates",
