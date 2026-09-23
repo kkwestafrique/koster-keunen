@@ -659,12 +659,37 @@ function validateRows(rows, template, lookups, isHistorical) {
 
       // Resolve text codes/names to the real FK columns instead of storing
       // them verbatim under a column name the table doesn't have.
+      // Real gap found via user report: single-add (AddBeekeeperDialog,
+      // DetailsTab) already auto-creates a village on the fly the moment
+      // someone types a genuinely new one (useFindOrCreateVillage) --
+      // bulk upload was the only place a new-but-real village name
+      // caused a hard failure ("not found... hasn't been added to the
+      // app yet"), even though that's exactly the flow someone bulk-
+      // onboarding beekeepers from a village never entered before would
+      // hit immediately. No longer blocks the row; resolution (find or
+      // create) now happens in submit(), same matching rule as
+      // useFindOrCreateVillage (case-insensitive, trimmed, same
+      // country/state/lga).
       if (col.key === 'village_name') {
         if (value) {
           const key = [value, cleaned.country, cleaned.state_region, cleaned.lga_municipality].map((s) => String(s || '').toLowerCase()).join('|');
           const id = lookups.villagesByName[key];
-          if (!id) errors.push(`Village "${value}" not found in ${cleaned.lga_municipality || ''}, ${cleaned.state_region || ''}, ${cleaned.country || ''} — check the spelling and address match exactly, or this village hasn't been added to the app yet`);
           cleaned.village_id = id || null;
+          if (!id) {
+            const trimmed = String(value).trim();
+            // Same minimum-length rule useFindOrCreateVillage already
+            // enforces for single-add, applied here too -- without it, a
+            // stray one-character typo in a bulk file would silently
+            // create a junk village row instead of the single bad row
+            // just failing, and at bulk volume that's a much bigger
+            // data-quality risk than the single-add case this rule was
+            // originally written for.
+            if (trimmed.length < 2) {
+              errors.push(`Village "${value}" is too short to be a real village name (at least 2 characters)`);
+            } else {
+              cleaned._newVillageName = trimmed;
+            }
+          }
         }
       } else if (col.key === 'actor_code') {
         if (value) {
@@ -895,6 +920,45 @@ export function useBulkUpload(templateKey) {
       // nonexistent) per-row column.
       ...(templateKey === 'receiveStock' ? { standard: options.standard, unit: 'Kg' } : {}),
     }));
+
+    // Real gap found via user report: bulk beekeeper upload rejected any
+    // row referencing a village not already in the villages table, even
+    // though single-add (findOrCreateVillage) has silently created new
+    // villages on the fly all along. Resolves every row flagged with
+    // _newVillageName during validation into a real village_id here,
+    // right before insert -- same match rule as findOrCreateVillage
+    // (case-insensitive on name, same country/state/lga), deduped within
+    // this batch so five beekeepers from the same new village create one
+    // village row, not five.
+    if (templateKey === 'beekeepers') {
+      const newVillageCache = {};
+      for (const row of validRows) {
+        if (!row._newVillageName) continue;
+        const cacheKey = [row._newVillageName, row.country, row.state_region, row.lga_municipality]
+          .map((s) => String(s || '').toLowerCase()).join('|');
+        if (!newVillageCache[cacheKey]) {
+          const { data: existing } = await supabase.from('villages').select('id')
+            .eq('supply_chain_id', supplyChainId)
+            .eq('country', row.country).eq('state_region', row.state_region).eq('lga_municipality', row.lga_municipality)
+            .ilike('name', row._newVillageName)
+            .maybeSingle();
+          if (existing) {
+            newVillageCache[cacheKey] = existing.id;
+          } else {
+            const { data: created, error: createError } = await supabase.from('villages')
+              .insert([{ country: row.country, state_region: row.state_region, lga_municipality: row.lga_municipality, name: row._newVillageName, supply_chain_id: supplyChainId }])
+              .select('id').single();
+            if (createError) throw createError;
+            newVillageCache[cacheKey] = created.id;
+          }
+        }
+        row.village_id = newVillageCache[cacheKey];
+        delete row._newVillageName;
+      }
+      queryClient.invalidateQueries({ queryKey: ['villages'] });
+      queryClient.invalidateQueries({ queryKey: ['villages-lite'] });
+    }
+
     const validationFailedCount = rows.length - validRows.length;
     // Real gap found via tracing why Failed uploads had a blank
     // error_detail even after BUG-21 wired up DB-error capture: rows
