@@ -524,7 +524,7 @@ function parseFile(file, template) {
 // don't exist on beekeepers/transactions at all — Supabase rejects the
 // whole batch before anything is written.
 async function fetchLookups(supplyChainId, templateKey) {
-  const lookups = { villagesByName: {}, actorsByCode: {}, beekeepersByCode: {} };
+  const lookups = { villagesByName: {}, lgasWithVillages: new Set(), actorsByCode: {}, beekeepersByCode: {} };
 
   if (templateKey === 'beekeepers') {
     const { data, error } = await supabase.from('villages').select('id, name, country, state_region, lga_municipality').eq('supply_chain_id', supplyChainId);
@@ -532,6 +532,14 @@ async function fetchLookups(supplyChainId, templateKey) {
     data.forEach((v) => {
       const key = [v.name, v.country, v.state_region, v.lga_municipality].map((s) => (s || '').trim().toLowerCase()).join('|');
       lookups.villagesByName[key] = v.id;
+      // Separate, name-independent key: lets the error message below tell
+      // apart "this LGA has real villages, you may have mistyped one" from
+      // "this LGA genuinely has zero villages in the app yet" -- a real
+      // gap found from a real upload: the message used to say "check the
+      // spelling" even when there was nothing at all to spell-check
+      // against for that LGA.
+      const lgaKey = [v.country, v.state_region, v.lga_municipality].map((s) => (s || '').trim().toLowerCase()).join('|');
+      lookups.lgasWithVillages.add(lgaKey);
     });
   }
 
@@ -663,7 +671,16 @@ function validateRows(rows, template, lookups, isHistorical) {
         if (value) {
           const key = [value, cleaned.country, cleaned.state_region, cleaned.lga_municipality].map((s) => String(s || '').toLowerCase()).join('|');
           const id = lookups.villagesByName[key];
-          if (!id) errors.push(`Village "${value}" not found in ${cleaned.lga_municipality || ''}, ${cleaned.state_region || ''}, ${cleaned.country || ''} — check the spelling and address match exactly, or this village hasn't been added to the app yet`);
+          if (!id) {
+            const lgaKey = [cleaned.country, cleaned.state_region, cleaned.lga_municipality].map((s) => String(s || '').toLowerCase()).join('|');
+            const lgaHasAnyVillages = lookups.lgasWithVillages.has(lgaKey);
+            const where = `${cleaned.lga_municipality || ''}, ${cleaned.state_region || ''}, ${cleaned.country || ''}`;
+            errors.push(
+              lgaHasAnyVillages
+                ? `Village "${value}" not found in ${where} — check the spelling and address match exactly, or add it as a new village first`
+                : `Village "${value}" not found — ${where} has no villages added to the app yet. Add it as a new village first, then re-upload.`
+            );
+          }
           cleaned.village_id = id || null;
         }
       } else if (col.key === 'actor_code') {
