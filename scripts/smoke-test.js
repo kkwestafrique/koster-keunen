@@ -97,7 +97,11 @@ async function main() {
       // transaction whose standard the referenced beekeeper isn't
       // already flagged for. Nearly every test below creates a
       // Sustainable-standard transaction for this beekeeper.
-      .insert({ supply_chain_id: supplyChain.id, traceability_code: `${testTag}-BK`, full_name: testTag, village_id: village.id, standards: ['Sustainable'] })
+      //
+      // charter_signed: true is required alongside it -- a separate,
+      // real constraint (beekeepers_charter_required_if_sustainable)
+      // requires both together, not standards alone.
+      .insert({ supply_chain_id: supplyChain.id, traceability_code: `${testTag}-BK`, full_name: testTag, village_id: village.id, standards: ['Sustainable'], charter_signed: true })
       .select().single();
     if (bkErr) throw new Error(`Could not create test beekeeper: ${bkErr.message}`);
     cleanup.push(() => admin.from('beekeepers').delete().eq('id', beekeeper.id));
