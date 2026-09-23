@@ -357,6 +357,42 @@ async function main() {
     check('The same rule correctly allows Sustainable + charter_signed=true', !charterOkErr && !!charterOk, charterOkErr?.message);
     if (charterOk) cleanup.push(() => admin.from('beekeepers').delete().eq('id', charterOk.id));
 
+    // ---- Fixture: a second, fresh authenticated Member ----
+    // Real bug found from an actual CI run, not a bug in the app: section 9
+    // above deliberately, correctly revokes asFieldOfficer's own access as
+    // its whole point (that's what it's testing). Reusing that same,
+    // now-genuinely-revoked session for the tests below -- which all
+    // legitimately need a real, still-valid Member session -- was a bug in
+    // this suite's own test ordering, not the functions under test.
+    // Confirmed live: process_stock correctly, accurately rejected
+    // asFieldOfficer with "Not authorized" once its supply_chain_id was
+    // genuinely null, exactly as it should for a real revoked user --
+    // proving the fix from section 9 itself works, but showing this test
+    // needs its own, separate, un-revoked session.
+    const testEmail2 = `${testTag.toLowerCase()}-2@smoketest.invalid`;
+    const testPassword2 = `Sm0ke-${randomUUID()}`;
+    const { data: authUser2, error: authUser2Err } = await admin.auth.admin.createUser({
+      email: testEmail2, password: testPassword2, email_confirm: true,
+    });
+    if (authUser2Err) throw new Error(`Could not create second test auth user: ${authUser2Err.message}`);
+    cleanup.push(() => admin.auth.admin.deleteUser(authUser2.user.id));
+
+    const { error: ua2Err } = await admin.from('user_accounts').insert({
+      id: authUser2.user.id, username: `${testTag}-2`, role: 'Member',
+      supply_chain_id: supplyChain.id, current_actor_id: actor.id,
+    });
+    if (ua2Err) throw new Error(`Could not create second test user_account: ${ua2Err.message}`);
+
+    const { error: tm2Err } = await admin.from('team_members').insert({
+      actor_id: actor.id, name: `${testTag}-2`, email: testEmail2, role: 'Member',
+      status: 'Active', user_id: authUser2.user.id,
+    });
+    if (tm2Err) throw new Error(`Could not create second test team_members row: ${tm2Err.message}`);
+
+    const asMember2 = createClient(SUPABASE_URL, ANON_KEY);
+    const { error: signIn2Err } = await asMember2.auth.signInWithPassword({ email: testEmail2, password: testPassword2 });
+    if (signIn2Err) throw new Error(`Could not sign in as second test Member: ${signIn2Err.message}`);
+
     // =========================================================================
     console.log('\n12. approve_transaction: real status-conflict is caught, not overwritten');
     // =========================================================================
@@ -372,7 +408,7 @@ async function main() {
     cleanup.push(() => admin.from('transactions').delete().eq('transaction_group_id', tx12Group));
 
     await admin.from('transactions').update({ status: 'Rejected' }).eq('transaction_group_id', tx12Group);
-    const { error: approveAfterRejectErr } = await asFieldOfficer.rpc('approve_transaction', { p_transaction_group_id: tx12Group });
+    const { error: approveAfterRejectErr } = await asMember2.rpc('approve_transaction', { p_transaction_group_id: tx12Group });
     const { data: tx12After } = await admin.from('transactions').select('status').eq('transaction_group_id', tx12Group).single();
     check(
       'Approving a transaction that was concurrently rejected raises an error and leaves it Rejected (not silently Approved)',
@@ -399,7 +435,7 @@ async function main() {
     cleanup.push(() => admin.from('transactions').delete().eq('transaction_group_id', tx13Group));
 
     await admin.from('transactions').update({ status: 'Approved' }).eq('transaction_group_id', tx13Group);
-    const { error: rejectAfterApproveErr } = await asFieldOfficer
+    const { error: rejectAfterApproveErr } = await asMember2
       .rpc('reject_transaction_with_reversal', { p_transaction_group_id: tx13Group, p_reject_reason: 'smoke test' });
     const { data: tx13After } = await admin.from('transactions').select('status').eq('transaction_group_id', tx13Group).single();
     const { data: phantomReversals } = await admin
@@ -424,7 +460,7 @@ async function main() {
     if (exportUploadErr) throw new Error(`Could not create test export file: ${exportUploadErr.message}`);
     cleanup.push(() => admin.storage.from('private-media').remove([otherUserExportPath]));
 
-    const { data: exportsVisible } = await asFieldOfficer.storage.from('private-media')
+    const { data: exportsVisible } = await asMember2.storage.from('private-media')
       .list(`exports/${supplyChain.id}`, { search: `${testTag}-not-mine` });
     check(
       'A real Member cannot see another user\'s export file in the same tenant',
@@ -458,7 +494,7 @@ async function main() {
       p_transaction_type: 'Refining', p_transaction_date: '2026-01-01', p_currency: null,
       p_idempotency_key: idempotencyKey,
     };
-    const { data: firstGroupId, error: firstCallErr } = await asFieldOfficer.rpc('process_stock', processArgs);
+    const { data: firstGroupId, error: firstCallErr } = await asMember2.rpc('process_stock', processArgs);
     if (firstCallErr) throw new Error(`process_stock first call failed: ${firstCallErr.message}`);
     cleanup.push(() => admin.from('transactions').delete().eq('transaction_group_id', firstGroupId));
     cleanup.push(() => admin.from('transaction_batch_selections').delete().eq('transaction_group_id', firstGroupId));
@@ -468,7 +504,7 @@ async function main() {
     check('First call consumes the real, correct amount (20 - 5 = 15)', Number(afterFirstCall?.quantity_available) === 15, `got ${afterFirstCall?.quantity_available}`);
 
     // The retry: identical arguments, same idempotency key.
-    const { data: retryGroupId, error: retryErr } = await asFieldOfficer.rpc('process_stock', processArgs);
+    const { data: retryGroupId, error: retryErr } = await asMember2.rpc('process_stock', processArgs);
     const { data: afterRetry } = await admin.from('stocks').select('quantity_available').eq('id', sourceStock.id).single();
     check(
       'Retrying with the same idempotency key returns the same group id and does not consume stock again',
