@@ -6,6 +6,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import FilterBar from '@/components/common/FilterBar';
 import DataTable from '@/components/common/DataTable';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -24,16 +25,39 @@ const STATUS_COLORS = {
 // Transactions) showing upload HISTORY only. There is deliberately no
 // upload button here — file uploads happen inside the Multiple-transaction
 // flows under Transactions > Received / Send.
+// Low, live UI/UX audit: the error detail was only ever reachable via a
+// native title="" tooltip -- invisible until hover, which meant it
+// never showed up at all on touch/mobile, and the audit's own repro
+// specifically tried clicking it and (correctly) found nothing
+// happened, since hover was the only trigger. The data itself was
+// already captured correctly (see useBulkUpload.js's
+// validationErrorMessages fix, earlier this project) -- this was a
+// display gap, not a data gap. A real Popover fixes both: click (or
+// tap) to open, stays open long enough to actually read, and works
+// identically on touch.
 function UploadStatus({ status, errorDetail }) {
+  if (status === 'Failed' && errorDetail) {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="text-sm font-bold underline decoration-dotted cursor-pointer"
+            style={{ color: STATUS_COLORS.Failed }}
+            data-testid="upload-error-detail"
+          >
+            {status} <span className="text-xs font-normal">(?)</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 text-sm text-[#032b71] bg-white" data-testid="upload-error-detail-content">
+          {errorDetail}
+        </PopoverContent>
+      </Popover>
+    );
+  }
   return (
-    <span
-      className="text-sm font-bold"
-      style={{ color: STATUS_COLORS[status] || '#5a6f9a' }}
-      title={status === 'Failed' && errorDetail ? errorDetail : undefined}
-      data-testid={status === 'Failed' && errorDetail ? 'upload-error-detail' : undefined}
-    >
+    <span className="text-sm font-bold" style={{ color: STATUS_COLORS[status] || '#5a6f9a' }}>
       {status}
-      {status === 'Failed' && errorDetail && <span className="ml-1 text-xs font-normal underline decoration-dotted cursor-help">{'(?)'}</span>}
     </span>
   );
 }

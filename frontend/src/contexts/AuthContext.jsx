@@ -142,6 +142,13 @@ export function AuthProvider({ children }) {
     return () => {
       supabase.removeChannel(channel);
     };
+    // signOut is deliberately omitted: it's a plain, unmemoized function
+    // recreated every render, so including it would tear down and
+    // recreate this realtime subscription on every single render. It
+    // always calls the same, stable supabase.auth.signOut() underneath
+    // regardless of when it was defined, so there's no stale-closure risk
+    // here to worry about.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id, toast, t]);
 
   const signIn = async (email, password) => {
