@@ -92,7 +92,12 @@ async function main() {
 
     const { data: beekeeper, error: bkErr } = await admin
       .from('beekeepers')
-      .insert({ supply_chain_id: supplyChain.id, traceability_code: `${testTag}-BK`, full_name: testTag, village_id: village.id })
+      // standards: ['Sustainable'] is required here -- a real, sensible
+      // database trigger (transactions_check_standard_flag) rejects any
+      // transaction whose standard the referenced beekeeper isn't
+      // already flagged for. Nearly every test below creates a
+      // Sustainable-standard transaction for this beekeeper.
+      .insert({ supply_chain_id: supplyChain.id, traceability_code: `${testTag}-BK`, full_name: testTag, village_id: village.id, standards: ['Sustainable'] })
       .select().single();
     if (bkErr) throw new Error(`Could not create test beekeeper: ${bkErr.message}`);
     cleanup.push(() => admin.from('beekeepers').delete().eq('id', beekeeper.id));
