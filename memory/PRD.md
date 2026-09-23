@@ -47,7 +47,9 @@ constants — all in Supabase Postgres, RLS enabled, scoped by supply_chain_id.
   dialog) + Beekeeper Detail.
 - Villages list (search, beekeeper count column, Add Village dialog).
 - Connections list (search + status + year filters, Add Connection dialog, Active/Revoked badge).
-- Sentry/PostHog wired with placeholder keys (`/app/frontend/src/lib/sentry.js`, `posthog.js`).
+- Sentry/PostHog wired (`/app/frontend/src/lib/sentry.js`, `posthog.js`); Sentry DSN set live
+  2026-08 (real error tracking active, verified via network request to ingest.de.sentry.io);
+  PostHog still placeholder.
 - TanStack Query staleTime 30s on all list hooks (`src/hooks/use*.js`).
 
 ## Known Schema Gaps (per literal spec vs. given DB schema)
