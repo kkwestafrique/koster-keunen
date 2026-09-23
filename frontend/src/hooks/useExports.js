@@ -11,8 +11,19 @@ const STALE_EXPORT_MINUTES = 5;
 // are inserted (Inprogress) and then updated (Completed/Failed) — no
 // polling needed.
 export function useRecentExports() {
-  const { supplyChainId } = useAuth();
+  const { supplyChainId, role, session } = useAuth();
+  const userId = session?.user?.id;
   const queryClient = useQueryClient();
+
+  // Real gap found while investigating the top-bar Download button
+  // throwing errors on click: this list was scoped only by
+  // supply_chain_id -- tenant-wide, showing every teammate's exports --
+  // while the storage policy that actually lets someone open a file
+  // only allows the real creator (or an Admin). A non-Admin saw every
+  // export listed here but could only open their own; clicking anyone
+  // else's threw a real, live permission error. Scoping the list to
+  // match what's actually openable (own exports, or everything if
+  // Admin) means what's shown here is what can actually be opened.
 
   // Recover from the "stuck at Inprogress forever" failure mode: if the
   // browser tab closed, the network dropped, or the browser crashed while
@@ -35,18 +46,25 @@ export function useRecentExports() {
   }, [supplyChainId, queryClient]);
 
   const query = useQuery({
-    queryKey: ['exports', supplyChainId],
+    queryKey: ['exports', supplyChainId, role === 'Admin' ? 'all' : userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('exports')
         .select('*')
         .eq('supply_chain_id', supplyChainId)
         .order('created_at', { ascending: false })
         .limit(RECENT_LIMIT);
+      if (role !== 'Admin') q = q.eq('created_by', userId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
-    enabled: !!supplyChainId,
+    // supplyChainId and userId both come from the same profile object
+    // in AuthContext, so they resolve together -- but guarding on both
+    // explicitly (rather than assuming) means this can't fire with a
+    // half-resolved auth state for a non-Admin user and silently query
+    // with created_by = undefined.
+    enabled: !!supplyChainId && (role === 'Admin' || !!userId),
     staleTime: 10_000,
   });
 
@@ -119,9 +137,17 @@ export function useUpdateExport() {
 // still present) -- matches the same scope as villages/connections,
 // which also don't touch anything beyond their own row.
 export function useDeleteExport() {
-  const { supplyChainId } = useAuth();
+  const { supplyChainId, role, session } = useAuth();
+  const userId = session?.user?.id;
   const queryClient = useQueryClient();
-  const queryKey = ['exports', supplyChainId];
+  // Must match useRecentExports' queryKey exactly -- setQueryData below
+  // needs an exact cache-key match, unlike invalidateQueries elsewhere
+  // in this file, which matches by prefix and would have kept working
+  // fine even with a mismatched key here. Missed initially when the
+  // list query's key grew a third segment; the optimistic delete would
+  // have silently targeted a nonexistent cache entry (no error, item
+  // just wouldn't disappear until the next real refetch).
+  const queryKey = ['exports', supplyChainId, role === 'Admin' ? 'all' : userId];
   return useMutation({
     mutationFn: async (id) => {
       const { error } = await supabase.from('exports').delete().eq('id', id);
