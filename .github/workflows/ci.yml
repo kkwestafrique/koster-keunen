@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - name: Install
@@ -59,7 +59,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Real, confirmed CI failure: Supabase's realtime-js library
+          # eagerly tries to set up a realtime connection the moment
+          # createClient() runs, even though these smoke tests never
+          # actually use realtime features. That needs a native
+          # WebSocket global, which only exists from Node 22 onward --
+          # Node 20 throws immediately with a clear "Node.js 20
+          # detected without native WebSocket support" error.
+          node-version: '22'
       - name: Install root scripts' dependencies
         run: npm install --no-save dotenv @supabase/supabase-js
       - name: Run smoke tests
