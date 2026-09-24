@@ -866,6 +866,22 @@ function validateRows(rows, template, lookups, isHistorical) {
 
       template.columns.filter((c) => c.atLeastOneOf).forEach((c) => { delete cleaned[c.key]; });
       cleaned.charter_signed = String(cleaned.charter_signed).trim().toLowerCase() === 'yes';
+
+      // Real, root-cause bug found via thorough investigation: country,
+      // state_region, and lga_municipality are only ever needed to
+      // resolve village_id above (see the village_name handling in the
+      // per-column loop) -- beekeepers has no such columns of its own
+      // at all, that data lives entirely through the village_id
+      // relationship. Left in cleaned, these three were never stripped
+      // before insert/update, so every single beekeeper bulk upload --
+      // new or updating an existing one -- failed at the actual
+      // database call with "column ... does not exist", even though
+      // validation itself showed a clean "row(s) verified" with zero
+      // errors. Confirmed directly: reproduced the real error against
+      // the database with real, transformed row data before this fix.
+      delete cleaned.country;
+      delete cleaned.state_region;
+      delete cleaned.lga_municipality;
     }
 
     // row.__originalRowIndex (set by parseFile's blank-row filter) is the
