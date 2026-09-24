@@ -72,7 +72,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'transactions',
     uploadType: 'Transactions',
     columns: [
-      { key: 'transaction_date', label: 'Date', required: true },
+      { key: 'transaction_date', label: 'Date (DD-MM-YYYY)', required: true, type: 'date' },
       { key: 'actor_code', label: 'Actor traceability code', required: false },
       { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: false },
       { key: 'product', label: 'Product', required: true },
@@ -88,7 +88,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'contracts',
     uploadType: 'Contracts',
     columns: [
-      { key: 'signature_date', label: 'Signature date', required: true },
+      { key: 'signature_date', label: 'Signature date (DD-MM-YYYY)', required: true, type: 'date' },
       { key: 'actor_code', label: 'Supplier actor traceability code', required: true },
       { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
