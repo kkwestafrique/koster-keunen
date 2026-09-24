@@ -129,9 +129,9 @@ function MultiUploadBody({ onDone }) {
     setPhase('processing');
     setProgress(20);
     try {
-      await loadFile(file);
+      const validatedRows = await loadFile(file);
       setProgress(60);
-      const result = await submit({ fileName: file.name });
+      const result = await submit({ fileName: file.name, rows: validatedRows });
       setProgress(100);
       setPhase('done');
       if (result.inserted > 0 || result.updated > 0) {

@@ -504,7 +504,46 @@ function parseFile(file, template) {
           // would silently collide and overwrite the last one.
           const hasGroups = template?.columns?.some((c) => c.group);
           const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '', range: hasGroups ? 1 : 0 });
-          resolve(rows);
+          // Real, systemic gap found via user reports across every
+          // template (receiveStock: "499 row(s) with errors" from a file
+          // with only a couple of real rows filled in; contracts: "489
+          // row(s) with errors" showing the identical pattern) --
+          // `defval: ''` makes sheet_to_json produce a full row object
+          // for every row within the worksheet's used range, not just
+          // rows that actually have data. Every template pre-formats
+          // ~500 rows with real dropdown data-validation (a genuinely
+          // useful technique -- it's why the dropdowns keep working as
+          // someone scrolls down and keeps typing), so anyone who fills
+          // in just their real rows and leaves the rest untouched gets
+          // hundreds of phantom "row(s) with errors" for cells that were
+          // never meant to hold data at all. A row where every single
+          // cell is blank (after trimming) is Excel formatting bleed,
+          // not a real data row -- dropped here, before validateRows
+          // ever sees it, rather than validated and then explained away.
+          // Computed/formula columns (e.g. contracts' Total amount,
+          // receiveStock's Amount) always evaluate to a real value --
+          // typically 0 -- even on a row with nothing else in it, since
+          // that's how spreadsheet formulas work on blank inputs. Left
+          // in the blank-check below, a single computed column's "0"
+          // would count as "this row has data" and defeat the whole
+          // filter for exactly the two templates that have one -- which
+          // is exactly what was still happening for Contracts and
+          // Receive Stock after the fix above, even though it worked
+          // immediately for Beekeepers (no computed columns there).
+          // Excluded by normalized label/key so it matches however
+          // sheet_to_json actually named this column's key.
+          const computedHeaderKeys = new Set(
+            (template?.columns || []).filter((c) => c.computed).flatMap((c) => [normalizeHeader(c.label), normalizeHeader(c.key)])
+          );
+          const realRows = rows
+            .map((row, idx) => ({
+              row,
+              idx,
+              isBlank: !Object.entries(row).some(([k, v]) => !computedHeaderKeys.has(normalizeHeader(k)) && String(v ?? '').trim() !== ''),
+            }))
+            .filter((r) => !r.isBlank)
+            .map((r) => ({ ...r.row, __originalRowIndex: r.idx }));
+          resolve(realRows);
         } catch (err) {
           reject(err);
         }
@@ -524,7 +563,7 @@ function parseFile(file, template) {
 // don't exist on beekeepers/transactions at all — Supabase rejects the
 // whole batch before anything is written.
 async function fetchLookups(supplyChainId, templateKey) {
-  const lookups = { villagesByName: {}, lgasWithVillages: new Set(), actorsByCode: {}, beekeepersByCode: {} };
+  const lookups = { villagesByName: {}, actorsByCode: {}, beekeepersByCode: {} };
 
   if (templateKey === 'beekeepers') {
     const { data, error } = await supabase.from('villages').select('id, name, country, state_region, lga_municipality').eq('supply_chain_id', supplyChainId);
@@ -532,18 +571,18 @@ async function fetchLookups(supplyChainId, templateKey) {
     data.forEach((v) => {
       const key = [v.name, v.country, v.state_region, v.lga_municipality].map((s) => (s || '').trim().toLowerCase()).join('|');
       lookups.villagesByName[key] = v.id;
-      // Separate, name-independent key: lets the error message below tell
-      // apart "this LGA has real villages, you may have mistyped one" from
-      // "this LGA genuinely has zero villages in the app yet" -- a real
-      // gap found from a real upload: the message used to say "check the
-      // spelling" even when there was nothing at all to spell-check
-      // against for that LGA.
-      const lgaKey = [v.country, v.state_region, v.lga_municipality].map((s) => (s || '').trim().toLowerCase()).join('|');
-      lookups.lgasWithVillages.add(lgaKey);
     });
   }
 
-  if (templateKey === 'transactions' || templateKey === 'contracts') {
+  // Real, severe gap found via user report: receiveStock's beekeeper_code
+  // column is required: true, checked against lookups.beekeepersByCode
+  // at validation time -- but receiveStock was missing from this
+  // condition, so that lookup table was always empty for it. Every
+  // Receive Stock bulk upload has been failing "Beekeeper code ... not
+  // found" for every single beekeeper, correct or not, with no way to
+  // ever pass. Confirmed live: a beekeeper genuinely in the database
+  // (KKWA-TG-000002, "Samson") still failed this exact check.
+  if (templateKey === 'transactions' || templateKey === 'contracts' || templateKey === 'receiveStock') {
     const [actorsRes, beekeepersRes] = await Promise.all([
       supabase.from('actors').select('id, traceability_code').eq('supply_chain_id', supplyChainId),
       supabase.from('beekeepers').select('id, traceability_code').eq('supply_chain_id', supplyChainId),
@@ -590,7 +629,7 @@ function detectUnrecognizedColumns(rawRows, template) {
   const knownNormalized = new Set(
     template.columns.flatMap((c) => [normalizeHeader(c.label), normalizeHeader(c.key)])
   );
-  const realHeaders = Object.keys(rawRows[0]);
+  const realHeaders = Object.keys(rawRows[0]).filter((h) => h !== '__originalRowIndex');
   return realHeaders.filter((h) => !knownNormalized.has(normalizeHeader(h)));
 }
 
@@ -667,21 +706,37 @@ function validateRows(rows, template, lookups, isHistorical) {
 
       // Resolve text codes/names to the real FK columns instead of storing
       // them verbatim under a column name the table doesn't have.
+      // Real gap found via user report: single-add (AddBeekeeperDialog,
+      // DetailsTab) already auto-creates a village on the fly the moment
+      // someone types a genuinely new one (useFindOrCreateVillage) --
+      // bulk upload was the only place a new-but-real village name
+      // caused a hard failure ("not found... hasn't been added to the
+      // app yet"), even though that's exactly the flow someone bulk-
+      // onboarding beekeepers from a village never entered before would
+      // hit immediately. No longer blocks the row; resolution (find or
+      // create) now happens in submit(), same matching rule as
+      // useFindOrCreateVillage (case-insensitive, trimmed, same
+      // country/state/lga).
       if (col.key === 'village_name') {
         if (value) {
           const key = [value, cleaned.country, cleaned.state_region, cleaned.lga_municipality].map((s) => String(s || '').toLowerCase()).join('|');
           const id = lookups.villagesByName[key];
-          if (!id) {
-            const lgaKey = [cleaned.country, cleaned.state_region, cleaned.lga_municipality].map((s) => String(s || '').toLowerCase()).join('|');
-            const lgaHasAnyVillages = lookups.lgasWithVillages.has(lgaKey);
-            const where = `${cleaned.lga_municipality || ''}, ${cleaned.state_region || ''}, ${cleaned.country || ''}`;
-            errors.push(
-              lgaHasAnyVillages
-                ? `Village "${value}" not found in ${where} — check the spelling and address match exactly, or add it as a new village first`
-                : `Village "${value}" not found — ${where} has no villages added to the app yet. Add it as a new village first, then re-upload.`
-            );
-          }
           cleaned.village_id = id || null;
+          if (!id) {
+            const trimmed = String(value).trim();
+            // Same minimum-length rule useFindOrCreateVillage already
+            // enforces for single-add, applied here too -- without it, a
+            // stray one-character typo in a bulk file would silently
+            // create a junk village row instead of the single bad row
+            // just failing, and at bulk volume that's a much bigger
+            // data-quality risk than the single-add case this rule was
+            // originally written for.
+            if (trimmed.length < 2) {
+              errors.push(`Village "${value}" is too short to be a real village name (at least 2 characters)`);
+            } else {
+              cleaned._newVillageName = trimmed;
+            }
+          }
         }
       } else if (col.key === 'actor_code') {
         if (value) {
@@ -813,7 +868,12 @@ function validateRows(rows, template, lookups, isHistorical) {
       cleaned.charter_signed = String(cleaned.charter_signed).trim().toLowerCase() === 'yes';
     }
 
-    return { rowNumber: index + 2, data: cleaned, errors };
+    // row.__originalRowIndex (set by parseFile's blank-row filter) is the
+    // row's real position in the original file. Falls back to the
+    // array's own index if it's ever missing, so this never throws --
+    // not because a specific other caller is known to need it.
+    const realIndex = row.__originalRowIndex ?? index;
+    return { rowNumber: realIndex + 2, data: cleaned, errors };
   });
 }
 
@@ -865,7 +925,7 @@ export function useBulkUpload(templateKey) {
       const validCountNow = validated.filter((r) => r.errors.length === 0).length;
       if (validCountNow === 0 && validated.length > 0 && template.table !== 'contracts' && supplyChainId) {
         const failureMessages = validated
-          .map((r, idx) => (r.errors.length > 0 ? `Row ${idx + 1}: ${r.errors[0]}` : null))
+          .map((r) => (r.errors.length > 0 ? `Row ${r.rowNumber}: ${r.errors[0]}` : null))
           .filter(Boolean)
           .slice(0, 5);
         try {
@@ -882,6 +942,7 @@ export function useBulkUpload(templateKey) {
           console.error('Failed to log fully-failed bulk upload attempt:', logErr);
         }
       }
+      return validated;
     } catch (err) {
       // parseFile rejects (e.g. non-.xlsx file) with a real Error. Store it
       // for callers that just read `parseError` state (ReceiveStockForm's
@@ -903,7 +964,23 @@ export function useBulkUpload(templateKey) {
     if (submittingRef.current) return { inserted: 0, failed: 0 };
     submittingRef.current = true;
     setUploading(true);
-    const validRows = rows.filter((r) => r.errors.length === 0).map((r) => ({
+    // Real, severe gap found via user report: AddBeekeeperDialog's
+    // multi-upload flow calls `await loadFile(file)` then immediately
+    // `await submit(...)` in the same handler, with no re-render between
+    // them. submit is a useCallback closing over `rows` -- the reference
+    // the caller already holds was fixed at the last render, before
+    // loadFile's setRows(validated) had any chance to produce a new one.
+    // Every beekeeper bulk upload has been running against whatever
+    // `rows` was BEFORE this file was loaded (empty, on a first upload),
+    // not what was just validated -- confirmed live: a file that showed
+    // "1 row(s) verified, 0 row(s) with errors" still inserted zero
+    // beekeepers. Exact same bug class as the fileName fix (M7) above,
+    // just never applied to the actual data itself. loadFile now returns
+    // the validated rows; callers in this exact back-to-back pattern
+    // should pass them as options.rows to sidestep the stale closure
+    // entirely, the same way options.fileName already does.
+    const effectiveRows = options.rows ?? rows;
+    const validRows = effectiveRows.filter((r) => r.errors.length === 0).map((r) => ({
       ...r.data,
       supply_chain_id: supplyChainId,
       // Same reasoning as the historical RPC branch above: receiveStock
@@ -912,7 +989,46 @@ export function useBulkUpload(templateKey) {
       // nonexistent) per-row column.
       ...(templateKey === 'receiveStock' ? { standard: options.standard, unit: 'Kg' } : {}),
     }));
-    const validationFailedCount = rows.length - validRows.length;
+
+    // Real gap found via user report: bulk beekeeper upload rejected any
+    // row referencing a village not already in the villages table, even
+    // though single-add (findOrCreateVillage) has silently created new
+    // villages on the fly all along. Resolves every row flagged with
+    // _newVillageName during validation into a real village_id here,
+    // right before insert -- same match rule as findOrCreateVillage
+    // (case-insensitive on name, same country/state/lga), deduped within
+    // this batch so five beekeepers from the same new village create one
+    // village row, not five.
+    if (templateKey === 'beekeepers') {
+      const newVillageCache = {};
+      for (const row of validRows) {
+        if (!row._newVillageName) continue;
+        const cacheKey = [row._newVillageName, row.country, row.state_region, row.lga_municipality]
+          .map((s) => String(s || '').toLowerCase()).join('|');
+        if (!newVillageCache[cacheKey]) {
+          const { data: existing } = await supabase.from('villages').select('id')
+            .eq('supply_chain_id', supplyChainId)
+            .eq('country', row.country).eq('state_region', row.state_region).eq('lga_municipality', row.lga_municipality)
+            .ilike('name', row._newVillageName)
+            .maybeSingle();
+          if (existing) {
+            newVillageCache[cacheKey] = existing.id;
+          } else {
+            const { data: created, error: createError } = await supabase.from('villages')
+              .insert([{ country: row.country, state_region: row.state_region, lga_municipality: row.lga_municipality, name: row._newVillageName, supply_chain_id: supplyChainId }])
+              .select('id').single();
+            if (createError) throw createError;
+            newVillageCache[cacheKey] = created.id;
+          }
+        }
+        row.village_id = newVillageCache[cacheKey];
+        delete row._newVillageName;
+      }
+      queryClient.invalidateQueries({ queryKey: ['villages'] });
+      queryClient.invalidateQueries({ queryKey: ['villages-lite'] });
+    }
+
+    const validationFailedCount = effectiveRows.length - validRows.length;
     // Real gap found via tracing why Failed uploads had a blank
     // error_detail even after BUG-21 wired up DB-error capture: rows
     // that fail our own client-side validation (wrong/missing fields,
@@ -923,8 +1039,8 @@ export function useBulkUpload(templateKey) {
     // ended up with a totalFailed count but no reason a person could
     // read. Capped at 5 for the same reason the DB-error path caps at
     // 5 below: error_detail is a short summary, not a full log.
-    const validationErrorMessages = rows
-      .map((r, idx) => (r.errors.length > 0 ? `Row ${idx + 1}: ${r.errors[0]}` : null))
+    const validationErrorMessages = effectiveRows
+      .map((r) => (r.errors.length > 0 ? `Row ${r.rowNumber}: ${r.errors[0]}` : null))
       .filter(Boolean)
       .slice(0, 5);
 
