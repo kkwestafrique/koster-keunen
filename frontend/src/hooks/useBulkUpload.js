@@ -923,6 +923,7 @@ export function useBulkUpload(templateKey) {
           console.error('Failed to log fully-failed bulk upload attempt:', logErr);
         }
       }
+      return validated;
     } catch (err) {
       // parseFile rejects (e.g. non-.xlsx file) with a real Error. Store it
       // for callers that just read `parseError` state (ReceiveStockForm's
@@ -944,7 +945,23 @@ export function useBulkUpload(templateKey) {
     if (submittingRef.current) return { inserted: 0, failed: 0 };
     submittingRef.current = true;
     setUploading(true);
-    const validRows = rows.filter((r) => r.errors.length === 0).map((r) => ({
+    // Real, severe gap found via user report: AddBeekeeperDialog's
+    // multi-upload flow calls `await loadFile(file)` then immediately
+    // `await submit(...)` in the same handler, with no re-render between
+    // them. submit is a useCallback closing over `rows` -- the reference
+    // the caller already holds was fixed at the last render, before
+    // loadFile's setRows(validated) had any chance to produce a new one.
+    // Every beekeeper bulk upload has been running against whatever
+    // `rows` was BEFORE this file was loaded (empty, on a first upload),
+    // not what was just validated -- confirmed live: a file that showed
+    // "1 row(s) verified, 0 row(s) with errors" still inserted zero
+    // beekeepers. Exact same bug class as the fileName fix (M7) above,
+    // just never applied to the actual data itself. loadFile now returns
+    // the validated rows; callers in this exact back-to-back pattern
+    // should pass them as options.rows to sidestep the stale closure
+    // entirely, the same way options.fileName already does.
+    const effectiveRows = options.rows ?? rows;
+    const validRows = effectiveRows.filter((r) => r.errors.length === 0).map((r) => ({
       ...r.data,
       supply_chain_id: supplyChainId,
       // Same reasoning as the historical RPC branch above: receiveStock
@@ -992,7 +1009,7 @@ export function useBulkUpload(templateKey) {
       queryClient.invalidateQueries({ queryKey: ['villages-lite'] });
     }
 
-    const validationFailedCount = rows.length - validRows.length;
+    const validationFailedCount = effectiveRows.length - validRows.length;
     // Real gap found via tracing why Failed uploads had a blank
     // error_detail even after BUG-21 wired up DB-error capture: rows
     // that fail our own client-side validation (wrong/missing fields,
@@ -1003,7 +1020,7 @@ export function useBulkUpload(templateKey) {
     // ended up with a totalFailed count but no reason a person could
     // read. Capped at 5 for the same reason the DB-error path caps at
     // 5 below: error_detail is a short summary, not a full log.
-    const validationErrorMessages = rows
+    const validationErrorMessages = effectiveRows
       .map((r) => (r.errors.length > 0 ? `Row ${r.rowNumber}: ${r.errors[0]}` : null))
       .filter(Boolean)
       .slice(0, 5);
