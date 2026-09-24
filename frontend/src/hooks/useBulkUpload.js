@@ -504,7 +504,27 @@ function parseFile(file, template) {
           // would silently collide and overwrite the last one.
           const hasGroups = template?.columns?.some((c) => c.group);
           const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '', range: hasGroups ? 1 : 0 });
-          resolve(rows);
+          // Real, systemic gap found via user reports across every
+          // template (receiveStock: "499 row(s) with errors" from a file
+          // with only a couple of real rows filled in; contracts: "489
+          // row(s) with errors" showing the identical pattern) --
+          // `defval: ''` makes sheet_to_json produce a full row object
+          // for every row within the worksheet's used range, not just
+          // rows that actually have data. Every template pre-formats
+          // ~500 rows with real dropdown data-validation (a genuinely
+          // useful technique -- it's why the dropdowns keep working as
+          // someone scrolls down and keeps typing), so anyone who fills
+          // in just their real rows and leaves the rest untouched gets
+          // hundreds of phantom "row(s) with errors" for cells that were
+          // never meant to hold data at all. A row where every single
+          // cell is blank (after trimming) is Excel formatting bleed,
+          // not a real data row -- dropped here, before validateRows
+          // ever sees it, rather than validated and then explained away.
+          const realRows = rows
+            .map((row, idx) => ({ row, idx, isBlank: !Object.values(row).some((v) => String(v ?? '').trim() !== '') }))
+            .filter((r) => !r.isBlank)
+            .map((r) => ({ ...r.row, __originalRowIndex: r.idx }));
+          resolve(realRows);
         } catch (err) {
           reject(err);
         }
@@ -582,7 +602,7 @@ function detectUnrecognizedColumns(rawRows, template) {
   const knownNormalized = new Set(
     template.columns.flatMap((c) => [normalizeHeader(c.label), normalizeHeader(c.key)])
   );
-  const realHeaders = Object.keys(rawRows[0]);
+  const realHeaders = Object.keys(rawRows[0]).filter((h) => h !== '__originalRowIndex');
   return realHeaders.filter((h) => !knownNormalized.has(normalizeHeader(h)));
 }
 
@@ -821,7 +841,12 @@ function validateRows(rows, template, lookups, isHistorical) {
       cleaned.charter_signed = String(cleaned.charter_signed).trim().toLowerCase() === 'yes';
     }
 
-    return { rowNumber: index + 2, data: cleaned, errors };
+    // row.__originalRowIndex (set by parseFile's blank-row filter) is the
+    // row's real position in the original file. Falls back to the
+    // array's own index if it's ever missing, so this never throws --
+    // not because a specific other caller is known to need it.
+    const realIndex = row.__originalRowIndex ?? index;
+    return { rowNumber: realIndex + 2, data: cleaned, errors };
   });
 }
 
@@ -873,7 +898,7 @@ export function useBulkUpload(templateKey) {
       const validCountNow = validated.filter((r) => r.errors.length === 0).length;
       if (validCountNow === 0 && validated.length > 0 && template.table !== 'contracts' && supplyChainId) {
         const failureMessages = validated
-          .map((r, idx) => (r.errors.length > 0 ? `Row ${idx + 1}: ${r.errors[0]}` : null))
+          .map((r) => (r.errors.length > 0 ? `Row ${r.rowNumber}: ${r.errors[0]}` : null))
           .filter(Boolean)
           .slice(0, 5);
         try {
@@ -971,7 +996,7 @@ export function useBulkUpload(templateKey) {
     // read. Capped at 5 for the same reason the DB-error path caps at
     // 5 below: error_detail is a short summary, not a full log.
     const validationErrorMessages = rows
-      .map((r, idx) => (r.errors.length > 0 ? `Row ${idx + 1}: ${r.errors[0]}` : null))
+      .map((r) => (r.errors.length > 0 ? `Row ${r.rowNumber}: ${r.errors[0]}` : null))
       .filter(Boolean)
       .slice(0, 5);
 
