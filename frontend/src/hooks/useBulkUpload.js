@@ -520,8 +520,27 @@ function parseFile(file, template) {
           // cell is blank (after trimming) is Excel formatting bleed,
           // not a real data row -- dropped here, before validateRows
           // ever sees it, rather than validated and then explained away.
+          // Computed/formula columns (e.g. contracts' Total amount,
+          // receiveStock's Amount) always evaluate to a real value --
+          // typically 0 -- even on a row with nothing else in it, since
+          // that's how spreadsheet formulas work on blank inputs. Left
+          // in the blank-check below, a single computed column's "0"
+          // would count as "this row has data" and defeat the whole
+          // filter for exactly the two templates that have one -- which
+          // is exactly what was still happening for Contracts and
+          // Receive Stock after the fix above, even though it worked
+          // immediately for Beekeepers (no computed columns there).
+          // Excluded by normalized label/key so it matches however
+          // sheet_to_json actually named this column's key.
+          const computedHeaderKeys = new Set(
+            (template?.columns || []).filter((c) => c.computed).flatMap((c) => [normalizeHeader(c.label), normalizeHeader(c.key)])
+          );
           const realRows = rows
-            .map((row, idx) => ({ row, idx, isBlank: !Object.values(row).some((v) => String(v ?? '').trim() !== '') }))
+            .map((row, idx) => ({
+              row,
+              idx,
+              isBlank: !Object.entries(row).some(([k, v]) => !computedHeaderKeys.has(normalizeHeader(k)) && String(v ?? '').trim() !== ''),
+            }))
             .filter((r) => !r.isBlank)
             .map((r) => ({ ...r.row, __originalRowIndex: r.idx }));
           resolve(realRows);
