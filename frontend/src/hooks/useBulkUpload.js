@@ -555,7 +555,15 @@ async function fetchLookups(supplyChainId, templateKey) {
     });
   }
 
-  if (templateKey === 'transactions' || templateKey === 'contracts') {
+  // Real, severe gap found via user report: receiveStock's beekeeper_code
+  // column is required: true, checked against lookups.beekeepersByCode
+  // at validation time -- but receiveStock was missing from this
+  // condition, so that lookup table was always empty for it. Every
+  // Receive Stock bulk upload has been failing "Beekeeper code ... not
+  // found" for every single beekeeper, correct or not, with no way to
+  // ever pass. Confirmed live: a beekeeper genuinely in the database
+  // (KKWA-TG-000002, "Samson") still failed this exact check.
+  if (templateKey === 'transactions' || templateKey === 'contracts' || templateKey === 'receiveStock') {
     const [actorsRes, beekeepersRes] = await Promise.all([
       supabase.from('actors').select('id, traceability_code').eq('supply_chain_id', supplyChainId),
       supabase.from('beekeepers').select('id, traceability_code').eq('supply_chain_id', supplyChainId),
