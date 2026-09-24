@@ -1002,8 +1002,16 @@ export function useBulkUpload(templateKey) {
       // Same reasoning as the historical RPC branch above: receiveStock
       // rows no longer carry their own standard/unit, so they're stamped
       // on here from the batch-level choice instead of the (now
-      // nonexistent) per-row column.
-      ...(templateKey === 'receiveStock' ? { standard: options.standard, unit: 'Kg' } : {}),
+      // nonexistent) per-row column. direction is the same story: the
+      // template has no direction column at all (it's implicitly always
+      // 'Received'), but the transactions_insert RLS policy's with_check
+      // needs a real value to evaluate against -- with direction
+      // missing, `direction = 'Send'` and `direction <> 'Send'` both
+      // evaluate to NULL, so the whole with_check fails and every row
+      // was rejected with "new row violates row-level security policy",
+      // confirmed by reproducing this exact real error live before
+      // fixing it.
+      ...(templateKey === 'receiveStock' ? { standard: options.standard, unit: 'Kg', direction: 'Received' } : {}),
     }));
 
     // Real gap found via user report: bulk beekeeper upload rejected any
