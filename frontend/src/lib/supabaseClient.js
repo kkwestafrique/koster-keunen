@@ -52,6 +52,24 @@ export const MEDIA_ALLOWED_MIME_TYPES = [
 ];
 export const MEDIA_MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB
 export const MEDIA_ACCEPT_ATTR = '.jpg,.jpeg,.png,.webp,.gif,.pdf,.csv';
+// Real gap found via a security-prompt audit pass: the storage filename
+// used to be built from file.name.split('.').pop() -- the raw suffix
+// after the last dot in whatever name the browser reports, unsanitized.
+// A crafted File object (e.g. name: "x.csv/../../y") would carry that
+// straight into the storage path string. The MIME-type check above
+// happens on file.type, which is somewhat independently controllable
+// from file.name, so it didn't fully cover this. Deriving the extension
+// from the already-validated MIME type instead of the filename removes
+// the gap entirely -- the client-supplied filename never reaches the
+// storage path at all now, so there's nothing left to sanitize.
+const MIME_TO_EXTENSION = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'application/pdf': 'pdf',
+  'text/csv': 'csv',
+};
 
 export function getPublicMediaUrl(path) {
   if (!path) return null;
@@ -67,7 +85,7 @@ export async function uploadMediaFile(file, folder, supplyChainId) {
     throw new Error('That file is too large. Please upload a file under 15 MB.');
   }
 
-  const fileExt = file.name.split('.').pop();
+  const fileExt = MIME_TO_EXTENSION[file.type];
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
   // Path is folder/{supply_chain_id}/filename for every other folder --
   // the storage RLS policies check that middle segment against the
