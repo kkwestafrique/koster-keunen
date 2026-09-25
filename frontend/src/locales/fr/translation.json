@@ -21,7 +21,8 @@
     "products": "Produits",
     "verifications": "Vérifications",
     "activityLog": "Journal d'activité",
-    "exchangeRates": "Taux de change"
+    "exchangeRates": "Taux de change",
+    "admin": "Admin"
   },
   "topbar": {
     "myActor": "Mon acteur",
@@ -822,6 +823,24 @@
     "exportRestricted": "Seuls les administrateurs et les membres peuvent générer des exports",
     "powerBiFormat": "Traduire pour le tableau de bord Power BI",
     "powerBiFormatHint": "Convertit les noms de produits et de normes vers les valeurs françaises attendues par le tableau de bord Power BI (ex. \"Beeswax-Yellow\" → \"Cire d’abeille - Jaune\")."
+  },
+  "adminPanel": {
+    "pageHint": "Gérez les utilisateurs, les données de référence et exportez toute la base de données au même endroit.",
+    "usersTab": "Utilisateurs",
+    "masterDataTab": "Données de référence",
+    "databaseTab": "Base de données",
+    "masterDataHint": "Villages actuellement dans le système, tous acteurs confondus.",
+    "databaseHint": "Exportez chaque table sous forme de classeur Excel (une feuille par table) ou de fichier SQL d'instructions INSERT. Utilisez ceci comme sauvegarde ou pour le transmettre à la finance.",
+    "exportXlsx": "Exporter en Excel",
+    "exportSql": "Exporter en SQL",
+    "exportComplete": "Export prêt",
+    "exportFailed": "Échec de l'export",
+    "notAuthorized": "Vous n'avez pas accès à cette page.",
+    "actor": "Acteur",
+    "name": "Nom",
+    "email": "E-mail",
+    "role": "Rôle",
+    "status": "Statut"
   },
   "bulkUploads": {
     "fileName": "Nom du fichier",

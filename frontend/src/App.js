@@ -11,7 +11,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 // Real, measured finding: the single main.js bundle was 893.67 KB
 // gzipped (CRA's own recommended threshold is ~244 KB) with zero code
-// splitting anywhere -- every one of these 26 pages was downloaded
+// splitting anywhere -- every one of these pages was downloaded
 // upfront, on every single visit, regardless of role or which page the
 // user actually needed. React.lazy() here means each page's code only
 // loads the moment its route is actually visited. Login and the other
@@ -45,6 +45,7 @@ const LossList = lazy(() => import('@/pages/stocks/LossList'));
 const BulkUploads = lazy(() => import('@/pages/bulkUploads/BulkUploads'));
 const Report = lazy(() => import('@/pages/report/Report'));
 const ExchangeRates = lazy(() => import('@/pages/exchangeRates/ExchangeRates'));
+const AdminPanel = lazy(() => import('@/pages/admin/AdminPanel'));
 const UserProfile = lazy(() => import('@/pages/UserProfile'));
 const StockDetail = lazy(() => import('@/pages/stocks/StockDetail'));
 const ActivityLog = lazy(() => import('@/pages/ActivityLog'));
@@ -164,6 +165,7 @@ function AppRoutes() {
       <Route path="/bulk-uploads" element={<ProtectedRoute><BulkUploads /></ProtectedRoute>} />
       <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
       <Route path="/exchange-rates" element={<ProtectedRoute><ExchangeRates /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
       <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path="/stocks/detail/:id" element={<ProtectedRoute><StockDetail /></ProtectedRoute>} />
       <Route path="/activity-log" element={<ProtectedRoute><ActivityLog /></ProtectedRoute>} />

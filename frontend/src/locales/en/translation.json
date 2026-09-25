@@ -21,7 +21,8 @@
     "products": "Products",
     "verifications": "Verifications",
     "activityLog": "Activity log",
-    "exchangeRates": "Exchange Rates"
+    "exchangeRates": "Exchange Rates",
+    "admin": "Admin"
   },
   "topbar": {
     "myActor": "My Actor",
@@ -822,6 +823,24 @@
     "exportRestricted": "Only Admins and Members can generate exports",
     "powerBiFormat": "Translate for Power BI dashboard",
     "powerBiFormatHint": "Converts product and standard names to the French values the Power BI dashboard expects (e.g. \"Beeswax-Yellow\" → \"Cire d’abeille - Jaune\")."
+  },
+  "adminPanel": {
+    "pageHint": "Manage users, master data, and export the full database in one place.",
+    "usersTab": "Users",
+    "masterDataTab": "Master data",
+    "databaseTab": "Database",
+    "masterDataHint": "Villages currently in the system, across every actor.",
+    "databaseHint": "Export every table as an Excel workbook (one sheet per table) or a SQL file of INSERT statements. Use this as a backup or to hand off to finance.",
+    "exportXlsx": "Export as Excel",
+    "exportSql": "Export as SQL",
+    "exportComplete": "Export ready",
+    "exportFailed": "Export failed",
+    "notAuthorized": "You don't have access to this page.",
+    "actor": "Actor",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status"
   },
   "bulkUploads": {
     "fileName": "File name",

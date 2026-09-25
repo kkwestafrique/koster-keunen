@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   PieChart,
   DollarSign,
+  Database,
   History,
   ChevronDown,
   ChevronRight,
@@ -69,6 +70,7 @@ const NAV_ITEMS = [
   { key: 'activityLog', labelKey: 'nav.activityLog', icon: History, to: '/activity-log' },
   { key: 'report', labelKey: 'nav.report', icon: PieChart, to: '/report' },
   { key: 'exchangeRates', labelKey: 'nav.exchangeRates', icon: DollarSign, to: '/exchange-rates' },
+  { key: 'admin', labelKey: 'nav.admin', icon: Database, to: '/admin', systemAdminOnly: true },
 ];
 
 function NavIcon({ Icon, active }) {
@@ -247,7 +249,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
       )}
 
       <nav className="flex-1 overflow-y-auto pt-3 flex flex-col gap-1" onClick={onCloseMobile}>
-        {NAV_ITEMS.map((item) =>
+        {NAV_ITEMS.filter((item) => !item.systemAdminOnly || profile?.is_system_admin).map((item) =>
           item.children ? (
             <NavGroup key={item.key} item={item} currentPath={window.location.pathname} t={t} />
           ) : (
