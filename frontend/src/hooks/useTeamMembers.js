@@ -71,7 +71,7 @@ export function useRemoveTeamMember() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id }) => {
-      const { error } = await supabase.from('team_members').delete().eq('id', id);
+      const { error } = await supabase.from('team_members').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: (_, { actorId }) => queryClient.invalidateQueries({ queryKey: ['team_members', actorId] }),

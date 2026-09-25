@@ -117,7 +117,7 @@ export function useDeleteClaim() {
   const pendingKey = ['pending-claims', supplyChainId];
   return useMutation({
     mutationFn: async (claimId) => {
-      const { error } = await supabase.from('claims').delete().eq('id', claimId);
+      const { error } = await supabase.from('claims').update({ deleted_at: new Date().toISOString() }).eq('id', claimId);
       if (error) throw error;
     },
     // Real, genuine cache-level optimistic delete on pending-claims --

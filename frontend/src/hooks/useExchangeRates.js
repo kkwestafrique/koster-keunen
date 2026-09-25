@@ -44,7 +44,7 @@ export function useDeleteExchangeRate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id) => {
-      const { error } = await supabase.from('exchange_rates').delete().eq('id', id);
+      const { error } = await supabase.from('exchange_rates').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['exchange-rates', supplyChainId] }),
