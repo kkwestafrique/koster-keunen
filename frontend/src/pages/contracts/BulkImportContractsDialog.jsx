@@ -72,7 +72,7 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
             {downloadingTemplate ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />} {t('receiveForm.downloadTemplate')}
           </Button>
 
-          <label className="inline-block">
+          <div>
             <input
               ref={fileInputRef}
               type="file"
@@ -81,14 +81,15 @@ export default function BulkImportContractsDialog({ open, onOpenChange }) {
               data-testid="contracts-bulk-file-input"
               onChange={handleFileChange}
             />
-            <span
-              className="inline-flex items-center gap-1 bg-[#0f48aa] text-white hover:bg-[#0d3d91] rounded-[5px] px-4 py-2 text-sm font-medium cursor-pointer"
+            <Button
+              type="button"
               data-testid="contracts-bulk-upload-verify"
               onClick={() => fileInputRef.current?.click()}
+              className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
             >
-              <Upload className="h-4 w-4" /> {t('receiveForm.uploadFileVerify')}
-            </span>
-          </label>
+              <Upload className="h-4 w-4 mr-1" /> {t('receiveForm.uploadFileVerify')}
+            </Button>
+          </div>
           {bulkUpload.fileName && <span className="text-sm text-[#5a6f9a]">{bulkUpload.fileName}</span>}
           {bulkUpload.parseError && (
             <p className="text-sm text-[#ba550c] font-bold" data-testid="contracts-bulk-parse-error">{bulkUpload.parseError}</p>

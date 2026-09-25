@@ -61,6 +61,10 @@ export default function ReceiveStockForm() {
   const [step, setStep] = useState(1); // 1 = fill in, 2 = review before confirming (single mode only -- multiple/bulk mode already has its own review table before import)
   const [saving, setSaving] = useState(false);
   const submittingRef = useRef(false);
+  // Used below to trigger the hidden file input from a real, keyboard-
+  // accessible Button, matching the fix already applied to Contracts'
+  // identical upload action.
+  const fileInputRef = useRef(null);
   // Generated once, at mount, not per-submit-attempt -- see
   // ContractWizard's identical fix for the full reasoning.
   const [transactionGroupId] = useState(() => crypto.randomUUID());
@@ -427,8 +431,9 @@ export default function ReceiveStockForm() {
               </div>
               <div>
                 <p className="text-sm font-bold text-[#032b71] mb-2">2. {t('receiveForm.uploadAndVerify')}</p>
-                <label className="inline-block">
+                <div>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept=".xlsx,.xls"
                     className="hidden"
@@ -442,10 +447,15 @@ export default function ReceiveStockForm() {
                       if (file) bulkUpload.loadFile(file).catch(() => {});
                     }}
                   />
-                  <span className="inline-flex items-center gap-1 bg-[#0f48aa] text-white hover:bg-[#0d3d91] rounded-[5px] px-4 py-2 text-sm font-medium cursor-pointer" data-testid="receive-upload-verify">
-                    <Upload className="h-4 w-4" /> {t('receiveForm.uploadFileVerify')}
-                  </span>
-                </label>
+                  <Button
+                    type="button"
+                    data-testid="receive-upload-verify"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-[#0f48aa] text-white hover:bg-[#0d3d91]"
+                  >
+                    <Upload className="h-4 w-4 mr-1" /> {t('receiveForm.uploadFileVerify')}
+                  </Button>
+                </div>
                 {bulkUpload.fileName && (
                   <span className="ml-3 text-sm text-[#5a6f9a]">{bulkUpload.fileName}</span>
                 )}
