@@ -49,9 +49,16 @@ export const MEDIA_ALLOWED_MIME_TYPES = [
   'image/gif',
   'application/pdf',
   'text/csv',
+  // Reports switched from .csv to .xlsx (all reports must be xlsx, not
+  // csv) -- without this, the report's local download would still work
+  // (independent of this allowlist) but the storage upload that powers
+  // "re-download later from the downloads panel" would silently fail
+  // every single time, since uploadMediaFile rejects any MIME type not
+  // in this list before ever reaching Supabase Storage.
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
 export const MEDIA_MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB
-export const MEDIA_ACCEPT_ATTR = '.jpg,.jpeg,.png,.webp,.gif,.pdf,.csv';
+export const MEDIA_ACCEPT_ATTR = '.jpg,.jpeg,.png,.webp,.gif,.pdf,.csv,.xlsx';
 // Real gap found via a security-prompt audit pass: the storage filename
 // used to be built from file.name.split('.').pop() -- the raw suffix
 // after the last dot in whatever name the browser reports, unsanitized.
@@ -69,6 +76,7 @@ const MIME_TO_EXTENSION = {
   'image/gif': 'gif',
   'application/pdf': 'pdf',
   'text/csv': 'csv',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
 };
 
 export function getPublicMediaUrl(path) {

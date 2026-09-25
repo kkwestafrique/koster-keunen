@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PRODUCTS, STANDARDS } from '@/data/regions';
 import { supabase, uploadMediaFile } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
-import { csvBlobFromRows, downloadBlob } from '@/hooks/useReportData';
+import { xlsxBlobFromRows, downloadBlob } from '@/hooks/useReportData';
 import { useCreateExport, useUpdateExport } from '@/hooks/useExports';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -228,7 +228,7 @@ export default function Report() {
 
   const generate = async () => {
     setGenerating(true);
-    const fileName = `${activeReport.key}-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    const fileName = `${activeReport.key}-report-${new Date().toISOString().slice(0, 10)}.xlsx`;
     let exportRow;
     try {
       exportRow = await createExport.mutateAsync({ reportKey: activeReport.key, fileName });
@@ -296,14 +296,14 @@ export default function Report() {
         ? rows.map(applyPowerBiTranslation)
         : rows;
       const columns = Object.keys(finalRows[0]).map((k) => ({ key: k, label: k }));
-      const blob = csvBlobFromRows(finalRows, columns);
+      const blob = await xlsxBlobFromRows(finalRows, columns);
       downloadBlob(blob, fileName);
 
       // Upload the same file to storage so the downloads panel can offer a
       // real re-download later, from any device — not just this browser tab.
       let fileUrl = null;
       try {
-        fileUrl = await uploadMediaFile(new File([blob], fileName, { type: 'text/csv' }), 'exports', supplyChainId);
+        fileUrl = await uploadMediaFile(new File([blob], fileName, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'exports', supplyChainId);
       } catch (uploadErr) {
         // The person already has their local download; a storage-upload
         // failure shouldn't be treated as the whole export failing.
