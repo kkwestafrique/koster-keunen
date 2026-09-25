@@ -150,7 +150,7 @@ export function useDeleteExport() {
   const queryKey = ['exports', supplyChainId, role === 'Admin' ? 'all' : userId];
   return useMutation({
     mutationFn: async (id) => {
-      const { error } = await supabase.from('exports').delete().eq('id', id);
+      const { error } = await supabase.from('exports').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
     },
     // Real, genuine cache-level optimistic delete -- safe here (unlike

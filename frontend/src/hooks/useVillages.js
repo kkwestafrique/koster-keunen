@@ -101,7 +101,7 @@ export function useDeleteVillage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id) => {
-      const { error } = await supabase.from('villages').delete().eq('id', id);
+      const { error } = await supabase.from('villages').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {

@@ -182,7 +182,7 @@ export function useDeleteConnection() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id) => {
-      const { error } = await supabase.from('connections').delete().eq('id', id);
+      const { error } = await supabase.from('connections').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
