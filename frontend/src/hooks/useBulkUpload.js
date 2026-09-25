@@ -19,6 +19,15 @@ export const BULK_UPLOAD_TEMPLATES = {
       // downloadTemplate can render a real merged group-header row above
       // the column names, not just visual spacing.
       { key: 'full_name', label: 'Full name', required: true, group: 'Biographic data' },
+      // Match key for the export/edit/re-import workflow: exported rows
+      // carry their real, existing traceability code so re-uploading an
+      // edited file updates that exact beekeeper instead of creating a
+      // duplicate. Left blank on a row (a genuinely new beekeeper added
+      // below the exported ones), it's simply ignored -- the existing
+      // name+village matching below still applies as a fallback, and a
+      // fresh code gets generated the normal way. Never itself written
+      // by an insert/update -- see submit()'s handling.
+      { key: 'traceability_code', label: 'Traceability code (leave blank for a new beekeeper)', required: false, group: 'Biographic data' },
       { key: 'gender', label: 'Gender', required: true, allowed: ['Male', 'Female'], group: 'Biographic data' },
       { key: 'year_of_birth', label: 'Year of birth', required: false, type: 'number', group: 'Biographic data' },
       { key: 'national_id', label: 'National ID', required: false, group: 'Biographic data' },
@@ -291,6 +300,65 @@ export async function downloadTemplate(templateKey, filename, supplyChainId, fil
 
   const dynamicOptions = supplyChainId ? await fetchDynamicOptions(supplyChainId, template.columns, filters) : {};
 
+  // Beekeeper list should export every existing beekeeper pre-filled, so
+  // the same file can be used to both correct old data (edit a row, keep
+  // its traceability code) and onboard new beekeepers (add rows below,
+  // leave the code blank) in one upload -- per explicit request. Fetched
+  // as two plain queries rather than a relational embed, so the village
+  // join is explicit and predictable rather than depending on exactly
+  // how Supabase infers the FK relationship name.
+  let existingBeekeeperRows = [];
+  if (templateKey === 'beekeepers' && supplyChainId) {
+    const { data: beekeepers } = await supabase
+      .from('beekeepers')
+      .select('*')
+      .eq('supply_chain_id', supplyChainId)
+      .order('created_at', { ascending: true });
+    if (beekeepers?.length) {
+      const villageIds = [...new Set(beekeepers.map((b) => b.village_id).filter(Boolean))];
+      const { data: villageRows } = villageIds.length
+        ? await supabase.from('villages').select('id, name, country, state_region, lga_municipality').in('id', villageIds)
+        : { data: [] };
+      const villagesById = new Map((villageRows || []).map((v) => [v.id, v]));
+      const yn = (b) => (b ? 'Yes' : 'No');
+      existingBeekeeperRows = beekeepers.map((b) => {
+        const v = b.village_id ? villagesById.get(b.village_id) : null;
+        const standards = b.standards || [];
+        const commitment = b.commitment || [];
+        return {
+          full_name: b.full_name || '',
+          traceability_code: b.traceability_code || '',
+          gender: b.gender || '',
+          year_of_birth: b.year_of_birth ?? '',
+          national_id: b.national_id || '',
+          internal_code: b.internal_code || '',
+          linked_producer_organisation: b.linked_producer_organisation || '',
+          contact_phone: b.contact_phone || '',
+          country: v?.country || '',
+          state_region: v?.state_region || '',
+          lga_municipality: v?.lga_municipality || '',
+          village_name: v?.name || '',
+          standard_sustainable: yn(standards.includes('Sustainable')),
+          standard_organic: yn(standards.includes('Organic')),
+          standard_conventional: yn(standards.includes('Conventional')),
+          charter_signed: yn(b.charter_signed),
+          commitment_crude_honey: yn(commitment.includes('Crude honey')),
+          commitment_honey: yn(commitment.includes('Honey')),
+          commitment_beeswax: yn(commitment.includes('Beeswax')),
+          hives_traditional_single: b.hives_traditional_single ?? '',
+          hives_traditional_double: b.hives_traditional_double ?? '',
+          hives_modern: b.hives_modern ?? '',
+          hives_other: b.hives_other ?? '',
+          hive_cashew: b.hive_cashew ?? '',
+          hive_mango: b.hive_mango ?? '',
+          hive_shea: b.hive_shea ?? '',
+          hive_forest: b.hive_forest ?? '',
+          hive_other_forage: b.hive_other_forage ?? '',
+        };
+      });
+    }
+  }
+
   const workbook = new ExcelJS.Workbook();
   // Real, merged group-header row above the column names -- opt-in,
   // based on whether this template's columns declare a group at all, so
@@ -299,7 +367,7 @@ export async function downloadTemplate(templateKey, filename, supplyChainId, fil
   const hasGroups = template.columns.some((c) => c.group);
   const headerRowIndex = hasGroups ? 2 : 1;
   const firstDataRow = headerRowIndex + 1;
-  const lastDataRow = firstDataRow + 498; // 499 usable data rows, same as before this change
+  const lastDataRow = firstDataRow + Math.max(499, existingBeekeeperRows.length + 500) - 1; // 500 blank rows for new entries, after however many existing beekeepers are pre-filled
 
   const sheet = workbook.addWorksheet(template.label, { views: [{ state: 'frozen', ySplit: headerRowIndex }] });
   // Hidden sheet holding the real option lists, referenced by range
@@ -361,6 +429,17 @@ export async function downloadTemplate(templateKey, filename, supplyChainId, fil
   // unchanged, so the dropdown validation and computed-formula ranges
   // below still apply correctly to every row -- only the example
   // VALUES are gone, not the working template structure underneath.
+
+  // Beekeeper list export: write every existing beekeeper as a real,
+  // pre-filled row (built above), so editing a cell and re-uploading
+  // updates that exact beekeeper -- rows below these, left blank, are
+  // for genuinely new beekeepers. Not styled distinctly from a blank
+  // row: this is real, current data, not a placeholder to be wary of.
+  existingBeekeeperRows.forEach((rowData, i) => {
+    const sheetRow = sheet.getRow(firstDataRow + i);
+    template.columns.forEach((c, idx) => { sheetRow.getCell(idx + 1).value = rowData[c.key] ?? ''; });
+    sheetRow.commit();
+  });
 
   // Real Excel formula cells for every computed column, across the full
   // usable data range -- a genuine live formula per row
@@ -1136,42 +1215,56 @@ export function useBulkUpload(templateKey) {
     // or "just to be safe") previously created genuine duplicate records --
     // the same class of real, documented problem found on the platform this
     // rebuild is measured against (real duplicate beekeepers, risk of
-    // double-counting or double-payment). There's no traceability_code
-    // column in this template (it's server-generated), so a database-level
-    // upsert isn't directly possible -- instead, match existing beekeepers
-    // by (full_name, village_id) within the same supply chain before
-    // inserting, and update the existing row instead of creating a new one.
-    // This deliberately does NOT attempt fuzzy/similarity matching across
-    // near-duplicate spellings (e.g. "N Tcha Matie" vs "NTctha Matie") --
-    // that's a separate, larger feature (a real merge-screen UI), not a
-    // quick fix bolted onto this one.
+    // double-counting or double-payment). The export/edit/re-import
+    // workflow (see downloadTemplate) now writes each existing beekeeper's
+    // real traceability_code into the file, so that's the primary,
+    // reliable match key -- it's stable and unique, unlike a name that can
+    // legitimately be corrected/retyped between exports. Falls back to the
+    // existing (full_name, village_id) matching for any row with no code
+    // (a genuinely new beekeeper, or an older file from before this
+    // column existed). This deliberately does NOT attempt fuzzy/similarity
+    // matching across near-duplicate spellings (e.g. "N Tcha Matie" vs
+    // "NTctha Matie") -- that's a separate, larger feature (a real
+    // merge-screen UI), not a quick fix bolted onto this one.
     let existingByKey = new Map();
+    let existingByCode = new Map();
     if (template.table === 'beekeepers' && validRows.length > 0) {
       const { data: existing, error: lookupError } = await supabase
         .from('beekeepers')
-        .select('id, full_name, village_id')
+        .select('id, full_name, village_id, traceability_code')
         .eq('supply_chain_id', supplyChainId);
       if (!lookupError && existing) {
         existingByKey = new Map(
           existing.map((b) => [`${b.full_name?.trim().toLowerCase()}|${b.village_id}`, b.id])
+        );
+        existingByCode = new Map(
+          existing.filter((b) => b.traceability_code).map((b) => [b.traceability_code.trim().toLowerCase(), b.id])
         );
       }
     }
 
     const toInsert = [];
     const toUpdate = [];
-    if (existingByKey.size > 0) {
+    if (existingByKey.size > 0 || existingByCode.size > 0) {
       for (const row of validRows) {
-        const key = `${row.full_name?.trim().toLowerCase()}|${row.village_id}`;
-        const existingId = existingByKey.get(key);
+        // traceability_code is a match key only, never a field to write --
+        // a new row's code comes from the server-side generator, and an
+        // existing beekeeper's real code must never be overwritten by
+        // whatever happened to be in this cell (it's the same value we
+        // exported, but stripping it here rather than trusting that stays
+        // true is the safer default either way).
+        const { traceability_code: rowCode, ...rowWithoutCode } = row;
+        const codeKey = rowCode ? String(rowCode).trim().toLowerCase() : null;
+        const nameKey = `${row.full_name?.trim().toLowerCase()}|${row.village_id}`;
+        const existingId = (codeKey && existingByCode.get(codeKey)) || existingByKey.get(nameKey);
         if (existingId) {
-          toUpdate.push({ id: existingId, ...row });
+          toUpdate.push({ id: existingId, ...rowWithoutCode });
         } else {
-          toInsert.push(row);
+          toInsert.push(rowWithoutCode);
         }
       }
     } else {
-      toInsert.push(...validRows);
+      toInsert.push(...validRows.map(({ traceability_code, ...rest }) => rest));
     }
 
     // Insert in batches of 100 to avoid oversized payloads
