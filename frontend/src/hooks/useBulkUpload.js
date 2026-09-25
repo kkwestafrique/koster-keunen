@@ -350,38 +350,17 @@ export async function downloadTemplate(templateKey, filename, supplyChainId, fil
     cell.alignment = { wrapText: true, vertical: 'middle' };
   });
 
-  const exampleRow = {};
-  const firstRegionRow = dynamicOptions.regions?.[0];
-  const exampleCountry = firstRegionRow?.country;
-  const exampleState = exampleCountry ? dynamicOptions.regions.find((r) => r.country === exampleCountry && r.level === 'state')?.name : null;
-  const exampleLga = exampleState ? dynamicOptions.regions.find((r) => r.country === exampleCountry && r.level === 'lga' && r.parent_name === exampleState)?.name : null;
-  template.columns.forEach((c) => {
-    const dynamicList = dynamicOptions[c.key] || (c.softDropdown && dynamicOptions[c.softDropdown]);
-    if (c.cascadeLevel === 'country') exampleRow[c.key] = exampleCountry || '';
-    else if (c.cascadeLevel === 'state') exampleRow[c.key] = exampleState || '';
-    else if (c.cascadeLevel === 'lga') exampleRow[c.key] = exampleLga || '';
-    else if (dynamicList && dynamicList.length > 0) exampleRow[c.key] = dynamicList[0];
-    else if (c.type === 'array' && c.allowed) exampleRow[c.key] = c.allowed[0];
-    else if (c.type === 'boolean') exampleRow[c.key] = 'No';
-    else if (c.atLeastOneOf) exampleRow[c.key] = 'No';
-    else if (c.allowed) exampleRow[c.key] = c.allowed[0];
-    else if (c.type === 'number') exampleRow[c.key] = 0;
-    else if (c.key === 'transaction_date' || c.key === 'signature_date') exampleRow[c.key] = '01/15/2026';
-    else if (c.computed) exampleRow[c.key] = null; // filled with a real formula below, not a static value
-    else exampleRow[c.key] = '';
-  });
-  // At least one atLeastOneOf group member needs a real "Yes" example, or
-  // the example row itself would fail the very validation rule it's
-  // meant to demonstrate.
-  const atLeastOneOfGroups = [...new Set(template.columns.filter((c) => c.atLeastOneOf).map((c) => c.atLeastOneOf))];
-  atLeastOneOfGroups.forEach((group) => {
-    const firstInGroup = template.columns.find((c) => c.atLeastOneOf === group);
-    if (firstInGroup) exampleRow[firstInGroup.key] = 'Yes';
-  });
-  const addedExampleRow = sheet.getRow(firstDataRow);
-  template.columns.forEach((c, idx) => { addedExampleRow.getCell(idx + 1).value = exampleRow[c.key]; });
-  addedExampleRow.font = { italic: true, color: { argb: 'FF5A6F9A' } };
-  addedExampleRow.commit();
+  // Watermark/example data removed from all bulk upload templates, per
+  // explicit request. Previously wrote a full example row of plausible
+  // values directly into the first real data row (firstDataRow) --
+  // genuinely risky for templates like Transactions/Contracts where
+  // every field has a valid-looking example value: a user who didn't
+  // notice and delete it (easy to miss -- italic styling was the only
+  // visual cue) could have it uploaded as a real, fake record. The
+  // template now starts genuinely blank. firstDataRow/lastDataRow are
+  // unchanged, so the dropdown validation and computed-formula ranges
+  // below still apply correctly to every row -- only the example
+  // VALUES are gone, not the working template structure underneath.
 
   // Real Excel formula cells for every computed column, across the full
   // usable data range -- a genuine live formula per row
