@@ -72,7 +72,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'transactions',
     uploadType: 'Transactions',
     columns: [
-      { key: 'transaction_date', label: 'Date (DD-MM-YYYY)', required: true, type: 'date' },
+      { key: 'transaction_date', label: 'Date (MM/DD/YYYY)', required: true, type: 'date' },
       { key: 'actor_code', label: 'Actor traceability code', required: false },
       { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: false },
       { key: 'product', label: 'Product', required: true },
@@ -88,7 +88,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'contracts',
     uploadType: 'Contracts',
     columns: [
-      { key: 'signature_date', label: 'Signature date (DD-MM-YYYY)', required: true, type: 'date' },
+      { key: 'signature_date', label: 'Signature date (MM/DD/YYYY)', required: true, type: 'date' },
       { key: 'actor_code', label: 'Supplier actor traceability code', required: true },
       { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
@@ -133,7 +133,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'transactions',
     uploadType: 'Transactions',
     columns: [
-      { key: 'transaction_date', label: 'Date (DD-MM-YYYY)', required: true, type: 'date' },
+      { key: 'transaction_date', label: 'Date (MM/DD/YYYY)', required: true, type: 'date' },
       { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: true },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
       { key: 'quantity', label: 'Quantity (Kg)', required: true, type: 'number' },
@@ -366,7 +366,7 @@ export async function downloadTemplate(templateKey, filename, supplyChainId, fil
     else if (c.atLeastOneOf) exampleRow[c.key] = 'No';
     else if (c.allowed) exampleRow[c.key] = c.allowed[0];
     else if (c.type === 'number') exampleRow[c.key] = 0;
-    else if (c.key === 'transaction_date' || c.key === 'signature_date') exampleRow[c.key] = '15-01-2026';
+    else if (c.key === 'transaction_date' || c.key === 'signature_date') exampleRow[c.key] = '01/15/2026';
     else if (c.computed) exampleRow[c.key] = null; // filled with a real formula below, not a static value
     else exampleRow[c.key] = '';
   });
