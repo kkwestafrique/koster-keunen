@@ -81,7 +81,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'transactions',
     uploadType: 'Transactions',
     columns: [
-      { key: 'transaction_date', label: 'Date (MM/DD/YYYY)', required: true, type: 'date' },
+      { key: 'transaction_date', label: 'Date (DD/MM/YYYY)', required: true, type: 'date' },
       { key: 'actor_code', label: 'Actor traceability code', required: false },
       { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: false },
       { key: 'product', label: 'Product', required: true },
@@ -97,7 +97,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'contracts',
     uploadType: 'Contracts',
     columns: [
-      { key: 'signature_date', label: 'Signature date (MM/DD/YYYY)', required: true, type: 'date' },
+      { key: 'signature_date', label: 'Signature date (DD/MM/YYYY)', required: true, type: 'date' },
       { key: 'actor_code', label: 'Supplier actor traceability code', required: true },
       { key: 'standard', label: 'Standard', required: true, allowed: STANDARDS },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
@@ -142,7 +142,7 @@ export const BULK_UPLOAD_TEMPLATES = {
     table: 'transactions',
     uploadType: 'Transactions',
     columns: [
-      { key: 'transaction_date', label: 'Date (MM/DD/YYYY)', required: true, type: 'date' },
+      { key: 'transaction_date', label: 'Date (DD/MM/YYYY)', required: true, type: 'date' },
       { key: 'beekeeper_code', label: 'Beekeeper traceability code', required: true },
       { key: 'product', label: 'Product', required: true, allowed: PRODUCTS },
       { key: 'quantity', label: 'Quantity (Kg)', required: true, type: 'number' },
@@ -714,15 +714,15 @@ function validateRows(rows, template, lookups, isHistorical) {
       }
 
       if (col.type === 'date' && value !== '' && value !== undefined && value !== null) {
-        // Real DD-MM-YYYY parsing, not a loose pass-through -- the
-        // database needs a real ISO date, and the heading now explicitly
-        // promises DD-MM-YYYY, so this has to actually enforce that
-        // format and reject anything that doesn't genuinely parse as a
-        // real calendar date (e.g. 31-02-2026), not silently accept an
-        // ambiguous or wrong one.
-        const match = String(value).match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+        // Real DD/MM/YYYY parsing, not a loose pass-through -- the
+        // database needs a real ISO date, and the heading explicitly
+        // promises DD/MM/YYYY (per explicit request), so this has to
+        // actually enforce that format and reject anything that doesn't
+        // genuinely parse as a real calendar date (e.g. 31/02/2026), not
+        // silently accept an ambiguous or wrong one.
+        const match = String(value).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
         if (!match) {
-          errors.push(`${col.label} must be in DD-MM-YYYY format`);
+          errors.push(`${col.label} must be in DD/MM/YYYY format`);
         } else {
           const day = Number(match[1]);
           const month = Number(match[2]);
