@@ -36,21 +36,27 @@ const STATUS_COLORS = {
 // tap) to open, stays open long enough to actually read, and works
 // identically on touch.
 function UploadStatus({ status, errorDetail }) {
-  if (status === 'Failed' && errorDetail) {
+  const { t } = useTranslation();
+  // Error detail used to be viewable only on Failed rows. An upload
+  // where existing beekeepers updated but new ones failed was marked
+  // Completed, with its real error hidden. Any upload with recorded
+  // errors now shows them, and a partly failed one says so.
+  if (errorDetail && (status === 'Failed' || status === 'Completed')) {
+    const partial = status === 'Completed';
     return (
       <Popover>
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="text-sm font-bold underline decoration-dotted cursor-pointer"
+            className="text-sm font-bold underline decoration-dotted cursor-pointer text-left"
             style={{ color: STATUS_COLORS.Failed }}
             data-testid="upload-error-detail"
           >
-            {status} <span className="text-xs font-normal">(?)</span>
+            {partial ? t('bulkUploads.completedWithErrors', 'Completed with errors') : status} <span className="text-xs font-normal">(?)</span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 text-sm text-[#032b71] bg-white" data-testid="upload-error-detail-content">
-          {errorDetail}
+        <PopoverContent className="w-96 text-sm text-[#032b71] bg-white whitespace-pre-wrap" data-testid="upload-error-detail-content">
+          {errorDetail.split(' | ').join('\n')}
         </PopoverContent>
       </Popover>
     );

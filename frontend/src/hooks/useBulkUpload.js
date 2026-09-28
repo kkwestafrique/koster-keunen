@@ -64,16 +64,16 @@ export const BULK_UPLOAD_TEMPLATES = {
       { key: 'commitment_honey', label: 'Honey', required: true, allowed: ['Yes', 'No'], atLeastOneOf: 'commitment', group: 'Commitments' },
       { key: 'commitment_beeswax', label: 'Beeswax', required: true, allowed: ['Yes', 'No'], atLeastOneOf: 'commitment', group: 'Commitments' },
 
-      { key: 'hives_traditional_single', label: 'Traditional single entry hives', required: false, type: 'number', group: 'Hive' },
-      { key: 'hives_traditional_double', label: 'Traditional double entries hives', required: false, type: 'number', group: 'Hive' },
-      { key: 'hives_modern', label: 'Modern hives', required: false, type: 'number', group: 'Hive' },
-      { key: 'hives_other', label: 'Other hives', required: false, type: 'number', group: 'Hive' },
+      { key: 'hives_traditional_single', label: 'Traditional single entry hives', required: false, type: 'number', emptyAs: 0, group: 'Hive' },
+      { key: 'hives_traditional_double', label: 'Traditional double entries hives', required: false, type: 'number', emptyAs: 0, group: 'Hive' },
+      { key: 'hives_modern', label: 'Modern hives', required: false, type: 'number', emptyAs: 0, group: 'Hive' },
+      { key: 'hives_other', label: 'Other hives', required: false, type: 'number', emptyAs: 0, group: 'Hive' },
 
-      { key: 'hive_cashew', label: 'Cashew', required: false, type: 'number', group: 'Forages' },
-      { key: 'hive_mango', label: 'Mango', required: false, type: 'number', group: 'Forages' },
-      { key: 'hive_shea', label: 'Shea', required: false, type: 'number', group: 'Forages' },
-      { key: 'hive_forest', label: 'Forest', required: false, type: 'number', group: 'Forages' },
-      { key: 'hive_other_forage', label: 'Other forage', required: false, type: 'number', group: 'Forages' },
+      { key: 'hive_cashew', label: 'Cashew', required: false, type: 'number', emptyAs: 0, group: 'Forages' },
+      { key: 'hive_mango', label: 'Mango', required: false, type: 'number', emptyAs: 0, group: 'Forages' },
+      { key: 'hive_shea', label: 'Shea', required: false, type: 'number', emptyAs: 0, group: 'Forages' },
+      { key: 'hive_forest', label: 'Forest', required: false, type: 'number', emptyAs: 0, group: 'Forages' },
+      { key: 'hive_other_forage', label: 'Other forage', required: false, type: 'number', emptyAs: 0, group: 'Forages' },
     ],
   },
   transactions: {
@@ -760,7 +760,18 @@ function validateRows(rows, template, lookups, isHistorical) {
         errors.push(`${col.label} must be a number`);
       }
 
-      const numericValue = col.type === 'number' && value !== '' ? Number(value) : value;
+      // Real bug, found in this app's own upload log: every optional
+      // number column (year of birth, hive and forage counts) sent "" to
+      // Postgres when left blank, which rejects it ("invalid input
+      // syntax for type integer"). One blank cell failed the whole
+      // insert batch, so new beekeepers silently didn't save. Blank now
+      // means the column's real empty value: 0 for counts (their DB
+      // default; forage columns are NOT NULL), null otherwise (e.g.
+      // year of birth, which has no default).
+      const isBlank = value === '' || value === undefined || value === null;
+      const numericValue = col.type === 'number'
+        ? (isBlank ? (col.emptyAs ?? null) : Number(value))
+        : value;
 
       // Resolve text codes/names to the real FK columns instead of storing
       // them verbatim under a column name the table doesn't have.
@@ -1272,11 +1283,22 @@ export function useBulkUpload(templateKey) {
     for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
       const batch = toInsert.slice(i, i + BATCH_SIZE);
       const { error, count } = await supabase.from(template.table).insert(batch).select('*', { count: 'exact' });
-      if (error) {
-        failed += batch.length;
-        errors.push(error.message);
-      } else {
+      if (!error) {
         inserted += count ?? batch.length;
+        continue;
+      }
+      // One bad row used to reject all 100 in its batch, so good rows
+      // were lost along with it. Retry this batch one row at a time:
+      // valid rows save, and each failure is reported against the
+      // specific beekeeper/row it belongs to.
+      for (const one of batch) {
+        const { error: rowError } = await supabase.from(template.table).insert(one);
+        if (rowError) {
+          failed += 1;
+          errors.push(`${one.full_name || one.product || 'Row'}: ${rowError.message}`);
+        } else {
+          inserted += 1;
+        }
       }
     }
 
@@ -1287,7 +1309,7 @@ export function useBulkUpload(templateKey) {
       const { error } = await supabase.from(template.table).update(patch).eq('id', id);
       if (error) {
         failed += 1;
-        errors.push(error.message);
+        errors.push(`${patch.full_name || 'Row'}: ${error.message}`);
       } else {
         updated += 1;
       }

@@ -858,7 +858,8 @@
     "startNewUploadHint": "Bulk uploads happen from inside the flow they belong to, not from this history page:",
     "startBeekeepers": "Add Beekeeper → Multiple beekeepers",
     "startTransactions": "Transactions → Received → Multiple transaction",
-    "startContracts": "Contracts → New contract → Bulk import"
+    "startContracts": "Contracts → New contract → Bulk import",
+    "completedWithErrors": "Completed with errors"
   },
   "transactionDetail": {
     "title": "Transaction Detail",

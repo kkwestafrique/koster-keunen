@@ -858,7 +858,8 @@
     "startNewUploadHint": "Les téléversements groupés se font depuis le flux concerné, pas depuis cette page d'historique :",
     "startBeekeepers": "Ajouter un apiculteur → Plusieurs apiculteurs",
     "startTransactions": "Transactions → Reçu → Transaction multiple",
-    "startContracts": "Contrats → Nouveau contrat → Import groupé"
+    "startContracts": "Contrats → Nouveau contrat → Import groupé",
+    "completedWithErrors": "Terminé avec des erreurs"
   },
   "transactionDetail": {
     "title": "Détail de la transaction",
