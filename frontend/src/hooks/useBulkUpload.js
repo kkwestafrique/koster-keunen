@@ -1059,6 +1059,15 @@ export function useBulkUpload(templateKey) {
     if (submittingRef.current) return { inserted: 0, failed: 0 };
     submittingRef.current = true;
     setUploading(true);
+    // Real bug, confirmed from edge logs + upload history: this guard was
+    // switched on here and never switched off, so only the FIRST upload
+    // in a session ever reached the database. Every later upload (the
+    // same file re-uploaded, or a new one, until a full page reload)
+    // returned "0 inserted" instantly without sending a single request,
+    // while the dialog jumped to 100%. Affected beekeepers, Receive
+    // Stock and Contracts bulk uploads alike. try/finally clears it on
+    // every exit path: success, early return, partial failure, or throw.
+    try {
     // Real, severe gap found via user report: AddBeekeeperDialog's
     // multi-upload flow calls `await loadFile(file)` then immediately
     // `await submit(...)` in the same handler, with no re-render between
@@ -1368,6 +1377,10 @@ export function useBulkUpload(templateKey) {
     setUploading(false);
     setResult({ inserted, updated, failed: totalFailed, errors });
     return { inserted, updated, failed: totalFailed, errors };
+    } finally {
+      submittingRef.current = false;
+      setUploading(false);
+    }
   }, [rows, supplyChainId, template, fileName, queryClient, isHistorical, templateKey]);
 
   const reset = useCallback(() => {
