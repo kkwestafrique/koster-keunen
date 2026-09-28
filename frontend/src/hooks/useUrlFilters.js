@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 // Real gap found via the newest audit (M5): every list page's filters,
@@ -36,20 +37,39 @@ export function useUrlFilters(defaults) {
     }
   }
 
+  // Real bug, reproduced before fixing: every list page's "Items per
+  // page" handler makes two updates in one click -- setPageSize(n) then
+  // setPage(1). React Router's functional setSearchParams((prev) => ...)
+  // does NOT hand the second call the first call's result; both start
+  // from the URL as of the last render. So the second update (page=1,
+  // built from a URL with no pageSize) overwrote the first, and the
+  // dropdown snapped straight back to 15 every time. Confirmed by
+  // running this exact hook with react-router-dom 7.18.4 and the exact
+  // BeekeepersList handler: selecting 30 left pageSize at 15.
+  //
+  // Fix: remember any update still pending from this same event, and
+  // merge the next one into it instead of into the stale URL. Cleared as
+  // soon as a render commits a new URL, so it never outlives the event.
+  const pendingRef = useRef(null);
+  const committedRef = useRef(searchParams);
+  if (committedRef.current !== searchParams) {
+    committedRef.current = searchParams;
+    pendingRef.current = null;
+  }
+
   const setValues = (updates) => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      for (const key of Object.keys(updates)) {
-        const val = updates[key];
-        const isDefault = val === defaults[key] || val === '' || val == null;
-        if (isDefault) {
-          next.delete(key);
-        } else {
-          next.set(key, String(val));
-        }
+    const next = new URLSearchParams(pendingRef.current ?? searchParams);
+    for (const key of Object.keys(updates)) {
+      const val = updates[key];
+      const isDefault = val === defaults[key] || val === '' || val == null;
+      if (isDefault) {
+        next.delete(key);
+      } else {
+        next.set(key, String(val));
       }
-      return next;
-    }, { replace: true });
+    }
+    pendingRef.current = next;
+    setSearchParams(next, { replace: true });
   };
 
   return [values, setValues];

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import ExcelJS from 'exceljs';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -41,21 +42,25 @@ export function useReportData({ year = '', standard = '' } = {}) {
   });
 }
 
-export function csvBlobFromRows(rows, columns) {
-  const header = columns.map((c) => c.label).join(',');
-  const body = rows
-    .map((row) =>
-      columns
-        .map((c) => {
-          const value = c.accessor ? c.accessor(row) : row[c.key];
-          const str = value === null || value === undefined ? '' : String(value);
-          return str.includes(',') ? `"${str.replace(/"/g, '""')}"` : str;
-        })
-        .join(',')
-    )
-    .join('\n');
-  const csv = `${header}\n${body}`;
-  return new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+export async function xlsxBlobFromRows(rows, columns) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('Report');
+  sheet.columns = columns.map((c) => ({
+    header: c.label,
+    key: c.key,
+    width: Math.max(14, Math.min(38, String(c.label).length + 4)),
+  }));
+  sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F48AA' } };
+  rows.forEach((row) => {
+    sheet.addRow(columns.reduce((acc, c) => {
+      const value = c.accessor ? c.accessor(row) : row[c.key];
+      acc[c.key] = value === null || value === undefined ? '' : value;
+      return acc;
+    }, {}));
+  });
+  const buffer = await workbook.xlsx.writeBuffer();
+  return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 }
 
 export function downloadBlob(blob, filename) {
