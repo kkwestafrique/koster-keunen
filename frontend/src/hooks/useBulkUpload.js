@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
 import { calculateAdvancePercent } from '@/lib/contractMath';
+import { parseBulkUploadDate } from '@/lib/dateParsing';
 import ExcelJS from 'exceljs';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -441,6 +442,24 @@ export async function downloadTemplate(templateKey, filename, supplyChainId, fil
     sheetRow.commit();
   });
 
+  // Date columns are pre-formatted as Text across the whole usable
+  // range. Left General-formatted, Excel silently converts a typed
+  // "15/01/2026" into a real date value (a serial number, 46037) on
+  // day-first-locale machines -- confirmed empirically to read back as
+  // a bare number, which a text-based DD/MM/YYYY check can never
+  // match, so someone typing exactly the right thing still got told the
+  // format was wrong. Text format makes Excel keep exactly what's typed.
+  // (Pasting from another sheet can still override the cell's format,
+  // which is why the parser also accepts a raw date serial -- see
+  // lib/dateParsing.js. The two are complementary, not redundant.)
+  template.columns.forEach((c, idx) => {
+    if (c.type !== 'date') return;
+    const colLetter = sheet.getColumn(idx + 1).letter;
+    for (let row = firstDataRow; row <= lastDataRow; row++) {
+      sheet.getCell(`${colLetter}${row}`).numFmt = '@';
+    }
+  });
+
   // Real Excel formula cells for every computed column, across the full
   // usable data range -- a genuine live formula per row
   // (e.g. =E10*G10), not a static number that goes stale the moment
@@ -714,26 +733,17 @@ function validateRows(rows, template, lookups, isHistorical) {
       }
 
       if (col.type === 'date' && value !== '' && value !== undefined && value !== null) {
-        // Real DD/MM/YYYY parsing, not a loose pass-through -- the
-        // database needs a real ISO date, and the heading explicitly
-        // promises DD/MM/YYYY (per explicit request), so this has to
-        // actually enforce that format and reject anything that doesn't
-        // genuinely parse as a real calendar date (e.g. 31/02/2026), not
-        // silently accept an ambiguous or wrong one.
-        const match = String(value).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-        if (!match) {
-          errors.push(`${col.label} must be in DD/MM/YYYY format`);
+        // Real date parsing, not a loose pass-through -- the database
+        // needs a real ISO date, and the heading explicitly promises
+        // DD/MM/YYYY. Handles both shapes Excel actually hands over
+        // (a text string, or a raw date serial number when Excel
+        // auto-converted a typed date) -- see lib/dateParsing.js for
+        // the full reasoning and the sanity range on serials.
+        const parsedDate = parseBulkUploadDate(value);
+        if (parsedDate.error) {
+          errors.push(`${col.label} ${parsedDate.error}`);
         } else {
-          const day = Number(match[1]);
-          const month = Number(match[2]);
-          const year = Number(match[3]);
-          const parsed = new Date(Date.UTC(year, month - 1, day));
-          const isRealDate = parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
-          if (!isRealDate) {
-            errors.push(`${col.label}: "${value}" is not a real date`);
-          } else {
-            value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          }
+          value = parsedDate.iso;
         }
       }
 
