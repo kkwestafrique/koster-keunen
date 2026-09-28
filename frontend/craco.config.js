@@ -79,6 +79,17 @@ let webpackConfig = {
       },
     },
   },
+  // Same '@/' alias webpack already has, for Jest. Without it the
+  // existing dashboardMetrics test failed to even load ("Cannot find
+  // module '@/lib/supabaseClient'"), and nothing noticed because CI
+  // never ran tests.
+  jest: {
+    configure: {
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/src/$1',
+      },
+    },
+  },
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
