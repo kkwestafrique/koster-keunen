@@ -29,6 +29,9 @@ jobs:
       - name: Install
         working-directory: frontend
         run: npm install --legacy-peer-deps
+      - name: Unit tests
+        working-directory: frontend
+        run: npm test -- --watchAll=false
       - name: Build
         working-directory: frontend
         run: npm run build
