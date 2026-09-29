@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PRODUCTS, STANDARDS } from '@/data/regions';
 import { supabase, uploadMediaFile } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
-import { xlsxBlobFromRows, downloadBlob } from '@/hooks/useReportData';
+import { downloadBlob } from '@/hooks/useReportData';
+import { buildReport, reportToXlsxBlob, reportFileName, displayProduct, REPORT_TEMPLATES } from '@/lib/reportTemplates';
 import { useCreateExport, useUpdateExport } from '@/hooks/useExports';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
@@ -26,7 +27,8 @@ const YEARS = ['2027', '2026', '2025', '2024', '2023', '2022'];
 //   Actors-Achieved (Start year + End year + Standards multi-select modal).
 // Tab 2 "Transactions": Contract / Received-Beekeepers / Received-Actors /
 //   Processing / Sent (Date range + Products multi-select + Standards
-//   multi-select modal). Every report generates a CSV download.
+//   multi-select modal). Every report downloads as .xlsx in the old MIS
+// layout -- see lib/reportTemplates.js.
 const PARTNER_REPORTS = [
   { key: 'beekeeperList', modal: 'yearOnly', table: 'beekeepers' },
   { key: 'beekeepersPotential', modal: 'yearRange', table: 'beekeepers', status: 'Potential' },
@@ -43,82 +45,76 @@ const TRANSACTION_REPORTS = [
   { key: 'sent', modal: 'dateProducts', table: 'transactions', direction: 'Send' },
 ];
 
-// Real gap found during a fresh review of this page: the export used
-// Object.keys(rows[0]) directly, dumping every raw database column as
-// its own literal name (supply_chain_id, created_at, and so on), and
-// every foreign key as a bare, meaningless UUID (e.g. actor_id:
-// "33333333-...") instead of the actual supplier or beekeeper name --
-// exactly the kind of thing a real reader reviewing this report
-// outside the app (or a parent company being shown it) has no way to
-// make sense of.
-//
-// Real select strings, not invented: matches the exact join syntax
-// already proven working elsewhere in this app for these same four
-// tables (useBeekeepers.js, useContracts.js, useTransactions.js),
-// rather than guessing at relationship names this file has never
-// queried before.
-const TABLE_SELECT = {
-  beekeepers: '*, villages(name), actors!beekeepers_actor_id_fkey(contact_name, traceability_code)',
-  actors: '*',
-  // `actors!actor_id(...)` disambiguates the embed -- both `contracts` and
-  // `transactions` have two FK relationships to `actors` (actor_id and
-  // owning_actor_id), and an unqualified `actors(...)` embed throws a
-  // PostgREST "more than one relationship" error. Same fix already proven
-  // in useReportData.js and useTransactions.js, applied here too.
-  contracts: '*, actors!actor_id(traceability_code, contact_name)',
-  transactions: '*, actors!actor_id(traceability_code, contact_name), beekeepers(traceability_code, full_name), user_accounts(username)',
-};
+// Reports now follow the old MIS export layouts exactly (sheet names,
+// headers, column order, widths, DD/MM/YYYY dates, "-" for missing
+// values) -- built in lib/reportTemplates.js. This page only loads the
+// raw data each report needs.
 
-// Purely internal columns with no meaning to a real reader outside the
-// app -- dropped from every export regardless of table. Raw foreign
-// key id columns are dropped per-table below, once their readable
-// name has been resolved from the join.
-const ALWAYS_DROP = ['id', 'supply_chain_id'];
-
-function humanizeKey(key) {
-  return key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+// PostgREST returns at most 1000 rows per request. Real gap: a single
+// request silently truncated every report past 1000 rows, which the
+// historical import (2,092 beekeeper transactions) would have hit.
+// Pages through until a short page comes back.
+async function fetchAll(buildQuery) {
+  const PAGE = 1000;
+  const out = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await buildQuery().range(from, from + PAGE - 1);
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < PAGE) break;
+  }
+  return out;
 }
 
-// Flattens one raw joined row into a clean, human-labeled export row --
-// resolves each table's real foreign keys to the actual name already
-// joined in above, and drops both the raw id and the now-redundant
-// nested join object.
-function flattenReportRow(table, row) {
-  const clean = { ...row };
-  if (table === 'beekeepers') {
-    clean['Village'] = row.villages?.name ?? '';
-    clean['Producer Organisation'] = row.actors?.contact_name ?? '';
-    delete clean.villages;
-    delete clean.actors;
-    delete clean.village_id;
-    delete clean.actor_id;
-    delete clean.linked_producer_organisation_id;
-  } else if (table === 'contracts') {
-    clean['Supplier'] = row.actors?.contact_name ?? row.actors?.traceability_code ?? '';
-    delete clean.actors;
-    delete clean.actor_id;
-    delete clean.owning_actor_id;
-  } else if (table === 'transactions') {
-    clean['Actor'] = row.actors?.contact_name ?? '';
-    clean['Beekeeper'] = row.beekeepers?.full_name ?? '';
-    clean['Logged By'] = row.user_accounts?.username ?? '';
-    delete clean.actors;
-    delete clean.beekeepers;
-    delete clean.user_accounts;
-    delete clean.actor_id;
-    delete clean.beekeeper_id;
-    delete clean.owning_actor_id;
-    delete clean.destination_actor_id;
-    delete clean.logged_by;
+const ACTOR_EMBED = 'actors!actor_id(traceability_code, contact_name, actor_type)';
+
+async function loadReportData(report, filters, supplyChainId) {
+  const inChain = (q) => q.eq('supply_chain_id', supplyChainId);
+  const data = { beekeepers: [], villagesById: {}, transactions: [], actors: [], connections: [], contracts: [] };
+  const key = report.key;
+  const needsBeekeepers = ['beekeeperList', 'beekeepersPotential', 'beekeepersAchieved', 'actorsPotential', 'actorsAchieved'].includes(key);
+
+  if (needsBeekeepers) {
+    // Same rule as the Beekeepers list and Dashboard: beekeepers with no
+    // owning actor are excluded, so counts agree across all three.
+    data.beekeepers = await fetchAll(() => inChain(supabase.from('beekeepers').select('*')).not('actor_id', 'is', null).order('id'));
   }
-  ALWAYS_DROP.forEach((k) => delete clean[k]);
-  const labeled = {};
-  Object.keys(clean).forEach((k) => {
-    // Already-human labels added above (Village, Supplier, etc.) are
-    // kept as-is; only raw snake_case database columns get humanized.
-    labeled[/^[a-z_]+$/.test(k) ? humanizeKey(k) : k] = clean[k];
-  });
-  return labeled;
+  if (key === 'beekeeperList') {
+    const villages = await fetchAll(() => inChain(supabase.from('villages').select('id, name, country, state_region, lga_municipality')).order('id'));
+    data.villagesById = Object.fromEntries(villages.map((v) => [v.id, v]));
+  }
+  if (['beekeeperList', 'beekeepersAchieved', 'actorsAchieved'].includes(key)) {
+    data.transactions = await fetchAll(() => inChain(supabase.from('transactions').select('id, beekeeper_id, transaction_date, product, direction'))
+      .not('beekeeper_id', 'is', null).order('id'));
+  }
+  if (key === 'actorsPotential' || key === 'actorsAchieved') {
+    data.actors = await fetchAll(() => inChain(supabase.from('actors').select('*')).order('id'));
+    data.connections = await fetchAll(() => inChain(supabase.from('connections').select('actor_from_id, actor_to_id, status')).order('id'));
+  }
+
+  const inRange = (q, field) => {
+    let out = q;
+    if (filters.dateFrom) out = out.gte(field, filters.dateFrom);
+    if (filters.dateTo) out = out.lte(field, filters.dateTo);
+    if (filters.standards.length > 0) out = out.in('standard', filters.standards);
+    return out;
+  };
+  if (key === 'contract') {
+    data.contracts = await fetchAll(() => inRange(inChain(supabase.from('contracts').select(`*, ${ACTOR_EMBED}`)), 'signature_date').order('id'));
+  }
+  if (['receivedBeekeepers', 'receivedActors', 'sent', 'processing'].includes(key)) {
+    data.transactions = await fetchAll(() => {
+      let q = inRange(inChain(supabase.from('transactions')
+        .select(`*, ${ACTOR_EMBED}, beekeepers(traceability_code, full_name, internal_code)`)), 'transaction_date')
+        .eq('direction', report.direction);
+      // Processing is filtered per batch in the builder (a batch matches
+      // if its input or any output is a selected product), so a batch is
+      // never half-dropped by a row-level filter here.
+      if (key !== 'processing' && filters.products.length > 0) q = q.in('product', filters.products);
+      return q.order('id');
+    });
+  }
+  return data;
 }
 
 // Real, confirmed translation map for the one specific Power BI
@@ -137,17 +133,13 @@ const POWERBI_STANDARD_MAP = {
   Organic: 'Biologique',
   Conventional: 'Conventionnelle',
 };
-const POWERBI_COUNTRY_MAP = {
-  Benin: 'Bénin',
-};
+// Country is not a column in the received-from-actors template, so the
+// Power BI Benin -> Bénin mapping no longer applies to this report.
 
-function applyPowerBiTranslation(row) {
-  const translated = { ...row };
-  if (translated['Product'] in POWERBI_PRODUCT_MAP) translated['Product'] = POWERBI_PRODUCT_MAP[translated['Product']];
-  if (translated['Standard'] in POWERBI_STANDARD_MAP) translated['Standard'] = POWERBI_STANDARD_MAP[translated['Standard']];
-  if (translated['Country'] in POWERBI_COUNTRY_MAP) translated['Country'] = POWERBI_COUNTRY_MAP[translated['Country']];
-  return translated;
-}
+const POWERBI_TRANSLATE = {
+  product: (p) => (p in POWERBI_PRODUCT_MAP ? POWERBI_PRODUCT_MAP[p] : displayProduct(p)),
+  standard: (st) => (st in POWERBI_STANDARD_MAP ? POWERBI_STANDARD_MAP[st] : st),
+};
 
 
 function MultiCheck({ options, allLabel, value, onChange, testIdPrefix }) {
@@ -182,7 +174,7 @@ export default function Report() {
   const { t } = useTranslation();
   usePageTitle(t('report.title'));
   const { toast } = useToast();
-  const { supplyChainId } = useAuth();
+  const { supplyChainId, profile } = useAuth();
   const { canEdit } = usePermissions();
   const createExport = useCreateExport();
   const updateExport = useUpdateExport();
@@ -228,62 +220,30 @@ export default function Report() {
 
   const generate = async () => {
     setGenerating(true);
-    const fileName = `${activeReport.key}-report-${new Date().toISOString().slice(0, 10)}.xlsx`;
     let exportRow;
+    let fileName = `${activeReport.key}.xlsx`;
     try {
+      // File named like the old MIS exports, e.g.
+      // "Beekeepers_List_OLD_LEVI_MULTIBIZ_SERVICES_LTD.xlsx".
+      let orgName = '';
+      if (profile?.current_actor_id) {
+        const { data: me } = await supabase.from('actors').select('contact_name').eq('id', profile.current_actor_id).maybeSingle();
+        orgName = me?.contact_name || '';
+      }
+      fileName = reportFileName(REPORT_TEMPLATES[activeReport.key].fileBase, orgName);
       exportRow = await createExport.mutateAsync({ reportKey: activeReport.key, fileName });
     } catch (err) {
       // If we can't even create the tracking row, still let the report
-      // generate — the downloads panel just won't show this one.
+      // generate -- the downloads panel just won't show this one.
       exportRow = null;
     }
 
     try {
-      let query = supabase.from(activeReport.table).select(TABLE_SELECT[activeReport.table]).eq('supply_chain_id', supplyChainId);
-      if (activeReport.status) query = query.eq('status', activeReport.status);
-      if (activeReport.direction) query = query.eq('direction', activeReport.direction);
-      if (activeReport.counterpart) query = query.not(activeReport.counterpart, 'is', null);
-      // Real bug found via independent audit: "beekeeper count
-      // disagreement across dashboard/list/export" -- this was the
-      // third of three places with the same gap. The List and (now
-      // fixed) Dashboard both correctly exclude beekeeper records with
-      // no owning actor at all; this export never did, so a beekeeper
-      // count report could disagree with what both screens showed.
-      if (activeReport.table === 'beekeepers') query = query.not('actor_id', 'is', null);
+      const data = await loadReportData(activeReport, filters, supplyChainId);
+      const translate = activeReport.key === 'receivedActors' && powerBiFormat ? POWERBI_TRANSLATE : undefined;
+      const report = buildReport(activeReport.key, data, filters, translate);
 
-      // beekeepers/actors have no `year` column — "year" here means the
-      // year the record was created.
-      const isCreatedAtYear = activeReport.table === 'beekeepers' || activeReport.table === 'actors';
-      if (activeReport.modal === 'yearOnly' && filters.year) {
-        if (isCreatedAtYear) {
-          query = query.gte('created_at', `${filters.year}-01-01`).lte('created_at', `${filters.year}-12-31T23:59:59`);
-        } else {
-          query = query.eq('year', Number(filters.year));
-        }
-      }
-      if (activeReport.modal === 'yearRange') {
-        if (isCreatedAtYear) {
-          if (filters.startYear) query = query.gte('created_at', `${filters.startYear}-01-01`);
-          if (filters.endYear) query = query.lte('created_at', `${filters.endYear}-12-31T23:59:59`);
-        } else {
-          if (filters.startYear) query = query.gte('year', Number(filters.startYear));
-          if (filters.endYear) query = query.lte('year', Number(filters.endYear));
-        }
-      }
-      if (activeReport.modal === 'dateProducts') {
-        const dateField = activeReport.dateField || 'transaction_date';
-        if (filters.dateFrom) query = query.gte(dateField, filters.dateFrom);
-        if (filters.dateTo) query = query.lte(dateField, filters.dateTo);
-        if (filters.products.length > 0) query = query.in('product', filters.products);
-      }
-      const tableHasStandard = activeReport.table !== 'beekeepers' && activeReport.table !== 'actors';
-      if (tableHasStandard && filters.standards.length > 0) query = query.in('standard', filters.standards);
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      const rawRows = data || [];
-      if (rawRows.length === 0) {
+      if (report.rows.length === 0) {
         toast({ title: t('report.noData') });
         if (exportRow) {
           await updateExport.mutateAsync({ id: exportRow.id, status: 'Failed', error_message: 'No matching records', completed_at: new Date().toISOString() });
@@ -291,16 +251,11 @@ export default function Report() {
         return;
       }
 
-      const rows = rawRows.map((row) => flattenReportRow(activeReport.table, row));
-      const finalRows = (activeReport.key === 'receivedActors' && powerBiFormat)
-        ? rows.map(applyPowerBiTranslation)
-        : rows;
-      const columns = Object.keys(finalRows[0]).map((k) => ({ key: k, label: k }));
-      const blob = await xlsxBlobFromRows(finalRows, columns);
+      const blob = await reportToXlsxBlob(report);
       downloadBlob(blob, fileName);
 
       // Upload the same file to storage so the downloads panel can offer a
-      // real re-download later, from any device — not just this browser tab.
+      // real re-download later, from any device -- not just this browser tab.
       let fileUrl = null;
       try {
         fileUrl = await uploadMediaFile(new File([blob], fileName, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'exports', supplyChainId);
@@ -313,7 +268,7 @@ export default function Report() {
         await updateExport.mutateAsync({
           id: exportRow.id,
           status: 'Completed',
-          row_count: rows.length,
+          row_count: report.rows.length,
           file_url: fileUrl,
           completed_at: new Date().toISOString(),
         });
