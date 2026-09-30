@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import ChartCard from '../ChartCard';
 import StatCard from '../StatCard';
 
-export default function IndicatorsTab({ indicatorsQuality, indicatorsYearly, indicatorsLocalPartners, beekeepersInvolved, beekeepersTrends, financeRevenue, financeContracts, year, country }) {
+export default function IndicatorsTab({ indicatorsQuality, indicatorsYearly, indicatorsLocalPartners, beekeepersInvolved, beekeepersTrends, financeRevenue, financeContracts, seasonPurchases, year, country }) {
   const { t } = useTranslation();
   return (
             <div className="flex flex-col gap-6" data-testid="dashboard-indicators-page">

@@ -258,6 +258,7 @@ export default function Dashboard() {
               beekeepersTrends={beekeepersTrends}
               financeRevenue={financeRevenue}
               financeContracts={financeContracts}
+              seasonPurchases={seasonPurchases}
               year={year}
               country={country}
             />
