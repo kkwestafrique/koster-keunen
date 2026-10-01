@@ -88,18 +88,18 @@ export default function Dashboard() {
 
   const { data: actorCounts, isLoading: actorCountsLoading } = useActorTypeCounts({ country });
   const { data: bkAgg, isLoading: bkAggLoading } = useBeekeeperAggregates({ country });
-  const { data: txSummary } = useDashboardTransactionSummary({ year });
-  const { data: seasonMetrics } = useSeasonMetrics({ year });
-  const { data: seasonPurchases } = useSeasonPurchases({ year });
-  const { data: seasonMonthly } = useSeasonMonthly({ year });
-  const { data: seasonStocks } = useSeasonStocks({ year });
-  const { data: indicatorsQuality } = useIndicatorsQuality({ year });
-  const { data: indicatorsYearly } = useIndicatorsYearly();
-  const { data: indicatorsLocalPartners } = useIndicatorsLocalPartners({ year });
-  const { data: beekeepersInvolved } = useBeekeepersInvolved({ year });
-  const { data: beekeepersTrends } = useBeekeepersTrends({ year });
-  const { data: financeRevenue } = useFinanceRevenue({ year });
-  const { data: financeContracts } = useFinanceContracts({ year });
+  const { data: txSummary } = useDashboardTransactionSummary({ year, enabled: tab === 'transactions' });
+  const { data: seasonMetrics } = useSeasonMetrics({ year, enabled: tab === 'season' });
+  const { data: seasonPurchases } = useSeasonPurchases({ year, enabled: tab === 'season' || tab === 'indicators' });
+  const { data: seasonMonthly } = useSeasonMonthly({ year, enabled: tab === 'season' });
+  const { data: seasonStocks } = useSeasonStocks({ year, enabled: tab === 'season' });
+  const { data: indicatorsQuality } = useIndicatorsQuality({ year, enabled: tab === 'indicators' });
+  const { data: indicatorsYearly } = useIndicatorsYearly({ enabled: tab === 'indicators' });
+  const { data: indicatorsLocalPartners } = useIndicatorsLocalPartners({ year, enabled: tab === 'indicators' });
+  const { data: beekeepersInvolved } = useBeekeepersInvolved({ year, enabled: tab === 'indicators' });
+  const { data: beekeepersTrends } = useBeekeepersTrends({ year, enabled: tab === 'indicators' });
+  const { data: financeRevenue } = useFinanceRevenue({ year, enabled: tab === 'indicators' });
+  const { data: financeContracts } = useFinanceContracts({ year, enabled: tab === 'indicators' });
   const { data: countries = [] } = useCountries();
 
   const currentActor = actors.find((a) => a.id === profile?.current_actor_id);

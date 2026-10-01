@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 // counts as Achieved, all of that actor's own villages, beekeepers,
 // and beehives count as Achieved too, matching the source's own
 // per-actor rollup approach.
-export function useSeasonMetrics({ year = '' } = {}) {
+export function useSeasonMetrics({ year = '', enabled = true } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
     queryKey: ['season-metrics', supplyChainId, year],
@@ -94,7 +94,7 @@ export function useSeasonMetrics({ year = '' } = {}) {
         },
       };
     },
-    enabled: !!supplyChainId,
+    enabled: !!supplyChainId && enabled,
     staleTime: 30_000,
   });
 }

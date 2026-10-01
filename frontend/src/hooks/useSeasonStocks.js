@@ -25,7 +25,7 @@ function sumBy(rows, key, value, field) {
 // (Entree), or the shared source_quantity would be double-counted;
 // the output side (Sortie) correctly sums every row as-is, since each
 // one is a genuinely separate output.
-export function useSeasonStocks({ year, standard = [] } = {}) {
+export function useSeasonStocks({ year, standard = [], enabled = true } = {}) {
   const { supplyChainId } = useAuth();
 
   return useQuery({
@@ -110,7 +110,7 @@ export function useSeasonStocks({ year, standard = [] } = {}) {
         })),
       };
     },
-    enabled: !!supplyChainId,
+    enabled: !!supplyChainId && enabled,
     staleTime: 30_000,
   });
 }

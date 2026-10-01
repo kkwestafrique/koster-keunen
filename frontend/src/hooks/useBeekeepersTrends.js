@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 // the real field tracking which Producer Organisation a beekeeper is
 // affiliated with, matching "Groupement"'s real meaning (a farmer
 // group/cooperative) in this domain.
-export function useBeekeepersTrends({ year }) {
+export function useBeekeepersTrends({ year, enabled = true }) {
   const { supplyChainId } = useAuth();
   const prevYear = year ? Number(year) - 1 : null;
 
@@ -96,7 +96,7 @@ export function useBeekeepersTrends({ year }) {
         genderTrend,
       };
     },
-    enabled: !!supplyChainId && !!year,
+    enabled: !!supplyChainId && !!year && enabled,
     staleTime: 30_000,
   });
 }

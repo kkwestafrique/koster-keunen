@@ -29,7 +29,7 @@ function sumField(rows, field) {
 // ignoring any Standard filter while still respecting Year -- true
 // here by construction, since this page has no Standard filter of its
 // own yet to ignore.
-export function useIndicatorsQuality({ year }) {
+export function useIndicatorsQuality({ year, enabled = true }) {
   const { supplyChainId } = useAuth();
   const prevYear = year ? Number(year) - 1 : null;
 
@@ -83,7 +83,7 @@ export function useIndicatorsQuality({ year }) {
         countryTable,
       };
     },
-    enabled: !!supplyChainId && !!year,
+    enabled: !!supplyChainId && !!year && enabled,
     staleTime: 30_000,
   });
 }

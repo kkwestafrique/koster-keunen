@@ -23,7 +23,7 @@ function sumByProduct(rows, product, field) {
   return rows.filter((r) => r.product === product).reduce((sum, r) => sum + (Number(r[field]) || 0), 0);
 }
 
-export function useSeasonPurchases({ year }) {
+export function useSeasonPurchases({ year, enabled = true }) {
   const { supplyChainId } = useAuth();
   const prevYear = year ? Number(year) - 1 : null;
 
@@ -103,7 +103,7 @@ export function useSeasonPurchases({ year }) {
         missingRateCurrencies: Array.from(missingRateCurrencies),
       };
     },
-    enabled: !!supplyChainId && !!year,
+    enabled: !!supplyChainId && !!year && enabled,
     staleTime: 30_000,
   });
 }

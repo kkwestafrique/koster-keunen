@@ -14,7 +14,7 @@ function sumField(rows, field) {
 // -> None" from its Year slicer to this specific chart), always
 // showing the most recent 6 years of real data regardless of what
 // year is selected elsewhere on the page.
-export function useIndicatorsYearly() {
+export function useIndicatorsYearly({ enabled = true } = {}) {
   const { supplyChainId } = useAuth();
 
   return useQuery({
@@ -47,7 +47,7 @@ export function useIndicatorsYearly() {
         };
       });
     },
-    enabled: !!supplyChainId,
+    enabled: !!supplyChainId && enabled,
     staleTime: 30_000,
   });
 }

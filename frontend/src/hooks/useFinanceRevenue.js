@@ -25,7 +25,7 @@ function rateFor(rates, currency, year, month) {
 // involved beekeepers with at least one hive of each type, and average
 // income/price/quantity per beekeeper, split by wax vs honey --
 // confirmed via a real screenshot of the source dashboard.
-export function useFinanceRevenue({ year }) {
+export function useFinanceRevenue({ year, enabled = true }) {
   const { supplyChainId } = useAuth();
 
   return useQuery({
@@ -110,7 +110,7 @@ export function useFinanceRevenue({ year }) {
         honey,
       };
     },
-    enabled: !!supplyChainId && !!year,
+    enabled: !!supplyChainId && !!year && enabled,
     staleTime: 30_000,
   });
 }

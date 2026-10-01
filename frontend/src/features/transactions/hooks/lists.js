@@ -177,7 +177,7 @@ export function useBeekeeperTransactions(beekeeperId) {
   });
 }
 
-export function useDashboardTransactionSummary({ year = '' } = {}) {
+export function useDashboardTransactionSummary({ year = '', enabled = true } = {}) {
   const { supplyChainId } = useAuth();
   return useQuery({
     queryKey: ['dashboard-transaction-summary', supplyChainId, year],
@@ -192,7 +192,7 @@ export function useDashboardTransactionSummary({ year = '' } = {}) {
       if (error) throw error;
       return summarizeTransactions(data);
     },
-    enabled: !!supplyChainId,
+    enabled: !!supplyChainId && enabled,
     staleTime: 30_000,
   });
 }

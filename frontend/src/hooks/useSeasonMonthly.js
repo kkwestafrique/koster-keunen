@@ -19,7 +19,7 @@ function sumByProduct(rows, product, field) {
 // version: a text-vs-number comparison bug in the cumulative measure's
 // month filter. Not a risk here at all -- built directly from real
 // JS numbers throughout, not a text-typed month column.
-export function useSeasonMonthly({ year }) {
+export function useSeasonMonthly({ year, enabled = true }) {
   const { supplyChainId } = useAuth();
   const prevYear = year ? Number(year) - 1 : null;
 
@@ -79,7 +79,7 @@ export function useSeasonMonthly({ year }) {
         jaune: buildSeries(YELLOW),
       };
     },
-    enabled: !!supplyChainId && !!year,
+    enabled: !!supplyChainId && !!year && enabled,
     staleTime: 30_000,
   });
 }

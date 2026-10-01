@@ -28,7 +28,7 @@ function sumField(rows, field) {
 // explicitly clarified in the source as different from the ranking
 // basis; % Cire Jaune is each actor's own ratio, not a company-wide
 // share.
-export function useIndicatorsLocalPartners({ year }) {
+export function useIndicatorsLocalPartners({ year, enabled = true }) {
   const { supplyChainId } = useAuth();
   const prevYear = year ? Number(year) - 1 : null;
 
@@ -104,7 +104,7 @@ export function useIndicatorsLocalPartners({ year }) {
 
       return rows.sort((a, b) => b.contract - a.contract).slice(0, 20);
     },
-    enabled: !!supplyChainId && !!year,
+    enabled: !!supplyChainId && !!year && enabled,
     staleTime: 30_000,
   });
 }

@@ -36,7 +36,7 @@ function convertToXof(rows, rates, dateField) {
 // this. Left out entirely rather than invented from nothing; there's
 // no real number to compute here without a genuinely new field this
 // app doesn't have yet.
-export function useFinanceContracts({ year }) {
+export function useFinanceContracts({ year, enabled = true }) {
   const { supplyChainId } = useAuth();
 
   return useQuery({
@@ -73,7 +73,7 @@ export function useFinanceContracts({ year }) {
         missingRates: Array.from(new Set([...contractValue.missing, ...advance.missing, ...realized.missing])),
       };
     },
-    enabled: !!supplyChainId && !!year,
+    enabled: !!supplyChainId && !!year && enabled,
     staleTime: 30_000,
   });
 }

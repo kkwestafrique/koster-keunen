@@ -21,7 +21,7 @@ const HONEY_PRODUCTS = ['Honey', 'Crude Honey'];
 // defined for actors on the Season page: a beekeeper who actually
 // delivered that specific product type in the selected year, not
 // just a beekeeper who exists in the system.
-export function useBeekeepersInvolved({ year }) {
+export function useBeekeepersInvolved({ year, enabled = true }) {
   const { supplyChainId } = useAuth();
   const prevYear = year ? Number(year) - 1 : null;
 
@@ -93,7 +93,7 @@ export function useBeekeepersInvolved({ year }) {
         charterSignedRatio: involvedBeekeepers.length > 0 ? charterSignedCount / involvedBeekeepers.length : 0,
       };
     },
-    enabled: !!supplyChainId && !!year,
+    enabled: !!supplyChainId && !!year && enabled,
     staleTime: 30_000,
   });
 }
