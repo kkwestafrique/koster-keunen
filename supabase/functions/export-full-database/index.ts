@@ -26,8 +26,27 @@
 // bulk upload), so building both file formats happens there. Keeps this
 // function's only job "read everything, prove the caller is allowed to",
 // not file-format generation.
+//
+// Real bug found and fixed during live review: this function originally
+// shipped with no CORS headers at all, on any response path. It worked
+// fine when tested directly (via net.http_post, which isn't subject to
+// browser CORS), but every real call from the actual deployed app --
+// which runs on a different origin than the Supabase project itself --
+// was silently blocked by the browser's own CORS preflight check before
+// this function's code ever ran. The browser reported it as "Failed to
+// send a request to the Edge Function", which gave no hint the function
+// itself was healthy and reachable; only the browser console's CORS
+// policy message showed the real cause. Every response path below,
+// including the error ones (401/403/500), needs these headers -- a
+// browser blocks reading an error response's body just as readily as a
+// success one if the headers are missing.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 const TABLES = [
   'actors', 'beekeepers', 'contracts', 'transactions', 'stocks',
@@ -36,22 +55,23 @@ const TABLES = [
 ];
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   const authHeader = req.headers.get('Authorization') || '';
   const jwt = authHeader.replace('Bearer ', '');
   if (!jwt) {
-    return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 401 });
+    return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 401, headers: corsHeaders });
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-  // Identify the real caller from their own JWT (not blindly trusted --
-  // this is what proves who is actually asking, before checking whether
-  // they're allowed to).
   const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(jwt);
   if (userError || !userData?.user) {
-    return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 401 });
+    return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 401, headers: corsHeaders });
   }
 
   const { data: account, error: accountError } = await supabaseAdmin
@@ -60,20 +80,20 @@ Deno.serve(async (req) => {
     .eq('id', userData.user.id)
     .single();
   if (accountError || !account?.is_system_admin) {
-    return new Response(JSON.stringify({ error: 'Not authorized: system admin only' }), { status: 403 });
+    return new Response(JSON.stringify({ error: 'Not authorized: system admin only' }), { status: 403, headers: corsHeaders });
   }
 
   const result = {};
   for (const table of TABLES) {
     const { data, error } = await supabaseAdmin.from(table).select('*');
     if (error) {
-      return new Response(JSON.stringify({ error: `Failed to read ${table}: ${error.message}` }), { status: 500 });
+      return new Response(JSON.stringify({ error: `Failed to read ${table}: ${error.message}` }), { status: 500, headers: corsHeaders });
     }
     result[table] = data || [];
   }
 
   return new Response(JSON.stringify({ exported_at: new Date().toISOString(), tables: result }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 });
