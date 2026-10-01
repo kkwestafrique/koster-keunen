@@ -12,4 +12,5 @@ export {
 } from './hooks/stock';
 export { useApproveTransaction, useRejectTransaction } from './hooks/workflow';
 export { useCreateTransaction } from './hooks/create';
+export { useAttachTransactionFile } from './hooks/attachFile';
 export { summarizeTransactions } from './domain/summarizeTransactions';

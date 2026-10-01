@@ -7,5 +7,5 @@ export {
   useTransaction, useLinkedTransactionStatus, useProductsWithStock,
   useAvailableBatches, useProcessStock, useConsumeStockBatch, useRecordBatchSelection,
   useApproveTransaction, useRejectTransaction, useTransactionBatchSelections,
-  useCreateTransaction,
+  useCreateTransaction, useAttachTransactionFile,
 } from '@/features/transactions';
