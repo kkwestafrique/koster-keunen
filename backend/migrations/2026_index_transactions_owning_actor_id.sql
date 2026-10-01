@@ -1,0 +1,25 @@
+-- Add the missing index on transactions.owning_actor_id.
+--
+-- Found via a performance audit: the real transactions_select and
+-- transactions_insert RLS policies both check this exact column on
+-- every row they consider --
+--   owning_actor_id = auth_current_actor_id()
+--   OR (owning_actor_id IS NULL AND auth_role() = 'Admin')
+--   OR ...
+-- -- yet every other column transactions' RLS policies reference
+-- (supply_chain_id, actor_id, beekeeper_id) already had one.
+--
+-- Confirmed via a live EXPLAIN ANALYZE before adding this that Postgres
+-- currently chooses a sequential scan regardless, since the table has
+-- only ~71 rows and the planner correctly judges a seq scan cheaper at
+-- that size -- so this isn't fixing a visible slowdown today. It closes
+-- the gap before transaction volume grows enough that the planner
+-- needs this index to keep RLS evaluation (which runs on every single
+-- query against this table) fast.
+--
+-- A plain B-tree index, matching the style of every other index on
+-- this table. Postgres B-tree indexes include NULL values by default,
+-- so this one index serves both the equality branch and the IS NULL
+-- branch of the policy above -- no partial-index complexity needed.
+CREATE INDEX IF NOT EXISTS idx_transactions_owning_actor
+  ON public.transactions USING btree (owning_actor_id);
