@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import AppLayout from '@/components/layout/AppLayout';
 import DataTable from '@/components/common/DataTable';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -12,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/lib/errorMessages';
+import { useAllTeamMembers, useAllVillages } from '@/hooks/useAdmin';
 
 // Vibe-coding-checklist gaps closed: "Build an admin panel. Early. One
 // screen to manage users, master data, menus, records." and "One
@@ -33,34 +33,6 @@ import { getFriendlyErrorMessage } from '@/lib/errorMessages';
 // this same flag server-side) rather than through the regular
 // RLS-scoped client, which would correctly refuse this much visibility
 // to a normal session.
-
-function useAllTeamMembers() {
-  return useQuery({
-    queryKey: ['admin', 'all-team-members'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('team_members')
-        .select('id, name, email, role, status, created_at, actors(traceability_code, contact_name)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
-}
-
-function useAllVillages() {
-  return useQuery({
-    queryKey: ['admin', 'all-villages'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('villages')
-        .select('id, name, country, state_region, lga_municipality')
-        .order('country', { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
-}
 
 function UsersTab() {
   const { t } = useTranslation();

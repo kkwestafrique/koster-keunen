@@ -12,8 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, Paperclip } from 'lucide-react';
 import DetailPageSkeleton from '@/components/common/DetailPageSkeleton';
-import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction, useLinkedTransactionStatus } from '@/hooks/useTransactions';
-import { uploadMediaFile, getSignedMediaUrl, supabase, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
+import { useTransaction, useTransactionBatchSelections, useApproveTransaction, useRejectTransaction, useLinkedTransactionStatus, useAttachTransactionFile } from '@/hooks/useTransactions';
+import { uploadMediaFile, getSignedMediaUrl, MEDIA_ACCEPT_ATTR } from '@/lib/supabaseClient';
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -70,6 +70,7 @@ export default function TransactionDetail() {
   const { data: sourceBatches = [] } = useTransactionBatchSelections(tx?.transaction_group_id);
   const approveTransaction = useApproveTransaction();
   const rejectTransaction = useRejectTransaction();
+  const attachTransactionFile = useAttachTransactionFile();
   const { isReadOnly } = useActingActor();
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
@@ -156,11 +157,7 @@ export default function TransactionDetail() {
     setUploading(true);
     try {
       const url = await uploadMediaFile(file, 'transactions', supplyChainId);
-      const { error } = await supabase.rpc('attach_transaction_file', {
-        p_transaction_group_id: tx.transaction_group_id,
-        p_attachment_url: url,
-      });
-      if (error) throw error;
+      await attachTransactionFile.mutateAsync({ transactionGroupId: tx.transaction_group_id, attachmentUrl: url });
       toast({ title: t('transactionDetail.fileAttached') });
     } catch (err) {
       toast({ title: t('transactionDetail.attachFailed'), description: getFriendlyErrorMessage(err), variant: 'destructive' });
