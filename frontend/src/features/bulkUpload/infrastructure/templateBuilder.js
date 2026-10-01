@@ -148,7 +148,7 @@ export async function downloadTemplate(templateKey, filename, supplyChainId, fil
   if (templateKey === 'beekeepers' && supplyChainId) {
     const { data: beekeepers } = await supabase
       .from('beekeepers')
-      .select('*')
+      .select('full_name, traceability_code, gender, year_of_birth, national_id, internal_code, linked_producer_organisation, contact_phone, village_id, standards, commitment, charter_signed, hives_traditional_single, hives_traditional_double, hives_modern, hives_other, hive_cashew, hive_mango, hive_shea, hive_forest, hive_other_forage')
       .eq('supply_chain_id', supplyChainId)
       .order('created_at', { ascending: true });
     if (beekeepers?.length) {

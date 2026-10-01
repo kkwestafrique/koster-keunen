@@ -23,7 +23,7 @@ export function useFieldChangeHistory({ tableName, recordId, groupId }) {
   return useQuery({
     queryKey: ['field-change-history', tableName, recordId, groupId],
     queryFn: async () => {
-      let query = supabase.from('field_change_log').select('*').eq('table_name', tableName);
+      let query = supabase.from('field_change_log').select('id, action, changed_at, changed_by, changed_fields, new_data, old_data').eq('table_name', tableName);
       query = groupId ? query.eq('group_id', groupId) : query.eq('record_id', recordId);
       const { data, error } = await query.order('changed_at', { ascending: false });
       if (error) throw error;

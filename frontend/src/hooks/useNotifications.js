@@ -19,7 +19,7 @@ export function useNotifications() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select('id, read_at, title, message, created_at, link')
         .eq('actor_id', currentActorId)
         .order('created_at', { ascending: false })
         .limit(RECENT_LIMIT);

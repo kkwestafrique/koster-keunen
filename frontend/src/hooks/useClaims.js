@@ -15,7 +15,7 @@ export function useClaimsForEntity(entityType, entityId) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('claims')
-        .select('*')
+        .select('status, standard')
         .eq('entity_type', entityType)
         .eq('entity_id', entityId)
         .order('submitted_at', { ascending: false });
@@ -35,7 +35,7 @@ export function usePendingClaims() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('claims')
-        .select('*')
+        .select('id, entity_type, standard, evidence_note, submitted_at')
         .eq('supply_chain_id', supplyChainId)
         .eq('status', 'Pending')
         .order('submitted_at', { ascending: true });

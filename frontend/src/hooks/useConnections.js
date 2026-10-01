@@ -113,7 +113,7 @@ export function useConnectionBetween(actorAId, actorBId) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('connections')
-        .select('*')
+        .select('id, status')
         .eq('supply_chain_id', supplyChainId)
         .or(
           `and(actor_from_id.eq.${actorAId},actor_to_id.eq.${actorBId}),and(actor_from_id.eq.${actorBId},actor_to_id.eq.${actorAId})`

@@ -77,7 +77,7 @@ async function loadReportData(report, filters, supplyChainId) {
   if (needsBeekeepers) {
     // Same rule as the Beekeepers list and Dashboard: beekeepers with no
     // owning actor are excluded, so counts agree across all three.
-    data.beekeepers = await fetchAll(() => inChain(supabase.from('beekeepers').select('*')).not('actor_id', 'is', null).order('id'));
+    data.beekeepers = await fetchAll(() => inChain(supabase.from('beekeepers').select('id, created_at, traceability_code, internal_code, full_name, gender, year_of_birth, national_id, linked_producer_organisation, contact_phone, village_id, hives_traditional_single, hives_traditional_double, hives_modern, hives_other, hive_cashew, hive_mango, hive_shea, hive_forest, hive_other_forage, commitment, standards, charter_signed, actor_id')).not('actor_id', 'is', null).order('id'));
   }
   if (key === 'beekeeperList') {
     const villages = await fetchAll(() => inChain(supabase.from('villages').select('id, name, country, state_region, lga_municipality')).order('id'));
@@ -88,7 +88,7 @@ async function loadReportData(report, filters, supplyChainId) {
       .not('beekeeper_id', 'is', null).order('id'));
   }
   if (key === 'actorsPotential' || key === 'actorsAchieved') {
-    data.actors = await fetchAll(() => inChain(supabase.from('actors').select('*')).order('id'));
+    data.actors = await fetchAll(() => inChain(supabase.from('actors').select('id, traceability_code, created_at, contact_name, actor_type, country, state_region, lga_municipality, standards')).order('id'));
     data.connections = await fetchAll(() => inChain(supabase.from('connections').select('actor_from_id, actor_to_id, status')).order('id'));
   }
 

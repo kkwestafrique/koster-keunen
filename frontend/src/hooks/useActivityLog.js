@@ -24,7 +24,7 @@ export function useActivityLog() {
       const [{ data: rows, error: rowsError }, { data: users, error: usersError }] = await Promise.all([
         supabase
           .from('activity_log')
-          .select('*')
+          .select('created_at, created_by, entity_label, entity_type, updated_at, updated_by')
           .order('updated_at', { ascending: false }),
         supabase.rpc('get_supply_chain_usernames'),
       ]);

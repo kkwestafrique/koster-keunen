@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 async function fetchConstants(category) {
   const { data, error } = await supabase
     .from('constants')
-    .select('*')
+    .select('value, label, sort_order')
     .eq('category', category)
     .order('sort_order', { ascending: true });
   if (error) throw error;

@@ -9,7 +9,7 @@ export function useExchangeRates() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('exchange_rates')
-        .select('*')
+        .select('id, currency, year, month, rate_to_xof')
         .eq('supply_chain_id', supplyChainId)
         .order('year', { ascending: false })
         .order('month', { ascending: false })

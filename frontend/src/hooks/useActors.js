@@ -73,7 +73,7 @@ export function useActor(id) {
   return useQuery({
     queryKey: ['actor', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('actors').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('actors').select('actor_type, charter_signed, connect_id, contact_email, contact_name, contact_phone, country, description, lga_municipality, logo_url, profile_completeness, standards, state_region, traceability_code, village').eq('id', id).single();
       if (error) throw error;
       return data;
     },

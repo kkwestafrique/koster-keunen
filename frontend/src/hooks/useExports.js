@@ -50,7 +50,7 @@ export function useRecentExports() {
     queryFn: async () => {
       let q = supabase
         .from('exports')
-        .select('*')
+        .select('id, status, file_name, row_count, error_message, file_url')
         .eq('supply_chain_id', supplyChainId)
         .order('created_at', { ascending: false })
         .limit(RECENT_LIMIT);

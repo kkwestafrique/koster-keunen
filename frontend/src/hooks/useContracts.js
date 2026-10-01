@@ -139,7 +139,7 @@ export function useContractDeliveries(contractGroupId) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('contract_delivery_notifications')
-        .select('*')
+        .select('id, product, delivering_quantity, expected_delivery_date, comment')
         .eq('contract_group_id', contractGroupId)
         .order('expected_delivery_date', { ascending: true });
       if (error) throw error;

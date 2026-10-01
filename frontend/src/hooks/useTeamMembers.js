@@ -9,7 +9,7 @@ export function useTeamMembers(actorId) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('team_members')
-        .select('*')
+        .select('id, name, email, role, status')
         .eq('actor_id', actorId)
         .order('created_at', { ascending: true });
       if (error) throw error;

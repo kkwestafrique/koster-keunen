@@ -232,7 +232,7 @@ export function useBeekeeperYearlyRecords(beekeeperId) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('beekeeper_yearly_records')
-        .select('*')
+        .select('year, updated_at, commitment, total_hives, hives_traditional_single, hives_traditional_double, hives_modern, hives_other, charter_signed')
         .eq('beekeeper_id', beekeeperId)
         .order('year', { ascending: false });
       if (error) throw error;
