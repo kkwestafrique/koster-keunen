@@ -1,10 +1,28 @@
 -- RLS performance optimization: wrap session-constant helper calls in
 -- (select ...), and short-circuit auth_owns_linked_transaction.
 --
--- PREPARED FOR REVIEW -- NOT YET APPLIED to the live database. Every
--- statement below was first applied to and verified on a disposable test
--- project (schema-cloned from this live database), seeded with 20,000
--- realistic transactions, 4,000 beekeepers, 60 actors.
+-- APPLIED to the live database on 2026-10-03 (Supabase migration
+-- "optimize_rls_policies_initplan"). Every statement below was first
+-- applied to and verified on a disposable test project (schema-cloned
+-- from this live database), seeded with 20,000 realistic transactions,
+-- 4,000 beekeepers, 60 actors.
+--
+-- == Verified on the LIVE database, before vs after applying ==
+--
+-- - Exact match: all 70 live policies hash identically to the verified
+--   test project afterwards (deee04d116bf076a94af1552c82135c1) -- proves
+--   no transcription error between the tested version and what went live.
+-- - Every real user sees exactly the same rows: for all 51 real users
+--   (6 Admin, 1 Field Officer, 44 Member), fingerprinted the exact row IDs
+--   visible to each in all 26 tables, as that user, under RLS.
+--   Before: 29e2a060f9ddb01244998e340990006e, 78,856 rows.
+--   After:  29e2a060f9ddb01244998e340990006e, 78,856 rows.
+--   Raw underlying data fingerprint unchanged across the window
+--   (c63bbc16ab3402942aeee4d94556cd31), so the comparison is clean.
+-- - Supabase's own linter: "Auth RLS Initialization Plan" warnings 7 -> 0.
+--   Security linter findings identical before and after (no new items).
+--
+-- Rollback, verified to work: 2026_optimize_rls_policies_initplan_ROLLBACK.sql
 --
 -- == The real problem, proven empirically ==
 --
