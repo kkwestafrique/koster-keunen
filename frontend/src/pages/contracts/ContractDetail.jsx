@@ -517,7 +517,7 @@ export default function ContractDetail() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#ebf6ff] border border-[#cfd8e6] rounded-[5px] p-4 mt-4" data-testid="contract-detail-totals">
                   <DetailField label={t('contractWizard.totalQuantityExpected')} value={contract.total_quantity_expected} />
-                  <DetailField label={t('contractWizard.totalContractAmount')} value={products.reduce((s, p) => s + (Number(p.expected_quantity) || 0) * (Number(p.price) || 0), 0).toLocaleString()} />
+                  <DetailField label={t('contractWizard.totalContractAmount')} value={Number(contract.total_amount || 0).toLocaleString()} />
                   <DetailField
                     label={t('contractWizard.percentageYellowWax')}
                     value={(() => {
